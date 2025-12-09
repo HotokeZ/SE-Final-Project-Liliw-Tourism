@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Bin - Admin | Liliw Tourism</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        {% include 'admin/sidebar.html' %}
+        
+        <main class="admin-main">
+            <header class="admin-header">
+                <h1><i class="fas fa-trash-alt"></i> Blog Bin</h1>
+                <p>Non-approved blogs pending permanent deletion (30 days)</p>
+            </header>
+            
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="nav-tabs">
+                        <a href="{{ url_for('admin_blogs') }}" class="tab">
+                            <i class="fas fa-blog"></i> Active Blogs
+                        </a>
+                        <a href="{{ url_for('admin_blogs_archive') }}" class="tab">
+                            <i class="fas fa-archive"></i> Archive
+                        </a>
+                        <a href="{{ url_for('admin_blogs_bin') }}" class="tab active">
+                            <i class="fas fa-trash"></i> Bin
+                        </a>
+                    </div>
+                    
+                    <a href="{{ url_for('admin_cleanup_bin') }}" class="btn-primary" onclick="return confirm('This will permanently delete all blogs older than 30 days. Continue?');">
+                        <i class="fas fa-broom"></i> Clean Up Old Items
+                    </a>
+                </div>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="flash-message {{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <div class="warning-banner">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Auto-delete Warning</strong>
+                        <p>Items in the bin will be permanently deleted after 30 days. Restore them before then if needed.</p>
+                    </div>
+                </div>
+                
+                {% if blogs %}
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Status</th>
+                                <th>Deleted</th>
+                                <th>Days Left</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for blog in blogs %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ blog.title }}</strong>
+                                    </td>
+                                    <td>{{ blog.author }}</td>
+                                    <td>
+                                        <span class="status-badge {{ blog.status }}">
+                                            {{ blog.status | capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>{{ blog.deleted_at[:10] if blog.deleted_at else 'N/A' }}</td>
+                                    <td>
+                                        <span class="days-badge {% if blog.days_remaining <= 7 %}danger{% elif blog.days_remaining <= 14 %}warning{% else %}safe{% endif %}">
+                                            {{ blog.days_remaining }} days
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ url_for('admin_blog_restore', blog_id=blog.id) }}" 
+                                               class="btn-action btn-approve" title="Restore">
+                                                <i class="fas fa-undo"></i> Restore
+                                            </a>
+                                            <form action="{{ url_for('admin_blog_permanent_delete', blog_id=blog.id) }}" 
+                                                  method="POST" style="display: inline;"
+                                                  onsubmit="return confirm('PERMANENTLY delete this blog? This cannot be undone!');">
+                                                <button type="submit" class="btn-action btn-reject" title="Delete Forever">
+                                                    <i class="fas fa-trash"></i> Delete Forever
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-trash-alt"></i>
+                        <h3>Bin is Empty</h3>
+                        <p>No deleted blogs. Non-approved blogs that are deleted will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+    
+    <style>
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.25rem;
+            background: #f0f0f0;
+            color: #666;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #e0e0e0;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .warning-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .warning-banner i {
+            font-size: 1.5rem;
+            color: #856404;
+            margin-top: 0.25rem;
+        }
+        
+        .warning-banner strong {
+            color: #856404;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .warning-banner p {
+            margin: 0;
+            color: #856404;
+            font-size: 0.9rem;
+        }
+        
+        .days-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .days-badge.safe {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .days-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .days-badge.danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            color: #999;
+        }
+        
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: linear-gradient(135deg, #1a5f2a, #2d8f4a);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 95, 42, 0.3);
+        }
+    </style>
+</body>
+</html>

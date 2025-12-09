@@ -1,0 +1,73 @@
+<!-- Admin Sidebar Component -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2><i class="fas fa-leaf"></i> Liliw Admin</h2>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <a href="{{ url_for('admin_dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'admin_dashboard' else '' }}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+        
+        <div class="nav-section">Content Management</div>
+        
+        <a href="{{ url_for('admin_blogs') }}" class="nav-item {{ 'active' if 'blog' in request.endpoint else '' }}">
+            <i class="fas fa-blog"></i>
+            <span>Blogs</span>
+        </a>
+        
+        <a href="{{ url_for('admin_attractions') }}" class="nav-item {{ 'active' if 'attraction' in request.endpoint else '' }}">
+            <i class="fas fa-mountain"></i>
+            <span>Attractions</span>
+        </a>
+        
+        <a href="{{ url_for('admin_products') }}" class="nav-item {{ 'active' if 'product' in request.endpoint else '' }}">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Products</span>
+        </a>
+        
+        <a href="{{ url_for('admin_events') }}" class="nav-item {{ 'active' if 'event' in request.endpoint else '' }}">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Events</span>
+        </a>
+        
+        <div class="nav-section">Plan Your Trip</div>
+        
+        <a href="{{ url_for('admin_hotels') }}" class="nav-item {{ 'active' if 'hotel' in request.endpoint else '' }}">
+            <i class="fas fa-hotel"></i>
+            <span>Hotels</span>
+        </a>
+        
+        <a href="{{ url_for('admin_restaurants') }}" class="nav-item {{ 'active' if 'restaurant' in request.endpoint else '' }}">
+            <i class="fas fa-utensils"></i>
+            <span>Restaurants</span>
+        </a>
+        
+        <a href="{{ url_for('admin_reviews') }}" class="nav-item {{ 'active' if 'review' in request.endpoint else '' }}">
+            <i class="fas fa-star"></i>
+            <span>Reviews</span>
+        </a>
+        
+        <div class="nav-section">Reports</div>
+        
+        <a href="{{ url_for('admin_reports') }}" class="nav-item {{ 'active' if 'report' in request.endpoint else '' }}">
+            <i class="fas fa-flag"></i>
+            <span>Blog Reports</span>
+        </a>
+    </nav>
+    
+    <div class="sidebar-footer">
+        <a href="{{ url_for('index') }}" class="nav-item" target="_blank">
+            <i class="fas fa-external-link-alt"></i>
+            <span>View Website</span>
+        </a>
+        <a href="{{ url_for('admin_logout') }}" class="nav-item logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</aside>

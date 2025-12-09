@@ -1,0 +1,654 @@
+{% include 'header.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourism Information - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #0229bf 0%, #0052cc 100%);
+            color: white;
+            padding: 120px 20px 80px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Main Content */
+        .info-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        /* About Section */
+        .about-section {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        .about-section h2 {
+            color: #0229bf;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .about-content {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .about-content p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .about-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Tourism Office Section */
+        .office-section {
+            margin-bottom: 60px;
+        }
+
+        .office-section h2 {
+            color: #0229bf;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .office-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .office-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .office-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(2, 41, 191, 0.15);
+        }
+
+        .office-card-icon {
+            background: #0229bf;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 20px;
+        }
+
+        .office-card h3 {
+            color: #0229bf;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .office-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .office-card ul li {
+            color: #555;
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .office-card ul li::before {
+            content: "✓";
+            color: #0229bf;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        /* Helpful Information Cards */
+        .helpful-section {
+            margin-bottom: 60px;
+        }
+
+        .helpful-section h2 {
+            color: #0229bf;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .helpful-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .helpful-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 5px solid #0229bf;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .helpful-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(2, 41, 191, 0.15);
+        }
+
+        .helpful-card h3 {
+            color: #0229bf;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .helpful-card h3 i {
+            font-size: 1.5rem;
+        }
+
+        .helpful-card p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .helpful-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .helpful-card ul li {
+            color: #555;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .helpful-card ul li::before {
+            content: "•";
+            color: #0229bf;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            font-size: 1.2rem;
+        }
+
+        /* Emergency Contacts Section */
+        .emergency-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 60px;
+        }
+
+        .emergency-section h2 {
+            color: #d9534f;
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .emergency-section h2 i {
+            font-size: 2rem;
+        }
+
+        .emergency-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .emergency-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #d9534f;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .emergency-card h3 {
+            color: #d9534f;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .emergency-card p {
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .emergency-card a {
+            color: #d9534f;
+            text-decoration: none;
+        }
+
+        .emergency-card a:hover {
+            text-decoration: underline;
+        }
+
+        /* Useful Links Section */
+        .links-section {
+            background: #f8f9fa;
+            padding: 50px 40px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+
+        .links-section h2 {
+            color: #0229bf;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .link-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(2, 41, 191, 0.15);
+        }
+
+        .link-card a {
+            color: #0229bf;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .link-card a i {
+            font-size: 1.3rem;
+        }
+
+        .link-card a:hover {
+            color: #0052cc;
+        }
+
+        .link-card p {
+            color: #666;
+            font-size: 0.95rem;
+            margin-top: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .about-section h2,
+            .office-section h2,
+            .helpful-section h2,
+            .emergency-section h2,
+            .links-section h2 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 100px 20px 60px;
+            }
+
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .info-container {
+                padding: 40px 15px;
+            }
+
+            .about-content,
+            .emergency-section,
+            .links-section {
+                padding: 30px 20px;
+            }
+
+            .office-grid,
+            .helpful-grid,
+            .emergency-grid,
+            .links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .about-section h2,
+            .office-section h2,
+            .helpful-section h2,
+            .emergency-section h2,
+            .links-section h2 {
+                font-size: 1.6rem;
+            }
+
+            .office-card,
+            .helpful-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Tourism Information</h1>
+        <p>Everything you need to know to plan your perfect visit to Liliw, Laguna</p>
+    </section>
+
+    <!-- Main Content -->
+    <div class="info-container">
+        <!-- About Liliw Section -->
+        <section class="about-section">
+            <h2>About Liliw</h2>
+            <div class="about-content">
+                <p>Liliw, officially the Municipality of Liliw, is a charming 4th class municipality in the province of Laguna, Philippines. Known as the "Tsinelas Capital of the Philippines," Liliw is famous for its handcrafted footwear industry, particularly its colorful and intricately designed slippers and sandals.</p>
+
+                <p>Beyond its thriving footwear industry, Liliw is blessed with natural wonders and rich cultural heritage. The municipality is home to stunning waterfalls, historic churches, ancestral houses, and vibrant festivals that showcase the warmth and creativity of its people. The town's Spanish colonial architecture, particularly the Liliw Church (San Juan Bautista Parish Church) built in 1646, stands as a testament to its historical significance.</p>
+
+                <p>Visitors to Liliw can enjoy a perfect blend of adventure, culture, and relaxation. From trekking to the beautiful waterfalls in the uplands to exploring the heritage houses in the town proper, and shopping for unique footwear products at affordable prices, Liliw offers an authentic Filipino experience that captures the heart of Laguna's rural charm.</p>
+            </div>
+        </section>
+
+        <!-- Tourism Office Details -->
+        <section class="office-section">
+            <h2>Tourism Office Details</h2>
+            <div class="office-grid">
+                <div class="office-card">
+                    <div class="office-card-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Location</h3>
+                    <ul>
+                        <li>Municipal Tourism Office</li>
+                        <li>2nd Floor, Liliw Municipal Hall</li>
+                        <li>Liliw, Laguna 4004</li>
+                        <li>Philippines</li>
+                    </ul>
+                </div>
+
+                <div class="office-card">
+                    <div class="office-card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Office Hours</h3>
+                    <ul>
+                        <li>Monday - Friday</li>
+                        <li>8:00 AM - 5:00 PM</li>
+                        <li>Saturday: 8:00 AM - 12:00 PM</li>
+                        <li>Closed on Sundays & Holidays</li>
+                    </ul>
+                </div>
+
+                <div class="office-card">
+                    <div class="office-card-icon">
+                        <i class="fas fa-concierge-bell"></i>
+                    </div>
+                    <h3>Services Offered</h3>
+                    <ul>
+                        <li>Tourist information assistance</li>
+                        <li>Travel planning and itinerary</li>
+                        <li>Accommodation referrals</li>
+                        <li>Tour guide coordination</li>
+                        <li>Event and festival information</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Helpful Information -->
+        <section class="helpful-section">
+            <h2>Helpful Information</h2>
+            <div class="helpful-grid">
+                <div class="helpful-card">
+                    <h3><i class="fas fa-route"></i> Getting There</h3>
+                    <p><strong>From Manila:</strong></p>
+                    <ul>
+                        <li>Take a bus to Santa Cruz, Laguna (via SLEX)</li>
+                        <li>From Santa Cruz, take a jeepney or van to Liliw</li>
+                        <li>Travel time: 2.5 - 3 hours</li>
+                    </ul>
+                    <p><strong>By Private Vehicle:</strong></p>
+                    <ul>
+                        <li>Via SLEX, exit at Calamba</li>
+                        <li>Follow signs to Liliw via National Road</li>
+                        <li>Approximately 100 km from Manila</li>
+                    </ul>
+                </div>
+
+                <div class="helpful-card">
+                    <h3><i class="fas fa-calendar-alt"></i> Best Time to Visit</h3>
+                    <p><strong>Peak Season:</strong></p>
+                    <ul>
+                        <li>January (Liliw Festival)</li>
+                        <li>Holy Week (March/April)</li>
+                        <li>Summer months (April-May)</li>
+                    </ul>
+                    <p><strong>Weather:</strong></p>
+                    <ul>
+                        <li>Dry season: November to April</li>
+                        <li>Wet season: May to October</li>
+                        <li>Cool months: December to February</li>
+                    </ul>
+                </div>
+
+                <div class="helpful-card">
+                    <h3><i class="fas fa-backpack"></i> What to Bring</h3>
+                    <p><strong>Essentials:</strong></p>
+                    <ul>
+                        <li>Comfortable walking shoes</li>
+                        <li>Light, breathable clothing</li>
+                        <li>Sunscreen and hat</li>
+                        <li>Insect repellent</li>
+                        <li>Reusable water bottle</li>
+                    </ul>
+                    <p><strong>For Waterfall Tours:</strong></p>
+                    <ul>
+                        <li>Swimwear and towel</li>
+                        <li>Waterproof bag</li>
+                        <li>Change of clothes</li>
+                        <li>Trekking shoes</li>
+                    </ul>
+                </div>
+
+                <div class="helpful-card">
+                    <h3><i class="fas fa-info-circle"></i> Local Tips</h3>
+                    <ul>
+                        <li>Bring cash - limited ATMs available</li>
+                        <li>Respect local customs and traditions</li>
+                        <li>Try local delicacies like uraro and pilipit</li>
+                        <li>Shop for footwear at the public market</li>
+                        <li>Hire local guides for waterfall tours</li>
+                        <li>Practice responsible tourism</li>
+                        <li>Learn basic Filipino phrases</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Emergency Contacts -->
+        <section class="emergency-section">
+            <h2><i class="fas fa-exclamation-triangle"></i> Emergency Contacts</h2>
+            <div class="emergency-grid">
+                <div class="emergency-card">
+                    <h3>Police Emergency</h3>
+                    <p><a href="tel:911">911</a></p>
+                    <p>Liliw PNP: <a href="tel:+63495372100">(049) 537-2100</a></p>
+                </div>
+
+                <div class="emergency-card">
+                    <h3>Medical Emergency</h3>
+                    <p>Emergency: <a href="tel:911">911</a></p>
+                    <p>Liliw Health Center: <a href="tel:+63495372050">(049) 537-2050</a></p>
+                </div>
+
+                <div class="emergency-card">
+                    <h3>Fire Emergency</h3>
+                    <p><a href="tel:911">911</a></p>
+                    <p>BFP Liliw: <a href="tel:+63495372080">(049) 537-2080</a></p>
+                </div>
+
+                <div class="emergency-card">
+                    <h3>Municipal Hall</h3>
+                    <p><a href="tel:+63495372001">(049) 537-2001</a></p>
+                    <p>tourism@liliw.gov.ph</p>
+                </div>
+
+                <div class="emergency-card">
+                    <h3>Tourism Hotline</h3>
+                    <p><a href="tel:+639171234567">+63 917 123 4567</a></p>
+                    <p>Available 24/7 for tourists</p>
+                </div>
+
+                <div class="emergency-card">
+                    <h3>MDRRMO</h3>
+                    <p>Disaster Response: <a href="tel:+63495372090">(049) 537-2090</a></p>
+                    <p>Mobile: <a href="tel:+639181234567">+63 918 123 4567</a></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Useful Links -->
+        <section class="links-section">
+            <h2>Useful Links</h2>
+            <div class="links-grid">
+                <div class="link-card">
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-home"></i>
+                        Home Page
+                    </a>
+                    <p>Return to the main homepage</p>
+                </div>
+
+                <div class="link-card">
+                    <a href="{{ url_for('index') }}#attractions">
+                        <i class="fas fa-mountain"></i>
+                        Attractions
+                    </a>
+                    <p>Explore Liliw's tourist spots</p>
+                </div>
+
+                <div class="link-card">
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-calendar-check"></i>
+                        Plan Your Visit
+                    </a>
+                    <p>Hotels, restaurants, and travel tips</p>
+                </div>
+
+                <div class="link-card">
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-glass-cheers"></i>
+                        Festivals & Events
+                    </a>
+                    <p>Upcoming events and celebrations</p>
+                </div>
+
+                <div class="link-card">
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-shopping-bag"></i>
+                        Products & Shopping
+                    </a>
+                    <p>Local footwear and handicrafts</p>
+                </div>
+
+                <div class="link-card">
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-images"></i>
+                        Photo Gallery
+                    </a>
+                    <p>View stunning photos of Liliw</p>
+                </div>
+
+                <div class="link-card">
+                    <a href="https://liliw.gov.ph" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-landmark"></i>
+                        Official Municipality Website
+                    </a>
+                    <p>Visit the official Liliw government site</p>
+                </div>
+
+                <div class="link-card">
+                    <a href="https://tourism.gov.ph" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-globe"></i>
+                        Department of Tourism
+                    </a>
+                    <p>National tourism information</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    {% include 'footer.html' %}
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

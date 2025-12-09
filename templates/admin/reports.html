@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Reports - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <style>
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--danger);
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .report-reason {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .reason-spam { background: #fff3e0; color: #f57c00; }
+        .reason-inappropriate { background: #ffebee; color: #d32f2f; }
+        .reason-r18 { background: #fce4ec; color: #c2185b; }
+        .reason-other { background: #e0e0e0; color: #616161; }
+        .report-blog {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .report-blog h4 {
+            margin-bottom: 0.5rem;
+        }
+        .report-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Blog Reports</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h2>Reported Blog Posts</h2>
+        </div>
+
+        <div class="dashboard-section">
+            {% if reports %}
+                {% for report in reports %}
+                <div class="report-card">
+                    <div class="report-header">
+                        <span class="report-reason reason-{{ report.reason }}">
+                            <i class="fas fa-flag"></i> {{ report.reason | upper }}
+                        </span>
+                        <span style="color: #666; font-size: 0.85rem;">
+                            {{ report.created_at[:10] if report.created_at else 'Unknown date' }}
+                        </span>
+                    </div>
+                    
+                    <div class="report-blog">
+                        <h4>
+                            {% if report.blogs %}
+                                {{ report.blogs.title }}
+                            {% else %}
+                                Blog #{{ report.blog_id }}
+                            {% endif %}
+                        </h4>
+                        <p style="color: #666; font-size: 0.9rem;">
+                            By: {{ report.blogs.author if report.blogs else 'Unknown' }}
+                        </p>
+                    </div>
+                    
+                    {% if report.description %}
+                    <p><strong>Reporter's note:</strong> {{ report.description }}</p>
+                    {% endif %}
+                    
+                    <div class="report-actions">
+                        <a href="{{ url_for('admin_blog_edit', blog_id=report.blog_id) }}" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> View Blog
+                        </a>
+                        <a href="{{ url_for('admin_blog_reject', blog_id=report.blog_id) }}" class="btn btn-danger">
+                            <i class="fas fa-ban"></i> Reject Blog
+                        </a>
+                        <a href="{{ url_for('admin_report_dismiss', report_id=report.id) }}" class="btn btn-success">
+                            <i class="fas fa-check"></i> Dismiss Report
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="table-container">
+                    <p class="no-data" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-check-circle" style="font-size: 3rem; color: #4caf50; display: block; margin-bottom: 1rem;"></i>
+                        No reports at this time. All clear! 🎉
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

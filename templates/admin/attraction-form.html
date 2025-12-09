@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if attraction else 'Add' }} Attraction - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{{ 'Edit' if attraction else 'Add New' }} Attraction</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-section">
+            <form class="form-container" method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Name *</label>
+                        <input type="text" id="name" name="name" value="{{ attraction.name if attraction else '' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="natural" {{ 'selected' if attraction and attraction.category == 'natural' else '' }}>Natural</option>
+                            <option value="heritage" {{ 'selected' if attraction and attraction.category == 'heritage' else '' }}>Heritage</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Short Description</label>
+                    <textarea id="description" name="description" rows="3">{{ attraction.description if attraction else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_description">Full Description</label>
+                    <textarea id="full_description" name="full_description" rows="6">{{ attraction.full_description if attraction else '' }}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" value="{{ attraction.location if attraction else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="entrance_fee">Entrance Fee</label>
+                        <input type="text" id="entrance_fee" name="entrance_fee" value="{{ attraction.entrance_fee if attraction else '' }}" placeholder="e.g., ₱50 per person">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hours">Operating Hours</label>
+                        <input type="text" id="hours" name="hours" value="{{ attraction.hours if attraction else '' }}" placeholder="e.g., 7:00 AM - 5:00 PM">
+                    </div>
+                    <div class="form-group">
+                        <label for="best_time">Best Time to Visit</label>
+                        <input type="text" id="best_time" name="best_time" value="{{ attraction.best_time if attraction else '' }}" placeholder="e.g., November to May">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="duration">Duration</label>
+                        <input type="text" id="duration" name="duration" value="{{ attraction.duration if attraction else '' }}" placeholder="e.g., 2-3 hours">
+                    </div>
+                    <div class="form-group">
+                        <label for="difficulty">Difficulty</label>
+                        <select id="difficulty" name="difficulty">
+                            <option value="">Select...</option>
+                            <option value="Easy" {{ 'selected' if attraction and attraction.difficulty == 'Easy' else '' }}>Easy</option>
+                            <option value="Moderate" {{ 'selected' if attraction and attraction.difficulty == 'Moderate' else '' }}>Moderate</option>
+                            <option value="Difficult" {{ 'selected' if attraction and attraction.difficulty == 'Difficult' else '' }}>Difficult</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact">Contact Information</label>
+                    <input type="text" id="contact" name="contact" value="{{ attraction.contact if attraction else '' }}" placeholder="e.g., (049) 123-4567">
+                </div>
+
+                <div class="form-group">
+                    <label for="map_embed">Google Maps Embed URL</label>
+                    <input type="text" id="map_embed" name="map_embed" value="{{ attraction.map_embed if attraction else '' }}" placeholder="Paste Google Maps embed URL here">
+                </div>
+
+                <div class="form-group">
+                    <label for="image">{{ 'Change' if attraction else 'Upload' }} Image</label>
+                    <input type="file" id="image" name="image" accept="image/*">
+                    {% if attraction and attraction.image_url %}
+                    <div style="margin-top: 10px;">
+                        <img src="{{ attraction.image_url }}" alt="Current image" style="max-width: 200px; border-radius: 8px;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if attraction %}
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_active" {{ 'checked' if attraction.is_active else '' }}> Active (visible on website)
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_attractions') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Save Changes' if attraction else 'Add Attraction' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

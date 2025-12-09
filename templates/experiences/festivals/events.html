@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events Calendar - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/festival.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="festival-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Events Calendar</h1>
+                <p>Stay updated with upcoming festivals, celebrations, and special events in Liliw</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calendar View Toggle -->
+    <section class="calendar-controls">
+        <div class="section-container">
+            <div class="controls-header">
+                <h2>Upcoming Events</h2>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" data-view="list">
+                        <i class="fas fa-list"></i> List View
+                    </button>
+                    <button class="toggle-btn" data-view="grid">
+                        <i class="fas fa-th"></i> Grid View
+                    </button>
+                </div>
+            </div>
+
+            <!-- Month Filter (compact dropdown) -->
+            <div class="month-filter">
+                <label for="month-select" class="sr-only">Filter events by month</label>
+                <select id="month-select" class="month-select" aria-label="Filter events by month">
+                    <option value="all">All Months</option>
+                    <option value="january">January</option>
+                    <option value="february">February</option>
+                    <option value="march">March</option>
+                    <option value="april">April</option>
+                    <option value="may">May</option>
+                    <option value="june">June</option>
+                    <option value="july">July</option>
+                    <option value="august">August</option>
+                    <option value="september">September</option>
+                    <option value="october">October</option>
+                    <option value="november">November</option>
+                    <option value="december">December</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events List -->
+    <section class="events-section">
+        <div class="section-container">
+            <div class="events-list active" id="list-view">
+
+                <!-- Event Item - Gat Tayaw Tsinelas Festival -->
+                <div class="event-item" data-month="april">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Gat Tayaw Tsinelas Festival">
+                        <span class="event-badge featured">Featured</span>
+                    </div>
+                    <div class="event-details">
+                        <h3 class="event-title">Gat Tayaw Tsinelas Festival</h3>
+                        <p class="event-description">Liliw's grandest celebration honoring the footwear industry. Features street dancing, footwear parade, trade fair, cultural shows, and beauty pageant. Experience vibrant performances and colorful displays celebrating Liliw's identity as the "Tsinelas Capital of Laguna."</p>
+                        <div class="event-meta">
+                            <span class="event-date-inline meta-item">
+                                <i class="far fa-calendar-alt"></i> 19-21 April 2026
+                            </span>
+                            <span class="event-location">
+                                <i class="fas fa-map-marker-alt"></i> Town Plaza, Liliw
+                            </span>
+                            <span class="event-time">
+                                <i class="fas fa-clock"></i> All Day Event
+                            </span>
+                            <span class="event-type">
+                                <i class="fas fa-tag"></i> Festival
+                            </span>
+                        </div>
+                        <a href="{{ url_for('festivals') }}" class="event-btn">Learn More</a>
+                    </div>
+                </div>
+
+                <!-- Event Item - Patron Saint Fiesta -->
+                <div class="event-item" data-month="june">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Feast of St. John the Baptist">
+                    </div>
+                    <div class="event-details">
+                        <h3 class="event-title">Feast of St. John the Baptist</h3>
+                        <p class="event-description">The town's patron saint celebration featuring religious processions, holy mass, cultural presentations, and the famous "Basaan" (water splashing) tradition. Join the community in honoring their patron saint with faith and festivity.</p>
+                        <div class="event-meta">
+                            <span class="event-date-inline meta-item">
+                                <i class="far fa-calendar-alt"></i> 24 June 2026
+                            </span>
+                            <span class="event-location">
+                                <i class="fas fa-map-marker-alt"></i> Liliw Church
+                            </span>
+                            <span class="event-time">
+                                <i class="fas fa-clock"></i> 6:00 AM - 9:00 PM
+                            </span>
+                            <span class="event-type">
+                                <i class="fas fa-tag"></i> Religious
+                            </span>
+                        </div>
+                        <a href="{{ url_for('festivals') }}" class="event-btn">Learn More</a>
+                    </div>
+                </div>
+
+                <!-- Event Item - Harvest Festival -->
+                <div class="event-item" data-month="may">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Harvest Festival">
+                    </div>
+                    <div class="event-details">
+                        <h3 class="event-title">Pahiyas-Inspired Harvest Festival</h3>
+                        <p class="event-description">Celebrate the bountiful harvest with colorful house decorations, agricultural products display, and thanksgiving rituals. Houses are adorned with kiping, fruits, vegetables, and handicrafts in gratitude for a good harvest season.</p>
+                        <div class="event-meta">
+                            <span class="event-date-inline meta-item">
+                                <i class="far fa-calendar-alt"></i> 15 May 2026
+                            </span>
+                            <span class="event-location">
+                                <i class="fas fa-map-marker-alt"></i> Various Barangays
+                            </span>
+                            <span class="event-time">
+                                <i class="fas fa-clock"></i> 8:00 AM - 6:00 PM
+                            </span>
+                            <span class="event-type">
+                                <i class="fas fa-tag"></i> Cultural
+                            </span>
+                        </div>
+                        <a href="{{ url_for('festivals') }}" class="event-btn">Learn More</a>
+                    </div>
+                </div>
+
+                <!-- Event Item - Christmas Festival -->
+                <div class="event-item" data-month="december">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Christmas Festival">
+                    </div>
+                    <div class="event-details">
+                        <h3 class="event-title">Liliw Christmas Festival</h3>
+                        <p class="event-description">Experience the magic of Christmas in Liliw with nightly light displays, caroling competitions, parol-making contests, Christmas bazaar, and special masses. The town transforms into a winter wonderland of lights and festivities.</p>
+                        <div class="event-meta">
+                            <span class="event-date-inline meta-item">
+                                <i class="far fa-calendar-alt"></i> 16-25 December 2025
+                            </span>
+                            <span class="event-location">
+                                <i class="fas fa-map-marker-alt"></i> Town Center
+                            </span>
+                            <span class="event-time">
+                                <i class="fas fa-clock"></i> Evening Events
+                            </span>
+                            <span class="event-type">
+                                <i class="fas fa-tag"></i> Holiday
+                            </span>
+                        </div>
+                        <a href="{{ url_for('festivals') }}" class="event-btn">Learn More</a>
+                    </div>
+                </div>
+
+                <!-- Event Item - Foundation Day -->
+                <div class="event-item" data-month="january">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Foundation Day">
+                    </div>
+                    <div class="event-details">
+                        <h3 class="event-title">Liliw Foundation Day</h3>
+                        <p class="event-description">Commemorate Liliw's founding with civic parades, cultural shows, sports competitions, trade fairs, and special programs. A day of community pride celebrating the town's history, achievements, and aspirations.</p>
+                        <div class="event-meta">
+                            <span class="event-date-inline meta-item">
+                                <i class="far fa-calendar-alt"></i> 10 January 2026
+                            </span>
+                            <span class="event-location">
+                                <i class="fas fa-map-marker-alt"></i> Municipal Hall Grounds
+                            </span>
+                            <span class="event-time">
+                                <i class="fas fa-clock"></i> 8:00 AM - 5:00 PM
+                            </span>
+                            <span class="event-type">
+                                <i class="fas fa-tag"></i> Civic
+                            </span>
+                        </div>
+                        <a href="{{ url_for('festivals') }}" class="event-btn">Learn More</a>
+                    </div>
+                </div>
+
+                <!-- Event Item - Town Fiesta -->
+                <div class="event-item" data-month="august">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Town Fiesta">
+                    </div>
+                    <div class="event-details">
+                        <h3 class="event-title">Barrio Fiesta Celebrations</h3>
+                        <p class="event-description">Traditional Filipino town celebration with family reunions, abundant food, games, entertainment, and community bonding. Experience genuine Filipino hospitality with open houses and festive gatherings across the town.</p>
+                        <div class="event-meta">
+                            <span class="event-date-inline meta-item">
+                                <i class="far fa-calendar-alt"></i> 15 August 2026
+                            </span>
+                            <span class="event-location">
+                                <i class="fas fa-map-marker-alt"></i> Across All Barangays
+                            </span>
+                            <span class="event-time">
+                                <i class="fas fa-clock"></i> All Day
+                            </span>
+                            <span class="event-type">
+                                <i class="fas fa-tag"></i> Community
+                            </span>
+                        </div>
+                        <a href="{{ url_for('festivals') }}" class="event-btn">Learn More</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Grid View (Initially Hidden) -->
+            <div class="events-grid" id="grid-view" style="display: none;">
+                <!-- Grid items will be populated via JavaScript or duplicated here -->
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        // View Toggle: list <-> grid. Grid is rendered from visible list items.
+        (function() {
+            const listBtn = document.querySelector('.toggle-btn[data-view="list"]');
+            const gridBtn = document.querySelector('.toggle-btn[data-view="grid"]');
+            const listView = document.getElementById('list-view');
+            const gridView = document.getElementById('grid-view');
+
+            function renderGrid() {
+                // clear previous
+                gridView.innerHTML = '';
+                // ensure grid display
+                gridView.style.display = 'grid';
+
+                const visibleItems = Array.from(document.querySelectorAll('.event-item'))
+                    .filter(i => i.style.display !== 'none');
+
+                visibleItems.forEach(item => {
+                    const imgEl = item.querySelector('.event-image img');
+                    const imgSrc = imgEl ? imgEl.getAttribute('src') : '';
+                    const title = item.querySelector('.event-title') ? item.querySelector('.event-title').textContent.trim() : '';
+                    const desc = item.querySelector('.event-description') ? item.querySelector('.event-description').textContent.trim() : '';
+                    const metaHTML = item.querySelector('.event-meta') ? item.querySelector('.event-meta').innerHTML : '';
+                    const link = item.querySelector('.event-btn') ? item.querySelector('.event-btn').getAttribute('href') : '#';
+
+                    const card = document.createElement('div');
+                    card.className = 'festival-card';
+                    card.innerHTML = `
+                        <div class="festival-card-image"><img src="${imgSrc}" alt="${title}"></div>
+                        <div class="festival-card-content">
+                            <h3>${title}</h3>
+                            <p>${desc}</p>
+                            <div class="festival-card-meta">${metaHTML}</div>
+                            <a href="${link}" class="cta-button">Learn More</a>
+                        </div>`;
+
+                    gridView.appendChild(card);
+                });
+            }
+
+            // initial handlers
+            if (listBtn && gridBtn) {
+                listBtn.addEventListener('click', function() {
+                    listBtn.classList.add('active');
+                    gridBtn.classList.remove('active');
+                    // show list, hide grid
+                    listView.style.display = 'flex';
+                    gridView.style.display = 'none';
+                });
+
+                gridBtn.addEventListener('click', function() {
+                    gridBtn.classList.add('active');
+                    listBtn.classList.remove('active');
+                    // hide list, render and show grid
+                    listView.style.display = 'none';
+                    renderGrid();
+                });
+
+                // default to grid view on page load
+                // use setTimeout to allow other scripts/styles to initialize
+                setTimeout(() => {
+                    gridBtn.click();
+                }, 50);
+            }
+        })();
+
+        // Month Filter (dropdown)
+        const monthSelect = document.querySelector('.month-select');
+        if (monthSelect) {
+            monthSelect.addEventListener('change', function() {
+                const month = this.value;
+                document.querySelectorAll('.event-item').forEach(item => {
+                    if (month === 'all' || item.dataset.month === month) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

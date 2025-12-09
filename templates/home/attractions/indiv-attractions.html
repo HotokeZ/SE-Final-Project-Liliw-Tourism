@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ attraction.name }} - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/attractions.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="attraction-hero" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('{{ url_for('static', filename='assets/images/attractions/' + attraction.category + '/' + attraction.image) if attraction.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}');">
+        <div class="hero-content">
+            <div class="breadcrumb">
+                <a href="{{ url_for('home') }}">Home</a>
+                <span>/</span>
+                <a href="{{ url_for('attractions') }}">Attractions</a>
+                <span>/</span>
+                {% if attraction.category == 'heritage' %}
+                <a href="{{ url_for('heritage') }}">Heritage</a>
+                {% else %}
+                <a href="{{ url_for('natural') }}">Natural</a>
+                {% endif %}
+                <span>/</span>
+                <span>{{ attraction.name }}</span>
+            </div>
+            <h1>{{ attraction.name }}</h1>
+            <div class="hero-tags">
+                <span class="hero-tag"><i class="fas fa-map-marker-alt"></i> {{ attraction.location }}</span>
+                {% if attraction.duration %}
+                <span class="hero-tag"><i class="fas fa-clock"></i> {{ attraction.duration }}</span>
+                {% endif %}
+                {% if attraction.difficulty %}
+                <span class="hero-tag"><i class="fas fa-hiking"></i> {{ attraction.difficulty }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="attraction-content">
+        <div class="content-container">
+            <div class="main-content">
+                <!-- Overview -->
+                <div class="content-section">
+                    <h2>Overview</h2>
+                    <p class="lead">{{ attraction.description }}</p>
+                    <p>{{ attraction.full_description }}</p>
+                </div>
+
+                <!-- Highlights -->
+                {% if attraction.highlights %}
+                <div class="content-section">
+                    <h2>Highlights</h2>
+                    <ul class="highlights-list">
+                        {% for highlight in attraction.highlights %}
+                        <li><i class="fas fa-check-circle"></i> {{ highlight }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Activities -->
+                {% if attraction.activities %}
+                <div class="content-section">
+                    <h2>Things to Do</h2>
+                    <div class="activities-grid">
+                        {% for activity in attraction.activities %}
+                        <div class="activity-card">
+                            <i class="fas fa-{{ activity.icon }}"></i>
+                            <h4>{{ activity.name }}</h4>
+                            <p>{{ activity.description }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Getting There -->
+                <div class="content-section">
+                    <h2>Getting There</h2>
+                    <div class="directions-info">
+                        <div class="direction-item">
+                            <i class="fas fa-car"></i>
+                            <div>
+                                <h4>By Car</h4>
+                                <p>{{ attraction.directions.car }}</p>
+                            </div>
+                        </div>
+                        <div class="direction-item">
+                            <i class="fas fa-bus"></i>
+                            <div>
+                                <h4>By Public Transport</h4>
+                                <p>{{ attraction.directions.public }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                {% if attraction.tips %}
+                <div class="content-section">
+                    <h2>Travel Tips</h2>
+                    <div class="tips-grid">
+                        {% for tip in attraction.tips %}
+                        <div class="tip-card">
+                            <i class="fas fa-{{ tip.icon }}"></i>
+                            <h4>{{ tip.title }}</h4>
+                            <p>{{ tip.description }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Gallery -->
+                {% if attraction.gallery %}
+                <div class="content-section">
+                    <h2>Gallery</h2>
+                    <div class="gallery-grid">
+                        {% for image in attraction.gallery %}
+                        <div class="gallery-item">
+                            <img src="{{ url_for('static', filename='assets/images/gallery/' + image) }}" alt="{{ attraction.name }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Quick Info -->
+                <div class="sidebar-card">
+                    <h3>Quick Information</h3>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <strong>Location</strong>
+                                <span>{{ attraction.location }}</span>
+                            </div>
+                        </div>
+                        {% if attraction.entrance_fee %}
+                        <div class="info-item">
+                            <i class="fas fa-ticket-alt"></i>
+                            <div>
+                                <strong>Entrance Fee</strong>
+                                <span>{{ attraction.entrance_fee }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if attraction.hours %}
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <strong>Operating Hours</strong>
+                                <span>{{ attraction.hours }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if attraction.best_time %}
+                        <div class="info-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <div>
+                                <strong>Best Time to Visit</strong>
+                                <span>{{ attraction.best_time }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if attraction.contact %}
+                        <div class="info-item">
+                            <i class="fas fa-phone"></i>
+                            <div>
+                                <strong>Contact</strong>
+                                <span>{{ attraction.contact }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Map -->
+                <div class="sidebar-card">
+                    <h3>Location Map</h3>
+                    <div class="map-container">
+                        <iframe src="{{ attraction.map_embed }}" width="100%" height="300" style="border:0; border-radius: 10px;" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+                </div>
+
+                <!-- Related Attractions -->
+                {% if related_attractions %}
+                <div class="sidebar-card">
+                    <h3>You May Also Like</h3>
+                    <div class="related-list">
+                        {% for related in related_attractions %}
+                        <a href="{{ url_for('indiv_attractions', attraction=related.slug) }}" class="related-item">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/' + related.category + '/' + related.image) if related.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ related.name }}">
+                            <div class="related-info">
+                                <h4>{{ related.name }}</h4>
+                                <span><i class="fas fa-map-marker-alt"></i> {{ related.location }}</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

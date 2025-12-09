@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Products - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/products.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="products-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Local Products</h1>
+                <p>Discover authentic handcrafted goods and delicacies that make Liliw famous</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Product -->
+    <section class="featured-product">
+        <div class="section-container">
+            <div class="featured-grid">
+                <div class="featured-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Tsinelas">
+                </div>
+                <div class="featured-content">
+                    <span class="featured-tag">Most Popular</span>
+                    <h2>Liliw Tsinelas</h2>
+                    <p class="lead">The pride of Liliw - handcrafted slippers that have made our town the "Tsinelas Capital of the Philippines."</p>
+                    <p>For generations, skilled artisans have been crafting beautiful, comfortable footwear using traditional techniques passed down through families. Each pair tells a story of craftsmanship, creativity, and local pride.</p>
+                    <div class="featured-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-hands"></i>
+                            <span>Handmade by local artisans</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-palette"></i>
+                            <span>Customizable designs</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-tag"></i>
+                            <span>Affordable prices</span>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('indiv_product', product='tsinelas') }}" class="featured-btn">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Grid -->
+    <section class="products-section">
+        <div class="section-container">
+            <h2>Browse Our Products</h2>
+            <p class="section-subtitle">From traditional crafts to delicious local delicacies</p>
+
+            <!-- Category: Footwear -->
+            <div class="product-category">
+                <h3 class="category-title"><i class="fas fa-shoe-prints"></i> Footwear & Leather Goods</h3>
+                <div class="products-grid">
+                    <a href="{{ url_for('indiv_product', product='tsinelas') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Tsinelas">
+                            <div class="product-overlay"></div>
+                            <span class="product-badge">Bestseller</span>
+                        </div>
+                        <div class="product-info">
+                            <h4>Liliw Tsinelas</h4>
+                            <p>Handcrafted slippers in various styles and colors</p>
+                            <span class="product-price">₱150 - ₱500</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='leather-sandals') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Leather Sandals">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Leather Sandals</h4>
+                            <p>Premium leather sandals for comfort and style</p>
+                            <span class="product-price">₱300 - ₱800</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='leather-bags') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Leather Bags">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Leather Bags</h4>
+                            <p>Handcrafted bags and accessories</p>
+                            <span class="product-price">₱500 - ₱1,500</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='custom-footwear') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Custom Footwear">
+                            <div class="product-overlay"></div>
+                            <span class="product-badge">Custom</span>
+                        </div>
+                        <div class="product-info">
+                            <h4>Custom Designs</h4>
+                            <p>Create your own unique footwear design</p>
+                            <span class="product-price">₱400 - ₱1,000</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Category: Food Products -->
+            <div class="product-category">
+                <h3 class="category-title"><i class="fas fa-cookie"></i> Local Delicacies</h3>
+                <div class="products-grid">
+                    <a href="{{ url_for('indiv_product', product='uraro') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Uraro Cookies">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Uraro Cookies</h4>
+                            <p>Traditional arrowroot cookies - crispy and delicious</p>
+                            <span class="product-price">₱80 - ₱150</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='pastillas') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Pastillas">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Pastillas de Leche</h4>
+                            <p>Sweet milk candy wrapped in colorful paper</p>
+                            <span class="product-price">₱100 - ₱200</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='buko-pie') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Buko Pie">
+                            <div class="product-overlay"></div>
+                            <span class="product-badge">Fresh</span>
+                        </div>
+                        <div class="product-info">
+                            <h4>Buko Pie</h4>
+                            <p>Fresh coconut pie with flaky crust</p>
+                            <span class="product-price">₱150 - ₱250</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='pilipit') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Pilipit">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Pilipit</h4>
+                            <p>Twisted sweet dough fried to golden perfection</p>
+                            <span class="product-price">₱60 - ₱120</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Category: Handicrafts -->
+            <div class="product-category">
+                <h3 class="category-title"><i class="fas fa-hammer"></i> Handicrafts & Souvenirs</h3>
+                <div class="products-grid">
+                    <a href="{{ url_for('indiv_product', product='bamboo-crafts') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Bamboo Crafts">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Bamboo Crafts</h4>
+                            <p>Eco-friendly bamboo home decor and utensils</p>
+                            <span class="product-price">₱100 - ₱500</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='woven-bags') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Woven Products">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Woven Bags</h4>
+                            <p>Traditional hand-woven bags and baskets</p>
+                            <span class="product-price">₱200 - ₱600</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='wood-carvings') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Wood Carvings">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Wood Carvings</h4>
+                            <p>Intricately carved wooden sculptures and decor</p>
+                            <span class="product-price">₱300 - ₱2,000</span>
+                        </div>
+                    </a>
+
+                    <a href="{{ url_for('indiv_product', product='souvenir-items') }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Souvenir Items">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-info">
+                            <h4>Souvenir Items</h4>
+                            <p>Keychains, magnets, and memorabilia</p>
+                            <span class="product-price">₱50 - ₱300</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Where to Buy -->
+    <section class="buy-section">
+        <div class="section-container">
+            <h2>Where to Buy</h2>
+            <p class="section-subtitle">Visit these locations to purchase authentic Liliw products</p>
+
+            <div class="buy-grid">
+                <div class="buy-card">
+                    <i class="fas fa-store"></i>
+                    <h3>Town Center Shops</h3>
+                    <p>Multiple stores along the main street and around the plaza selling various local products</p>
+                    <span class="buy-location"><i class="fas fa-map-marker-alt"></i> Liliw Town Center</span>
+                </div>
+
+                <div class="buy-card">
+                    <i class="fas fa-shopping-bag"></i>
+                    <h3>Gat Tayaw Tsinelas Vendor Center</h3>
+                    <p>The main hub for footwear with dozens of stalls offering wide selection and competitive prices</p>
+                    <span class="buy-location"><i class="fas fa-map-marker-alt"></i> Near Town Plaza</span>
+                </div>
+
+                <div class="buy-card">
+                    <i class="fas fa-calendar-week"></i>
+                    <h3>Sunday Market</h3>
+                    <p>Weekly market featuring fresh produce, local delicacies, and handicrafts from various vendors</p>
+                    <span class="buy-location"><i class="fas fa-map-marker-alt"></i> Town Plaza (Every Sunday)</span>
+                </div>
+
+                <div class="buy-card">
+                    <i class="fas fa-laptop"></i>
+                    <h3>Online Orders</h3>
+                    <p>Many local shops offer online ordering and shipping throughout the Philippines</p>
+                    <span class="buy-location"><i class="fas fa-phone"></i> Contact Tourism Office for Details</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

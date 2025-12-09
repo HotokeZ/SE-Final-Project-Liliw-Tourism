@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Reviews - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Manage Reviews</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h2>User Reviews</h2>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Entity ID</th>
+                            <th>Reviewer</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if reviews %}
+                            {% for review in reviews %}
+                            <tr>
+                                <td><span class="tag">{{ review.entity_type }}</span></td>
+                                <td>{{ review.entity_id }}</td>
+                                <td>{{ review.reviewer_name or 'Anonymous' }}</td>
+                                <td>
+                                    {% for i in range(review.rating or 0) %}
+                                    <i class="fas fa-star" style="color: gold;"></i>
+                                    {% endfor %}
+                                </td>
+                                <td>{{ review.comment[:50] }}{% if review.comment and review.comment|length > 50 %}...{% endif %}</td>
+                                <td>
+                                    <span class="status status-{{ review.status }}">{{ review.status }}</span>
+                                </td>
+                                <td>{{ review.created_at[:10] if review.created_at else 'N/A' }}</td>
+                                <td>
+                                    {% if review.status == 'pending' %}
+                                    <a href="{{ url_for('admin_review_approve', review_id=review.id) }}" class="btn-icon success" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin_review_reject', review_id=review.id) }}" class="btn-icon danger" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('admin_review_delete', review_id=review.id) }}" class="btn-icon danger" title="Delete" onclick="return confirm('Are you sure?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="no-data">No reviews found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Blogs - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Manage Blogs</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h2>All Blog Posts</h2>
+            <div class="nav-tabs">
+                <a href="{{ url_for('admin_blogs') }}" class="tab active">
+                    <i class="fas fa-blog"></i> Active
+                </a>
+                <a href="{{ url_for('admin_blogs_archive') }}" class="tab">
+                    <i class="fas fa-archive"></i> Archive
+                </a>
+                <a href="{{ url_for('admin_blogs_bin') }}" class="tab">
+                    <i class="fas fa-trash"></i> Bin
+                </a>
+            </div>
+        </div>
+
+        <div class="filters-bar">
+            <a href="{{ url_for('admin_blogs') }}" class="filter-btn {{ 'active' if filter_status == 'all' else '' }}">All</a>
+            <a href="{{ url_for('admin_blogs', filter='pending') }}" class="filter-btn {{ 'active' if filter_status == 'pending' else '' }}">Pending</a>
+            <a href="{{ url_for('admin_blogs', filter='approved') }}" class="filter-btn {{ 'active' if filter_status == 'approved' else '' }}">Approved</a>
+            <a href="{{ url_for('admin_blogs', filter='rejected') }}" class="filter-btn {{ 'active' if filter_status == 'rejected' else '' }}">Rejected</a>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Reports</th>
+                            <th>Votes</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if blogs %}
+                            {% for blog in blogs %}
+                            <tr>
+                                <td>{{ blog.title[:40] }}{% if blog.title|length > 40 %}...{% endif %}</td>
+                                <td>{{ blog.author or 'Anonymous' }}</td>
+                                <td><span class="tag">{{ blog.category or 'General' }}</span></td>
+                                <td>
+                                    <span class="status status-{{ blog.status }}">{{ blog.status }}</span>
+                                </td>
+                                <td>
+                                    {% if blog.report_count and blog.report_count > 0 %}
+                                        <span class="status status-rejected">{{ blog.report_count }}</span>
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span style="color: green;">▲{{ blog.upvotes or 0 }}</span>
+                                    <span style="color: red;">▼{{ blog.downvotes or 0 }}</span>
+                                </td>
+                                <td>{{ blog.created_at[:10] if blog.created_at else 'N/A' }}</td>
+                                <td class="actions">
+                                    {% if blog.status == 'pending' %}
+                                    <a href="{{ url_for('admin_blog_approve', blog_id=blog.id) }}" class="btn-icon success" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin_blog_reject', blog_id=blog.id) }}" class="btn-icon danger" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('admin_blog_delete', blog_id=blog.id) }}" class="btn-icon danger" title="Delete" onclick="return confirm('Delete this blog? Approved blogs go to Archive, others go to Bin.')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="no-data">No blog posts found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .tab {
+            padding: 0.5rem 1rem;
+            background: #f0f0f0;
+            color: #666;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #e0e0e0;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #1a5f2a, #2d8f4a);
+            color: white;
+        }
+    </style>
+</body>
+</html>

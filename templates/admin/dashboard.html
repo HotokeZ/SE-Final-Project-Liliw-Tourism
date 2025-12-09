@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Liliw Tourism</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-leaf"></i> Liliw Admin</h2>
+            <button class="sidebar-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-item active">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            
+            <div class="nav-section">Content Management</div>
+            
+            <a href="{{ url_for('admin_blogs') }}" class="nav-item">
+                <i class="fas fa-blog"></i>
+                <span>Blogs</span>
+                {% if pending_blogs > 0 %}
+                <span class="badge">{{ pending_blogs }}</span>
+                {% endif %}
+            </a>
+            
+            <a href="{{ url_for('admin_attractions') }}" class="nav-item">
+                <i class="fas fa-mountain"></i>
+                <span>Attractions</span>
+            </a>
+            
+            <a href="{{ url_for('admin_products') }}" class="nav-item">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Products</span>
+            </a>
+            
+            <a href="{{ url_for('admin_events') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Events</span>
+            </a>
+            
+            <div class="nav-section">Plan Your Trip</div>
+            
+            <a href="{{ url_for('admin_hotels') }}" class="nav-item">
+                <i class="fas fa-hotel"></i>
+                <span>Hotels</span>
+            </a>
+            
+            <a href="{{ url_for('admin_restaurants') }}" class="nav-item">
+                <i class="fas fa-utensils"></i>
+                <span>Restaurants</span>
+            </a>
+            
+            <a href="{{ url_for('admin_reviews') }}" class="nav-item">
+                <i class="fas fa-star"></i>
+                <span>Reviews</span>
+                {% if pending_reviews > 0 %}
+                <span class="badge">{{ pending_reviews }}</span>
+                {% endif %}
+            </a>
+            
+            <div class="nav-section">Reports</div>
+            
+            <a href="{{ url_for('admin_reports') }}" class="nav-item">
+                <i class="fas fa-flag"></i>
+                <span>Blog Reports</span>
+                {% if pending_reports > 0 %}
+                <span class="badge badge-danger">{{ pending_reports }}</span>
+                {% endif %}
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('index') }}" class="nav-item" target="_blank">
+                <i class="fas fa-external-link-alt"></i>
+                <span>View Website</span>
+            </a>
+            <a href="{{ url_for('admin_logout') }}" class="nav-item logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Dashboard</h1>
+            <div class="header-actions">
+                <span class="admin-name"><i class="fas fa-user-shield"></i> {{ session.get('admin_username', 'Admin') }}</span>
+            </div>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Stats Cards -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blogs">
+                    <i class="fas fa-blog"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.blogs }}</h3>
+                    <p>Total Blogs</p>
+                </div>
+                <div class="stat-footer">
+                    <span class="pending">{{ stats.pending_blogs }} pending</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon attractions">
+                    <i class="fas fa-mountain"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.attractions }}</h3>
+                    <p>Attractions</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon products">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.products }}</h3>
+                    <p>Products</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon events">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.events }}</h3>
+                    <p>Events</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon hotels">
+                    <i class="fas fa-hotel"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.hotels }}</h3>
+                    <p>Hotels</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon restaurants">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.restaurants }}</h3>
+                    <p>Restaurants</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="dashboard-section">
+            <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+            <div class="quick-actions">
+                <a href="{{ url_for('admin_blogs') }}?filter=pending" class="action-card">
+                    <i class="fas fa-clock"></i>
+                    <span>Review Pending Blogs</span>
+                    {% if stats.pending_blogs > 0 %}
+                    <span class="count">{{ stats.pending_blogs }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('admin_attractions_add') }}" class="action-card">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Attraction</span>
+                </a>
+                <a href="{{ url_for('admin_products_add') }}" class="action-card">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Product</span>
+                </a>
+                <a href="{{ url_for('admin_events_add') }}" class="action-card">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Event</span>
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="action-card warning">
+                    <i class="fas fa-flag"></i>
+                    <span>View Reports</span>
+                    {% if stats.reports > 0 %}
+                    <span class="count danger">{{ stats.reports }}</span>
+                    {% endif %}
+                </a>
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="dashboard-section">
+            <h2><i class="fas fa-history"></i> Recent Blog Submissions</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_blogs %}
+                            {% for blog in recent_blogs %}
+                            <tr>
+                                <td>{{ blog.title[:40] }}{% if blog.title|length > 40 %}...{% endif %}</td>
+                                <td>{{ blog.author or 'Anonymous' }}</td>
+                                <td><span class="tag">{{ blog.category }}</span></td>
+                                <td>
+                                    <span class="status status-{{ blog.status }}">{{ blog.status }}</span>
+                                </td>
+                                <td>{{ blog.created_at[:10] if blog.created_at else 'N/A' }}</td>
+                                <td>
+                                    <!-- Edit button removed: no admin_blog_edit route exists -->
+                                    {% if blog.status == 'pending' %}
+                                    <a href="{{ url_for('admin_blog_approve', blog_id=blog.id) }}" class="btn-icon success" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="no-data">No blog submissions yet</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.querySelector('.main-content').classList.toggle('expanded');
+        }
+
+        // Auto-hide alerts after 5 seconds
+        document.querySelectorAll('.alert').forEach(alert => {
+            setTimeout(() => alert.remove(), 5000);
+        });
+    </script>
+</body>
+</html>

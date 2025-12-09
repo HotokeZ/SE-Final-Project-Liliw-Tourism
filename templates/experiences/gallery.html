@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/gallery.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="gallery-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Photo & Video Gallery</h1>
+                <p>Explore the beauty and culture of Liliw through stunning visuals</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Filters -->
+    <section class="gallery-filters">
+        <div class="filters-container">
+            <button class="filter-btn active" data-filter="all">
+                <i class="fas fa-th"></i> All
+            </button>
+            <button class="filter-btn" data-filter="attractions">
+                <i class="fas fa-mountain"></i> Attractions
+            </button>
+            <button class="filter-btn" data-filter="festivals">
+                <i class="fas fa-calendar"></i> Festivals
+            </button>
+            <button class="filter-btn" data-filter="culture">
+                <i class="fas fa-landmark"></i> Culture
+            </button>
+            <button class="filter-btn" data-filter="products">
+                <i class="fas fa-shopping-bag"></i> Products
+            </button>
+            <button class="filter-btn" data-filter="videos">
+                <i class="fas fa-video"></i> Videos
+            </button>
+        </div>
+    </section>
+
+    <!-- Gallery Grid -->
+    <section class="gallery-section">
+        <div class="section-container">
+            <div class="gallery-grid" id="galleryGrid">
+                <!-- Photos -->
+                <div class="gallery-item" data-category="attractions">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Buruwisan Falls">
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Buruwisan Falls</h3>
+                            <span><i class="fas fa-mountain"></i> Natural Attractions</span>
+                        </div>
+                        <button class="view-btn" onclick="openLightbox(this)">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gallery-item" data-category="festivals">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Tsinelas Festival">
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Tsinelas Festival</h3>
+                            <span><i class="fas fa-calendar"></i> Festivals</span>
+                        </div>
+                        <button class="view-btn" onclick="openLightbox(this)">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gallery-item" data-category="culture">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Church">
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>St. John the Baptist Church</h3>
+                            <span><i class="fas fa-landmark"></i> Heritage Sites</span>
+                        </div>
+                        <button class="view-btn" onclick="openLightbox(this)">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gallery-item" data-category="products">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Tsinelas Display">
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Handcrafted Tsinelas</h3>
+                            <span><i class="fas fa-shopping-bag"></i> Local Products</span>
+                        </div>
+                        <button class="view-btn" onclick="openLightbox(this)">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gallery-item" data-category="attractions">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Hulugan Falls">
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Hulugan Falls</h3>
+                            <span><i class="fas fa-mountain"></i> Natural Attractions</span>
+                        </div>
+                        <button class="view-btn" onclick="openLightbox(this)">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gallery-item" data-category="festivals">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Street Dancing">
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Street Dancing Competition</h3>
+                            <span><i class="fas fa-calendar"></i> Festivals</span>
+                        </div>
+                        <button class="view-btn" onclick="openLightbox(this)">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gallery-item" data-category="culture">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Gat Tayaw Monument">
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Gat Tayaw Monument</h3>
+                            <span><i class="fas fa-landmark"></i> Heritage Sites</span>
+                        </div>
+                        <button class="view-btn" onclick="openLightbox(this)">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gallery-item" data-category="products">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Artisan at Work">
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Artisan Craftsmanship</h3>
+                            <span><i class="fas fa-shopping-bag"></i> Local Products</span>
+                        </div>
+                        <button class="view-btn" onclick="openLightbox(this)">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Video Items -->
+                <div class="gallery-item video-item" data-category="videos">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Tour Video">
+                    <div class="video-icon"><i class="fas fa-play-circle"></i></div>
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Liliw Tourism Video</h3>
+                            <span><i class="fas fa-video"></i> Videos</span>
+                        </div>
+                        <button class="view-btn" onclick="openVideoLightbox('video-url-1')">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gallery-item video-item" data-category="videos">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Festival Highlights">
+                    <div class="video-icon"><i class="fas fa-play-circle"></i></div>
+                    <div class="item-overlay">
+                        <div class="item-info">
+                            <h3>Festival Highlights</h3>
+                            <span><i class="fas fa-video"></i> Videos</span>
+                        </div>
+                        <button class="view-btn" onclick="openVideoLightbox('video-url-2')">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="load-more-container">
+                <button class="load-more-btn">
+                    <i class="fas fa-sync-alt"></i> Load More
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section (Admin) -->
+    {% if is_admin %}
+    <section class="upload-section">
+        <div class="section-container">
+            <div class="upload-card">
+                <h2>Upload Media</h2>
+                <p>Add photos or videos to the gallery</p>
+                <a href="{{ url_for('add_media') }}" class="upload-btn">
+                    <i class="fas fa-cloud-upload-alt"></i> Go to Upload Page
+                </a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="lightbox-nav prev" onclick="navigateLightbox(-1)">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="lightbox-nav next" onclick="navigateLightbox(1)">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="lightbox-content">
+            <img src="" alt="" id="lightboxImage">
+            <div class="lightbox-info">
+                <h3 id="lightboxTitle"></h3>
+                <p id="lightboxCategory"></p>
+            </div>
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        // Filter functionality
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const galleryItems = document.querySelectorAll('.gallery-item');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+
+                // Update active button
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Filter items
+                galleryItems.forEach(item => {
+                    if (filter === 'all' || item.dataset.category === filter) {
+                        item.style.display = 'block';
+                        setTimeout(() => item.classList.add('show'), 10);
+                    } else {
+                        item.classList.remove('show');
+                        setTimeout(() => item.style.display = 'none', 300);
+                    }
+                });
+            });
+        });
+
+        // Lightbox functionality
+        let currentImageIndex = 0;
+        const visibleImages = () => Array.from(galleryItems).filter(item =>
+            item.style.display !== 'none' && !item.classList.contains('video-item')
+        );
+
+        function openLightbox(btn) {
+            const item = btn.closest('.gallery-item');
+            const img = item.querySelector('img');
+            const title = item.querySelector('h3').textContent;
+            const category = item.querySelector('.item-info span').textContent;
+
+            currentImageIndex = visibleImages().indexOf(item);
+
+            document.getElementById('lightboxImage').src = img.src;
+            document.getElementById('lightboxTitle').textContent = title;
+            document.getElementById('lightboxCategory').textContent = category;
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function navigateLightbox(direction) {
+            const images = visibleImages();
+            currentImageIndex = (currentImageIndex + direction + images.length) % images.length;
+            const item = images[currentImageIndex];
+
+            const img = item.querySelector('img');
+            const title = item.querySelector('h3').textContent;
+            const category = item.querySelector('.item-info span').textContent;
+
+            document.getElementById('lightboxImage').src = img.src;
+            document.getElementById('lightboxTitle').textContent = title;
+            document.getElementById('lightboxCategory').textContent = category;
+        }
+
+        // Close lightbox on background click
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target.id === 'lightbox') {
+                closeLightbox();
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('lightbox').classList.contains('active')) {
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowLeft') navigateLightbox(-1);
+                if (e.key === 'ArrowRight') navigateLightbox(1);
+            }
+        });
+
+        // Show all items initially
+        galleryItems.forEach(item => {
+            item.style.display = 'block';
+            item.classList.add('show');
+        });
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

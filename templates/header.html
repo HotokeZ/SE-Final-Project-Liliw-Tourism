@@ -1,0 +1,392 @@
+<header>
+    <a href="{{ url_for('home') }}" class="brand">Liliw</a>
+    <div class="menu-btn"></div>
+    <div class="nav-backdrop"></div>
+    <nav class="navigation">
+        <div class="navigation-items">
+            <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}active{% endif %}">Home</a>
+            <a href="{{ url_for('attractions') }}" class="{% if request.endpoint in ['attractions', 'heritage', 'natural', 'indiv_attraction'] %}active{% endif %}">Attractions</a>
+            <a href="{{ url_for('experiences') }}" class="{% if request.endpoint in ['experiences', 'products', 'indiv_product', 'gallery', 'festivals'] %}active{% endif %}">Experiences</a>
+            <a href="{{ url_for('blog') }}" class="{% if request.endpoint in ['blog', 'view_blog', 'create_blog'] %}active{% endif %}">Blog</a>
+            <a href="{{ url_for('events') }}" class="{% if request.endpoint == 'events' %}active{% endif %}">Events</a>
+            <a href="{{ url_for('plan') }}" class="{% if request.endpoint in ['plan', 'stay', 'eat', 'travel_tips', 'indiv_hotel', 'indiv_resto'] %}active{% endif %}">Plan Your Trip</a>
+            <a href="{{ url_for('map') }}" class="{% if request.endpoint == 'map' %}active{% endif %}">Map</a>
+            {% if session.get('user_id') %}
+                <div class="user-menu">
+                    <a href="{{ url_for('my_blogs') }}" class="user-link {% if request.endpoint == 'my_blogs' %}active{% endif %}">
+                        <i class="fas fa-user-circle"></i> {{ session.get('user_name', 'Account') }}
+                    </a>
+                    <a href="{{ url_for('user_logout') }}" class="logout-link">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            {% else %}
+                <a href="{{ url_for('user_login') }}" class="login-link {% if request.endpoint == 'user_login' %}active{% endif %}">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+</header>
+
+<style>
+*{
+    box-sizing: border-box;
+}
+
+/* Hide menu button by default (shown only on mobile) */
+.menu-btn {
+    display: none;
+}
+
+    header{
+    z-index: 999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 5%;
+    transition: 0.5s ease;
+    transform: translateY(0);
+    /* Solid header by default (no transparency so it doesn't visually blend with content) */
+    background: rgba(0, 0, 0, 0.85);
+}
+
+/* Responsive padding for larger screens */
+@media (min-width: 1400px) {
+    header {
+        padding: 15px 10%;
+    }
+}
+
+@media (min-width: 1600px) {
+    header {
+        padding: 15px 15%;
+    }
+}
+
+@media (min-width: 1900px) {
+    header {
+        padding: 15px 200px;
+    }
+}
+
+header.scroll-down {
+    transform: translateY(-100%);
+}
+
+header.scroll-up {
+    transform: translateY(0);
+}
+
+header.scrolled{
+    /* Keep the same solid background and add a subtle shadow when scrolling */
+    background: rgba(0, 0, 0, 0.85);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+header .brand{
+    color: #fff;
+    font-size: 1.5em;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+header .navigation {
+    position: relative;
+}
+
+header .navigation .navigation-items {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+header .navigation .navigation-items a{
+    position: relative;
+    color: #fff;
+    font-size: 0.95em;
+    font-weight: 500;
+    text-decoration: none;
+    margin-left: 20px;
+    transition: 0.3s ease;
+    white-space: nowrap;
+}
+
+/* Active page indicator for desktop */
+header .navigation .navigation-items a.active {
+    color: #5b9bd5;
+    font-weight: 600;
+}
+
+/* Adjust nav spacing for different screen sizes */
+@media (min-width: 1200px) {
+    header .navigation .navigation-items a {
+        margin-left: 28px;
+        font-size: 1em;
+    }
+}
+
+@media (min-width: 1400px) {
+    header .navigation .navigation-items a {
+        margin-left: 35px;
+    }
+}
+
+header .navigation .navigation-items a:before{
+    content: '';
+    position: absolute;
+    background: #fff;
+    width: 0;
+    height: 3px;
+    bottom: 0;
+    left: 0;
+    transition: 0.3s ease;
+}
+
+header .navigation .navigation-items a:hover:before{
+    width: 100%;
+}
+@media (max-width: 1100px) {
+    header{
+        padding: 12px 20px;
+    }
+
+    header .navigation{
+        position: fixed;
+        top: 0;
+        right: -280px;
+        width: 280px;
+        height: 100vh;
+        background: linear-gradient(135deg, #1a3c34 0%, #0d1f1a 100%);
+        display: flex;
+        flex-direction: column;
+        padding: 70px 0 30px;
+        z-index: 998;
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+        transition: right 0.3s ease;
+    }
+
+    header .navigation.active{
+        right: 0;
+    }
+
+    .menu-btn{
+        display: block;
+        background: url(/static/assets/icons/menu.png)no-repeat;
+        background-size: 30px;
+        background-position: center;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        transition: 0.3s ease;
+    }
+
+    .menu-btn.active{
+        z-index: 999;
+        background: url(/static/assets/icons/close.png)no-repeat;
+        background-size: 25px;
+        background-position: center;
+        transition: 0.3s ease;
+    }
+
+    header .navigation .navigation-items{
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        gap: 0;
+        width: 100%;
+    }
+
+    header .navigation .navigation-items a{
+        margin: 0;
+        padding: 14px 20px;
+        font-size: 1em;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.2s ease;
+        display: block;
+        width: 100%;
+    }
+
+    header .navigation .navigation-items a:hover{
+        color: #5b9bd5;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Active page indicator for mobile sidebar */
+    header .navigation .navigation-items a.active{
+        color: #5b9bd5;
+        font-weight: 600;
+    }
+
+    /* Mobile user menu styles */
+    header .navigation .user-menu {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        margin: 20px 0 0 0;
+        padding: 20px 20px 0;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        width: 100%;
+    }
+
+    header .navigation .user-menu a {
+        padding: 12px 20px;
+        border-bottom: none;
+        text-align: center;
+        width: 100%;
+    }
+
+    /* Backdrop overlay when sidebar is open */
+    .nav-backdrop{
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 997;
+    }
+
+    .nav-backdrop.active{
+        display: block;
+    }
+}
+
+/* User menu styles */
+.user-menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 1px solid rgba(255,255,255,0.3);
+}
+
+.user-link, .login-link, .logout-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.user-link i, .login-link i, .logout-link i {
+    font-size: 1.1em;
+}
+
+.logout-link {
+    opacity: 0.8;
+}
+
+.logout-link:hover {
+    opacity: 1;
+}
+
+@media (max-width: 1100px) {
+    .user-menu {
+        flex-direction: column;
+        border-left: none;
+        padding-left: 0;
+        margin-left: 0;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.3);
+    }
+}
+
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const menuBtn = document.querySelector('.menu-btn');
+    const navigation = document.querySelector('.navigation');
+    const header = document.querySelector('header');
+    let lastScroll = 0;
+
+    // Reserve space for the fixed header so it doesn't overlap page content
+    const updateHeaderOffset = () => {
+        if (!header) return;
+        const offset = header.offsetHeight || 0;
+        document.body.style.paddingTop = offset + 'px';
+        document.documentElement.style.setProperty('--header-height', offset + 'px');
+    };
+    // Initial calculation and on resize
+    updateHeaderOffset();
+    window.addEventListener('resize', updateHeaderOffset);
+
+    const backdrop = document.querySelector('.nav-backdrop');
+
+    function toggleMenu() {
+        menuBtn.classList.toggle("active");
+        navigation.classList.toggle("active");
+        backdrop.classList.toggle("active");
+        // Prevent body scroll when menu is open
+        document.body.style.overflow = navigation.classList.contains('active') ? 'hidden' : '';
+    }
+
+    function closeMenu() {
+        menuBtn.classList.remove("active");
+        navigation.classList.remove("active");
+        backdrop.classList.remove("active");
+        document.body.style.overflow = '';
+    }
+
+    if (menuBtn && navigation) {
+        menuBtn.addEventListener('click', toggleMenu);
+    }
+
+    // Close menu when clicking on backdrop
+    if (backdrop) {
+        backdrop.addEventListener('click', closeMenu);
+    }
+
+    // Close menu when clicking a navigation link (for mobile)
+    const navLinks = document.querySelectorAll('.navigation-items a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 1100) {
+                closeMenu();
+            }
+        });
+    });
+
+    const HIDE_THRESHOLD = 120; // px before header can hide on scroll down
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+
+        // Solid header at top; ensure shown
+        if (currentScroll <= 0) {
+            header.classList.remove('scroll-down');
+            header.classList.add('scroll-up');
+            header.classList.remove('scrolled');
+            updateHeaderOffset();
+            lastScroll = 0;
+            return;
+        }
+
+        // Add shadow when page is scrolled at all
+        header.classList.add('scrolled');
+
+        // Hide only after threshold while scrolling down
+        if (currentScroll > lastScroll && currentScroll > HIDE_THRESHOLD) {
+            header.classList.add('scroll-down');
+            header.classList.remove('scroll-up');
+        } else if (currentScroll < lastScroll) {
+            // Show on scroll up
+            header.classList.remove('scroll-down');
+            header.classList.add('scroll-up');
+        }
+
+        lastScroll = currentScroll;
+        updateHeaderOffset();
+    });
+});
+</script>

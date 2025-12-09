@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ hotel.name }} - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/establishments.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero-section" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{{ url_for('static', filename='uploads/' + hotel.image) if hotel.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}');">
+        <div class="hero-content">
+            <div class="breadcrumb">
+                <a href="{{ url_for('index') }}">Home</a>
+                <span>/</span>
+                <a href="{{ url_for('plan') }}">Plan Your Visit</a>
+                <span>/</span>
+                <a href="{{ url_for('stay') }}">Where to Stay</a>
+                <span>/</span>
+                <span>{{ hotel.name }}</span>
+            </div>
+            <h1>{{ hotel.name }}</h1>
+            <div class="hero-meta">
+                <div class="rating">
+                    {% for i in range(hotel.rating|int) %}
+                    <i class="fas fa-star"></i>
+                    {% endfor %}
+                    {% if hotel.rating % 1 >= 0.5 %}
+                    <i class="fas fa-star-half-alt"></i>
+                    {% endif %}
+                    <span>{{ hotel.rating }}/5</span>
+                </div>
+                <div class="location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ hotel.address }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container establishment-detail">
+        <div class="content-wrapper">
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Navigation Tabs -->
+                <div class="detail-tabs">
+                    <button class="tab-btn active" data-tab="overview">
+                        <i class="fas fa-info-circle"></i>
+                        Overview
+                    </button>
+                    <button class="tab-btn" data-tab="amenities">
+                        <i class="fas fa-concierge-bell"></i>
+                        Amenities
+                    </button>
+                    <button class="tab-btn" data-tab="rooms">
+                        <i class="fas fa-bed"></i>
+                        Rooms
+                    </button>
+                    <button class="tab-btn" data-tab="gallery">
+                        <i class="fas fa-images"></i>
+                        Gallery
+                    </button>
+                    <button class="tab-btn" data-tab="location">
+                        <i class="fas fa-map"></i>
+                        Location
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content active" id="overview">
+                    <div class="section-card">
+                        <h2>About {{ hotel.name }}</h2>
+                        <p class="description">{{ hotel.description }}</p>
+
+                        <div class="highlights">
+                            <h3>Hotel Highlights</h3>
+                            <ul class="highlights-list">
+                                {% if hotel.highlights %}
+                                    {% for highlight in hotel.highlights %}
+                                    <li><i class="fas fa-check-circle"></i>{{ highlight }}</li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li><i class="fas fa-check-circle"></i>Comfortable and spacious rooms</li>
+                                    <li><i class="fas fa-check-circle"></i>Friendly and attentive staff</li>
+                                    <li><i class="fas fa-check-circle"></i>Strategic location near attractions</li>
+                                    <li><i class="fas fa-check-circle"></i>Clean and well-maintained facilities</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+
+                        <div class="policies">
+                            <h3>Important Information</h3>
+                            <div class="policy-grid">
+                                <div class="policy-item">
+                                    <i class="fas fa-clock"></i>
+                                    <div>
+                                        <strong>Check-in:</strong>
+                                        <p>{{ hotel.checkin_time or '2:00 PM' }}</p>
+                                    </div>
+                                </div>
+                                <div class="policy-item">
+                                    <i class="fas fa-clock"></i>
+                                    <div>
+                                        <strong>Check-out:</strong>
+                                        <p>{{ hotel.checkout_time or '12:00 PM' }}</p>
+                                    </div>
+                                </div>
+                                <div class="policy-item">
+                                    <i class="fas fa-ban-smoking"></i>
+                                    <div>
+                                        <strong>Smoking Policy:</strong>
+                                        <p>{{ hotel.smoking_policy or 'Non-smoking rooms available' }}</p>
+                                    </div>
+                                </div>
+                                <div class="policy-item">
+                                    <i class="fas fa-paw"></i>
+                                    <div>
+                                        <strong>Pets:</strong>
+                                        <p>{{ hotel.pet_policy or 'Contact hotel for pet policy' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="amenities">
+                    <div class="section-card">
+                        <h2>Amenities & Services</h2>
+                        <div class="amenities-grid">
+                            {% if hotel.amenities %}
+                                {% for amenity in hotel.amenities %}
+                                <div class="amenity-item">
+                                    <i class="fas fa-{{ amenity.icon or 'check' }}"></i>
+                                    <span>{{ amenity.name }}</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="amenity-item">
+                                    <i class="fas fa-wifi"></i>
+                                    <span>Free Wi-Fi</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-parking"></i>
+                                    <span>Free Parking</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-swimming-pool"></i>
+                                    <span>Swimming Pool</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-utensils"></i>
+                                    <span>Restaurant</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-dumbbell"></i>
+                                    <span>Fitness Center</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-concierge-bell"></i>
+                                    <span>24/7 Front Desk</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-tv"></i>
+                                    <span>Cable TV</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-shower"></i>
+                                    <span>Hot & Cold Shower</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-wind"></i>
+                                    <span>Air Conditioning</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-broom"></i>
+                                    <span>Daily Housekeeping</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Safety Deposit Box</span>
+                                </div>
+                                <div class="amenity-item">
+                                    <i class="fas fa-coffee"></i>
+                                    <span>Complimentary Breakfast</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="rooms">
+                    <div class="section-card">
+                        <h2>Room Types</h2>
+                        <div class="rooms-grid">
+                            {% if hotel.rooms %}
+                                {% for room in hotel.rooms %}
+                                <div class="room-card">
+                                    <div class="room-image">
+                                        <img src="{{ url_for('static', filename='uploads/' + room.image) if room.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ room.type }}">
+                                        <div class="room-price">₱{{ room.price }}/night</div>
+                                    </div>
+                                    <div class="room-info">
+                                        <h3>{{ room.type }}</h3>
+                                        <p>{{ room.description }}</p>
+                                        <div class="room-features">
+                                            <span><i class="fas fa-users"></i> {{ room.capacity or '2' }} Guests</span>
+                                            <span><i class="fas fa-bed"></i> {{ room.bed_type or 'Queen Bed' }}</span>
+                                            <span><i class="fas fa-ruler-combined"></i> {{ room.size or '25' }} sqm</span>
+                                        </div>
+                                        <ul class="room-amenities">
+                                            {% for feature in room.features %}
+                                            <li><i class="fas fa-check"></i>{{ feature }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="room-card">
+                                    <div class="room-image">
+                                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Standard Room">
+                                        <div class="room-price">₱1,500/night</div>
+                                    </div>
+                                    <div class="room-info">
+                                        <h3>Standard Room</h3>
+                                        <p>Comfortable room with essential amenities for a pleasant stay.</p>
+                                        <div class="room-features">
+                                            <span><i class="fas fa-users"></i> 2 Guests</span>
+                                            <span><i class="fas fa-bed"></i> Queen Bed</span>
+                                            <span><i class="fas fa-ruler-combined"></i> 25 sqm</span>
+                                        </div>
+                                        <ul class="room-amenities">
+                                            <li><i class="fas fa-check"></i>Air Conditioning</li>
+                                            <li><i class="fas fa-check"></i>Private Bathroom</li>
+                                            <li><i class="fas fa-check"></i>Free Wi-Fi</li>
+                                            <li><i class="fas fa-check"></i>Cable TV</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="room-card">
+                                    <div class="room-image">
+                                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Deluxe Room">
+                                        <div class="room-price">₱2,500/night</div>
+                                    </div>
+                                    <div class="room-info">
+                                        <h3>Deluxe Room</h3>
+                                        <p>Spacious room with premium amenities and enhanced comfort.</p>
+                                        <div class="room-features">
+                                            <span><i class="fas fa-users"></i> 3 Guests</span>
+                                            <span><i class="fas fa-bed"></i> King Bed</span>
+                                            <span><i class="fas fa-ruler-combined"></i> 35 sqm</span>
+                                        </div>
+                                        <ul class="room-amenities">
+                                            <li><i class="fas fa-check"></i>Air Conditioning</li>
+                                            <li><i class="fas fa-check"></i>Premium Bathroom</li>
+                                            <li><i class="fas fa-check"></i>Free Wi-Fi</li>
+                                            <li><i class="fas fa-check"></i>Smart TV</li>
+                                            <li><i class="fas fa-check"></i>Mini Refrigerator</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="gallery">
+                    <div class="section-card">
+                        <h2>Photo Gallery</h2>
+                        <div class="photo-gallery">
+                            {% if hotel.gallery %}
+                                {% for photo in hotel.gallery %}
+                                <div class="gallery-item">
+                                    <img src="{{ url_for('static', filename='uploads/' + photo) }}" alt="{{ hotel.name }} - Photo {{ loop.index }}">
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="gallery-item">
+                                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ hotel.name }} - Exterior">
+                                </div>
+                                <div class="gallery-item">
+                                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ hotel.name }} - Room">
+                                </div>
+                                <div class="gallery-item">
+                                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ hotel.name }} - Facilities">
+                                </div>
+                                <div class="gallery-item">
+                                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ hotel.name }} - Interior">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="location">
+                    <div class="section-card">
+                        <h2>Location & Contact</h2>
+                        <div class="location-section">
+                            <div class="contact-details">
+                                <div class="contact-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <div>
+                                        <strong>Address:</strong>
+                                        <p>{{ hotel.address }}</p>
+                                    </div>
+                                </div>
+                                <div class="contact-item">
+                                    <i class="fas fa-phone"></i>
+                                    <div>
+                                        <strong>Phone:</strong>
+                                        <p>{{ hotel.phone }}</p>
+                                    </div>
+                                </div>
+                                {% if hotel.email %}
+                                <div class="contact-item">
+                                    <i class="fas fa-envelope"></i>
+                                    <div>
+                                        <strong>Email:</strong>
+                                        <p>{{ hotel.email }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if hotel.website %}
+                                <div class="contact-item">
+                                    <i class="fas fa-globe"></i>
+                                    <div>
+                                        <strong>Website:</strong>
+                                        <p><a href="{{ hotel.website }}" target="_blank">{{ hotel.website }}</a></p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="map-container">
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=1!1m18!1m12!1m3!1d3871.5!2d{{ hotel.longitude or '121.4313' }}!3d{{ hotel.latitude or '14.1322' }}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTTCsDA3JzU1LjkiTiAxMjHCsDI1JzUyLjciRQ!5e0!3m2!1sen!2sph!4v1234567890"
+                                    width="100%"
+                                    height="400"
+                                    style="border:0;"
+                                    allowfullscreen=""
+                                    loading="lazy">
+                                </iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Quick Info Card -->
+                <div class="sidebar-card quick-info">
+                    <div class="price-info">
+                        <span class="label">Starting from</span>
+                        <div class="price">₱{{ hotel.price_min or '1,500' }}</div>
+                        <span class="per-night">per night</span>
+                    </div>
+                    <div class="rating-info">
+                        <div class="stars">
+                            {% for i in range(hotel.rating|int) %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% if hotel.rating % 1 >= 0.5 %}
+                            <i class="fas fa-star-half-alt"></i>
+                            {% endif %}
+                        </div>
+                        <span>{{ hotel.rating }}/5 ({{ hotel.reviews_count or '0' }} reviews)</span>
+                    </div>
+                    <div class="quick-contact">
+                        <a href="tel:{{ hotel.phone }}" class="contact-btn">
+                            <i class="fas fa-phone"></i>
+                            Call Now
+                        </a>
+                        {% if hotel.email %}
+                        <a href="mailto:{{ hotel.email }}" class="contact-btn">
+                            <i class="fas fa-envelope"></i>
+                            Email
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Booking Form -->
+                <div class="sidebar-card booking-form">
+                    <h3>Book Your Stay</h3>
+                    <form action="{{ url_for('submit_booking') }}" method="POST">
+                        <input type="hidden" name="hotel_id" value="{{ hotel.id }}">
+                        <div class="form-group">
+                            <label for="checkin">
+                                <i class="fas fa-calendar-check"></i>
+                                Check-in Date
+                            </label>
+                            <input type="date" id="checkin" name="checkin" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="checkout">
+                                <i class="fas fa-calendar-times"></i>
+                                Check-out Date
+                            </label>
+                            <input type="date" id="checkout" name="checkout" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="guests">
+                                <i class="fas fa-users"></i>
+                                Number of Guests
+                            </label>
+                            <select id="guests" name="guests" required>
+                                <option value="">Select guests</option>
+                                <option value="1">1 Guest</option>
+                                <option value="2">2 Guests</option>
+                                <option value="3">3 Guests</option>
+                                <option value="4">4 Guests</option>
+                                <option value="5+">5+ Guests</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="room_type">
+                                <i class="fas fa-bed"></i>
+                                Room Type
+                            </label>
+                            <select id="room_type" name="room_type" required>
+                                <option value="">Select room type</option>
+                                {% if hotel.rooms %}
+                                    {% for room in hotel.rooms %}
+                                    <option value="{{ room.id }}">{{ room.type }}</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="standard">Standard Room</option>
+                                    <option value="deluxe">Deluxe Room</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="name">
+                                <i class="fas fa-user"></i>
+                                Full Name
+                            </label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact">
+                                <i class="fas fa-phone"></i>
+                                Contact Number
+                            </label>
+                            <input type="tel" id="contact" name="contact" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">
+                                <i class="fas fa-envelope"></i>
+                                Email Address
+                            </label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Submit Booking Request
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Similar Hotels -->
+                <div class="sidebar-card similar-places">
+                    <h3>Similar Hotels</h3>
+                    {% if similar_hotels %}
+                        {% for similar in similar_hotels %}
+                        <a href="{{ url_for('indiv_hotel', id=similar.id) }}" class="similar-item">
+                            <img src="{{ url_for('static', filename='uploads/' + similar.image) if similar.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ similar.name }}">
+                            <div class="similar-info">
+                                <h4>{{ similar.name }}</h4>
+                                <div class="similar-rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>{{ similar.rating }}</span>
+                                </div>
+                                <div class="similar-price">From ₱{{ similar.price_min }}</div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-similar">More hotels coming soon!</p>
+                    {% endif %}
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding content
+                button.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Gallery lightbox
+        document.querySelectorAll('.gallery-item img').forEach(img => {
+            img.addEventListener('click', () => {
+                const lightbox = document.createElement('div');
+                lightbox.className = 'lightbox';
+                lightbox.innerHTML = `
+                    <span class="close-lightbox">&times;</span>
+                    <img src="${img.src}" alt="${img.alt}">
+                `;
+                document.body.appendChild(lightbox);
+
+                lightbox.addEventListener('click', (e) => {
+                    if (e.target.className === 'lightbox' || e.target.className === 'close-lightbox') {
+                        lightbox.remove();
+                    }
+                });
+            });
+        });
+
+        // Set minimum date for booking
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('checkin').setAttribute('min', today);
+
+        document.getElementById('checkin').addEventListener('change', (e) => {
+            const checkinDate = e.target.value;
+            document.getElementById('checkout').setAttribute('min', checkinDate);
+        });
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>
