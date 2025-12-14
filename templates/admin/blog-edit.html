@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if blog else 'Add' }} Blog - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{{ 'Edit' if blog else 'Add' }} Blog Post</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-section">
+            <form class="form-container" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input type="text" id="title" name="title" value="{{ blog.title if blog else '' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="author">Author</label>
+                        <input type="text" id="author" name="author" value="{{ blog.author if blog else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="Adventure" {{ 'selected' if blog and blog.category == 'Adventure' else '' }}>Adventure</option>
+                            <option value="Travel Guide" {{ 'selected' if blog and blog.category == 'Travel Guide' else '' }}>Travel Guide</option>
+                            <option value="Food" {{ 'selected' if blog and blog.category == 'Food' else '' }}>Food</option>
+                            <option value="Culture" {{ 'selected' if blog and blog.category == 'Culture' else '' }}>Culture</option>
+                            <option value="Nature" {{ 'selected' if blog and blog.category == 'Nature' else '' }}>Nature</option>
+                            <option value="Shopping" {{ 'selected' if blog and blog.category == 'Shopping' else '' }}>Shopping</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Content *</label>
+                    <textarea id="content" name="content" rows="10" required>{{ blog.content if blog else '' }}</textarea>
+                </div>
+
+                {% if blog %}
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="pending" {{ 'selected' if blog.status == 'pending' else '' }}>Pending</option>
+                        <option value="approved" {{ 'selected' if blog.status == 'approved' else '' }}>Approved</option>
+                        <option value="rejected" {{ 'selected' if blog.status == 'rejected' else '' }}>Rejected</option>
+                    </select>
+                </div>
+
+                {% if blog.image_url %}
+                <div class="form-group">
+                    <label>Current Image</label>
+                    <img src="{{ blog.image_url }}" alt="Current image" style="max-width: 300px; border-radius: 8px;">
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_blogs') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="footer-main">
+        <div class="footer-container">
+            <!-- About Column -->
+            <div class="footer-column">
+                <div class="footer-logo">
+                    <img src="{{ url_for('static', filename='assets/images/logo/logo.png') }}" alt="Liliw Tourism">
+                    <h3>Liliw Tourism</h3>
+                </div>
+                <p>Discover the beauty, culture, and adventure of Liliw, Laguna - home to pristine waterfalls, rich heritage, and the finest handcrafted footwear in the Philippines.</p>
+                <div class="footer-social">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+
+            <!-- Quick Links Column -->
+            <div class="footer-column">
+                <h4>Explore</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('home') }}"><i class="fas fa-angle-right"></i> Home</a></li>
+                    <li><a href="{{ url_for('attractions') }}"><i class="fas fa-angle-right"></i> Attractions</a></li>
+                    <li><a href="{{ url_for('festivals') }}"><i class="fas fa-angle-right"></i> Festivals & Events</a></li>
+                    <li><a href="{{ url_for('products') }}"><i class="fas fa-angle-right"></i> Local Products</a></li>
+                    <li><a href="{{ url_for('gallery') }}"><i class="fas fa-angle-right"></i> Gallery</a></li>
+                    <li><a href="{{ url_for('blog') }}"><i class="fas fa-angle-right"></i> Blog</a></li>
+                </ul>
+            </div>
+
+            <!-- Plan Your Trip Column -->
+            <div class="footer-column">
+                <h4>Plan Your Trip</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('stay') }}"><i class="fas fa-angle-right"></i> Where to Stay</a></li>
+                    <li><a href="{{ url_for('eat') }}"><i class="fas fa-angle-right"></i> Where to Eat</a></li>
+                    <li><a href="{{ url_for('travel_tips') }}"><i class="fas fa-angle-right"></i> Travel Tips</a></li>
+                    <li><a href="{{ url_for('map') }}"><i class="fas fa-angle-right"></i> Interactive Map</a></li>
+                    <li><a href="{{ url_for('tourism_info') }}"><i class="fas fa-angle-right"></i> Tourism Information</a></li>
+                    <li><a href="{{ url_for('contact') }}"><i class="fas fa-angle-right"></i> Contact Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact Info Column -->
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <ul class="footer-contact">
+                    <li>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>Address</strong>
+                            <span>Municipal Tourism Office<br>Liliw, Laguna, Philippines</span>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <strong>Phone</strong>
+                            <span>(049) 123-4567</span>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <span>tourism@liliw.gov.ph</span>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <strong>Hours</strong>
+                            <span>Mon - Fri: 8:00 AM - 5:00 PM</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+        <div class="footer-container">
+            <div class="footer-bottom-content">
+                <p>&copy; 2025 Liliw Tourism. All rights reserved.</p>
+                <ul class="footer-bottom-links">
+                    <li><a href="{{ url_for('privacy') }}">Privacy Policy</a></li>
+                    <li><a href="{{ url_for('terms') }}">Terms of Use</a></li>
+                    <li><a href="{{ url_for('cookie') }}">Cookie Policy</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+/* Footer Styles */
+.site-footer {
+    background: #1a1a1a;
+    color: #e0e0e0;
+    margin-top: 80px;
+}
+
+.footer-main {
+    padding: 60px 40px 40px;
+}
+
+.footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    gap: 50px;
+}
+
+.footer-column h4 {
+    color: white;
+    font-size: 1.3em;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.footer-logo img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.footer-logo h3 {
+    color: white;
+    font-size: 1.4em;
+    margin: 0;
+}
+
+.footer-column p {
+    line-height: 1.7;
+    color: #b0b0b0;
+    margin-bottom: 25px;
+}
+
+.footer-social {
+    display: flex;
+    gap: 12px;
+}
+
+.footer-social a {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.footer-social a:hover {
+    background: #0229bf;
+    transform: translateY(-3px);
+}
+
+.footer-links {
+    list-style: none;
+}
+
+.footer-links li {
+    margin-bottom: 12px;
+}
+
+.footer-links a {
+    color: #b0b0b0;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #0229bf;
+    padding-left: 5px;
+}
+
+.footer-links i {
+    font-size: 0.8em;
+}
+
+.footer-contact {
+    list-style: none;
+}
+
+.footer-contact li {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.footer-contact i {
+    font-size: 1.2em;
+    color: #0229bf;
+    min-width: 20px;
+    margin-top: 3px;
+}
+
+.footer-contact strong {
+    display: block;
+    color: white;
+    margin-bottom: 5px;
+    font-size: 0.95em;
+}
+
+.footer-contact span {
+    color: #b0b0b0;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
+/* Newsletter Section */
+.footer-newsletter {
+    background: #0229bf;
+    padding: 40px;
+}
+
+.newsletter-content {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 40px;
+    align-items: center;
+}
+
+.newsletter-text h4 {
+    color: white;
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.newsletter-text p {
+    color: rgba(255,255,255,0.9);
+    margin: 0;
+}
+
+.newsletter-form {
+    display: flex;
+    gap: 10px;
+}
+
+.newsletter-form input {
+    flex: 1;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.95em;
+}
+
+.newsletter-form button {
+    padding: 15px 30px;
+    background: #1a1a1a;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.newsletter-form button:hover {
+    background: #333;
+    transform: translateY(-2px);
+}
+
+/* Footer Bottom */
+.footer-bottom {
+    background: #0f0f0f;
+    padding: 25px 40px;
+}
+
+.footer-bottom-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-bottom p {
+    color: #888;
+    margin: 0;
+}
+
+.footer-bottom-links {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    margin: 0;
+}
+
+.footer-bottom-links a {
+    color: #888;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-bottom-links a:hover {
+    color: #0229bf;
+}
+
+/* Responsive */
+@media(max-width:1040px){
+    .footer-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 40px;
+    }
+
+    .newsletter-content {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        text-align: center;
+    }
+}
+
+@media(max-width:768px){
+    .footer-main {
+        padding: 40px 20px 30px;
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr;
+        gap: 35px;
+    }
+
+    .footer-newsletter {
+        padding: 30px 20px;
+    }
+
+    .newsletter-form {
+        flex-direction: column;
+    }
+
+    .newsletter-form button {
+        justify-content: center;
+    }
+
+    .footer-bottom {
+        padding: 20px;
+    }
+
+    .footer-bottom-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .footer-bottom-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>

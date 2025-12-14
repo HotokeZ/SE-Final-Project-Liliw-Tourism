@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1a5f2a 0%, #2d8f4a 50%, #1a5f2a 100%);
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        .email-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+        }
+        
+        .email-icon i {
+            font-size: 3rem;
+            color: #f39c12;
+        }
+        
+        .auth-header h1 {
+            color: #1a5f2a;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .auth-header p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .user-email {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-weight: 600;
+            color: #1a5f2a;
+        }
+        
+        .instructions {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+        
+        .instructions h4 {
+            color: #1565c0;
+            margin: 0 0 1rem 0;
+        }
+        
+        .instructions ol {
+            margin: 0;
+            padding-left: 1.5rem;
+            color: #1976d2;
+        }
+        
+        .instructions li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn-resend {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #1a5f2a, #2d8f4a);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 1rem;
+        }
+        
+        .btn-resend:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 95, 42, 0.3);
+        }
+        
+        .auth-footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .auth-footer a {
+            color: #1a5f2a;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .flash-messages {
+            margin-bottom: 1.5rem;
+        }
+        
+        .flash-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+        
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .flash-message.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <a href="{{ url_for('index') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+        
+        <div class="auth-card">
+            <div class="email-icon">
+                <i class="fas fa-envelope-open-text"></i>
+            </div>
+            
+            <div class="auth-header">
+                <h1>Verify Your Email</h1>
+                <p>We've sent a verification link to your email address. Please check your inbox to verify your account.</p>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <div class="user-email">
+                <i class="fas fa-at"></i> {{ session.get('user_email', 'your email') }}
+            </div>
+            
+            <div class="instructions">
+                <h4><i class="fas fa-list-ol"></i> What to do:</h4>
+                <ol>
+                    <li>Check your email inbox</li>
+                    <li>Look for an email from Liliw Tourism</li>
+                    <li>Click the verification link in the email</li>
+                    <li>Come back here and refresh or login again</li>
+                </ol>
+            </div>
+            
+            <p style="color: #666;">Didn't receive the email? Check your spam folder or request a new one.</p>
+            
+            <form action="{{ url_for('resend_verification') }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn-resend">
+                    <i class="fas fa-paper-plane"></i> Resend Verification Email
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p><a href="{{ url_for('user_logout') }}">Logout</a> and login with a different account</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

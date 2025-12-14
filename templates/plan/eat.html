@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Where to Eat - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/establishments.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+{% include 'header.html' %}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1 class="hero-title">Where to Eat</h1>
+        <p class="hero-subtitle">Discover the flavors of Liliw - from traditional Filipino cuisine to modern cafes and local delicacies</p>
+    </div>
+</section>
+
+<!-- Filter Section -->
+<section class="filter-section">
+    <div class="container">
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-category="all">
+                <i class="fas fa-utensils"></i> All
+            </button>
+            <button class="filter-btn" data-category="restaurant">
+                <i class="fas fa-store"></i> Restaurants
+            </button>
+            <button class="filter-btn" data-category="cafe">
+                <i class="fas fa-coffee"></i> Cafes
+            </button>
+            <button class="filter-btn" data-category="street-food">
+                <i class="fas fa-hotdog"></i> Street Food
+            </button>
+            <button class="filter-btn" data-category="bakery">
+                <i class="fas fa-bread-slice"></i> Bakeries
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Establishments Grid -->
+<section class="establishments-section">
+    <div class="container">
+        <div class="establishments-grid">
+            <!-- Restaurant Card 1 -->
+            <div class="establishment-card" data-category="restaurant">
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Araña's Grill and Restaurant">
+                    <span class="badge badge-restaurant">Restaurant</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="establishment-name">Araña's Grill and Restaurant</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span class="rating-number">(4.5)</span>
+                    </div>
+                    <p class="description">Famous for authentic Filipino dishes and grilled specialties. A local favorite serving generous portions with hometown flavors.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-drumstick-bite"></i>
+                            <span>Filipino Cuisine</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-snowflake"></i>
+                            <span>Air-Conditioned</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-users"></i>
+                            <span>Family-Friendly</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-range">₱₱ - ₱₱₱</span>
+                        <a href="{{ url_for('indiv_resto', resto_id=1) }}" class="btn-details">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cafe Card 2 -->
+            <div class="establishment-card" data-category="cafe">
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Kape Isla Coffee Shop">
+                    <span class="badge badge-cafe">Cafe</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="establishment-name">Kape Isla Coffee Shop</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="rating-number">(5.0)</span>
+                    </div>
+                    <p class="description">Cozy cafe serving premium local coffee, pastries, and light meals. Perfect spot for remote work or casual meetings.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-wifi"></i>
+                            <span>Free WiFi</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-coffee"></i>
+                            <span>Specialty Coffee</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-plug"></i>
+                            <span>Power Outlets</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-range">₱ - ₱₱</span>
+                        <a href="{{ url_for('indiv_resto', resto_id=2) }}" class="btn-details">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bakery Card 3 -->
+            <div class="establishment-card" data-category="bakery">
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Uraro House">
+                    <span class="badge badge-bakery">Bakery</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="establishment-name">Liliw Uraro House</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="rating-number">(4.8)</span>
+                    </div>
+                    <p class="description">Home of the famous Liliw uraro cookies and local pastries. Perfect for pasalubong and sweet treats.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-cookie"></i>
+                            <span>Fresh Pastries</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-gift"></i>
+                            <span>Gift Packages</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-award"></i>
+                            <span>Local Specialty</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-range">₱</span>
+                        <a href="{{ url_for('indiv_resto', resto_id=3) }}" class="btn-details">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restaurant Card 4 -->
+            <div class="establishment-card" data-category="restaurant">
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Bahay Kubo Restaurant">
+                    <span class="badge badge-restaurant">Restaurant</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="establishment-name">Bahay Kubo Restaurant</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="rating-number">(4.2)</span>
+                    </div>
+                    <p class="description">Traditional Filipino dining experience in a native bahay kubo setting. Specializes in farm-to-table fresh vegetables.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-leaf"></i>
+                            <span>Organic Options</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-tree"></i>
+                            <span>Outdoor Seating</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-camera"></i>
+                            <span>Instagrammable</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-range">₱₱</span>
+                        <a href="{{ url_for('indiv_resto', resto_id=4) }}" class="btn-details">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Street Food Card 5 -->
+            <div class="establishment-card" data-category="street-food">
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Plaza Food Stalls">
+                    <span class="badge badge-street">Street Food</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="establishment-name">Plaza Food Stalls</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span class="rating-number">(4.6)</span>
+                    </div>
+                    <p class="description">Collection of food stalls offering local street food favorites. From fish balls to isaw, experience authentic Filipino street food culture.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-peso-sign"></i>
+                            <span>Budget-Friendly</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-moon"></i>
+                            <span>Open at Night</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-fire"></i>
+                            <span>Fresh Grilled</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-range">₱</span>
+                        <a href="{{ url_for('indiv_resto', resto_id=5) }}" class="btn-details">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cafe Card 6 -->
+            <div class="establishment-card" data-category="cafe">
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Taza Cafe & Bistro">
+                    <span class="badge badge-cafe">Cafe</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="establishment-name">Taza Cafe & Bistro</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span class="rating-number">(4.7)</span>
+                    </div>
+                    <p class="description">Modern cafe and bistro serving international and fusion cuisine. Great ambiance for dates and group gatherings.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-cocktail"></i>
+                            <span>Specialty Drinks</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-snowflake"></i>
+                            <span>Air-Conditioned</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-music"></i>
+                            <span>Live Music</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-range">₱₱ - ₱₱₱</span>
+                        <a href="{{ url_for('indiv_resto', resto_id=6) }}" class="btn-details">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restaurant Card 7 -->
+            <div class="establishment-card" data-category="restaurant">
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Lakeside Grill">
+                    <span class="badge badge-restaurant">Restaurant</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="establishment-name">Liliw Lakeside Grill</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="rating-number">(4.9)</span>
+                    </div>
+                    <p class="description">Scenic lakeside dining with fresh seafood and grilled specialties. Enjoy your meal with a beautiful view of nature.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-fish"></i>
+                            <span>Fresh Seafood</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-water"></i>
+                            <span>Lake View</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-umbrella-beach"></i>
+                            <span>Al Fresco Dining</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-range">₱₱₱</span>
+                        <a href="{{ url_for('indiv_resto', resto_id=7) }}" class="btn-details">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bakery Card 8 -->
+            <div class="establishment-card" data-category="bakery">
+                <div class="card-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Pan de Liliw Bakeshop">
+                    <span class="badge badge-bakery">Bakery</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="establishment-name">Pan de Liliw Bakeshop</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="rating-number">(4.3)</span>
+                    </div>
+                    <p class="description">Traditional bakery serving freshly baked pandesal, ensaymada, and local bread favorites since 1985.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-bread-slice"></i>
+                            <span>Fresh Daily</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-clock"></i>
+                            <span>Early Opening</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-heart"></i>
+                            <span>Local Favorite</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-range">₱</span>
+                        <a href="{{ url_for('indiv_resto', resto_id=8) }}" class="btn-details">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dining Tips Section -->
+<section class="tips-section">
+    <div class="container">
+        <h2 class="section-title">Dining Tips</h2>
+        <div class="tips-grid">
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Best Time to Visit</h3>
+                <p>Most restaurants are busiest during lunch (12-2 PM) and dinner (6-8 PM). Visit during off-peak hours for a more relaxed experience. Street food stalls typically open in the late afternoon and evening.</p>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3>Payment Methods</h3>
+                <p>While larger restaurants accept cards, many local eateries and street food vendors prefer cash. It's best to have small bills ready. Some establishments now accept GCash and other e-wallets.</p>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <h3>Local Etiquette</h3>
+                <p>Don't be shy to eat with your hands, especially when enjoying traditional Filipino meals. Say "Salamat" (thank you) to show appreciation. Tipping is appreciated but not mandatory - 10% is customary in restaurants.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/establishments.css') }}">
+
+{% include 'footer.html' %}

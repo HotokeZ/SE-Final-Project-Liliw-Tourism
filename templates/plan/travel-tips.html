@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Tips - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/travel-tips.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+{% include 'header.html' %}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1 class="hero-title">Travel Tips & Guide</h1>
+        <p class="hero-subtitle">Everything you need to know for an amazing trip to Liliw</p>
+    </div>
+</section>
+
+<!-- Introduction Section -->
+<section class="intro-section">
+    <div class="container">
+        <div class="intro-content">
+            <p class="lead-text">
+                Planning your visit to Liliw, Laguna? This comprehensive guide will help you make the most of your trip.
+                From transportation tips to local customs, we've gathered essential information to ensure you have a smooth
+                and memorable experience in the "Footwear Capital of Laguna." Whether you're a first-time visitor or a
+                returning traveler, these tips will help you navigate Liliw like a local.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Tips Categories Section -->
+<section class="tips-categories-section">
+    <div class="container">
+        <!-- Getting There -->
+        <div class="category-card">
+            <div class="category-header">
+                <div class="category-icon">
+                    <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <h2 class="category-title">Getting There</h2>
+            </div>
+            <div class="category-content">
+                <ul class="tips-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>From Manila, take a bus from Cubao or Alabang terminals bound for Santa Cruz, Laguna (2-3 hours). From Santa Cruz, take a jeepney or tricycle to Liliw (30 minutes).</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>If driving, take SLEX to Calamba Exit, then follow the Calamba-Santa Cruz-Liliw route. Total travel time is approximately 2.5 hours from Metro Manila.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Tricycles are the primary mode of transportation within Liliw. Negotiate fares before boarding - typical rates range from ₱10-50 depending on distance.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Consider hiring a private van or car for day trips if traveling in a group. Local tour operators offer packages that include transportation and guides.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Download offline maps before your trip as internet connectivity may be limited in some areas around Liliw.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Best Time to Visit -->
+        <div class="category-card">
+            <div class="category-header">
+                <div class="category-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h2 class="category-title">Best Time to Visit</h2>
+            </div>
+            <div class="category-content">
+                <ul class="tips-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>The dry season (November to April) is ideal for visiting Liliw. Expect pleasant weather perfect for walking tours and outdoor activities.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Plan your visit during the Gat Tayaw Tsinelas Festival (April 10-18) to experience Liliw's vibrant culture and footwear showcase at its peak.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Weekends can be crowded, especially at popular attractions. Visit on weekdays for a more peaceful experience and better photo opportunities.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Rainy season (June to October) sees fewer tourists but brings lush greenery. Bring umbrellas and waterproof gear if visiting during this period.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Early morning visits (7-9 AM) to natural attractions offer cooler temperatures and better lighting for photography.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- What to Bring -->
+        <div class="category-card">
+            <div class="category-header">
+                <div class="category-icon">
+                    <i class="fas fa-suitcase"></i>
+                </div>
+                <h2 class="category-title">What to Bring</h2>
+            </div>
+            <div class="category-content">
+                <ul class="tips-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Comfortable walking shoes are essential - you'll be exploring heritage sites, shoe shops, and natural attractions on foot. Bring extra pairs if visiting during rainy season.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Pack light, breathable clothing suitable for tropical weather. Include a light jacket or sweater for air-conditioned establishments and cool mornings.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Don't forget sun protection: sunscreen (SPF 50+), sunglasses, hat or cap. The Philippine sun can be intense, especially midday.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Bring insect repellent for outdoor activities and nature trips. Reusable water bottle to stay hydrated throughout your exploration.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Camera or smartphone with good storage space - Liliw offers countless Instagram-worthy spots. Power bank is highly recommended.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Safety Tips -->
+        <div class="category-card">
+            <div class="category-header">
+                <div class="category-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2 class="category-title">Safety & Health</h2>
+            </div>
+            <div class="category-content">
+                <ul class="tips-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Liliw is generally safe for tourists. However, keep valuables secure and be aware of your surroundings, especially in crowded markets and during festivals.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Drink bottled water only. While tap water is treated, it's safer to stick with bottled water to avoid any stomach issues during your trip.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Bring basic first aid supplies and any personal medications. The nearest hospital is in Santa Cruz, about 30 minutes away.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Save emergency contact numbers: Police - 117, Fire - 160, Liliw Municipal Hall - (049) 557-XXXX. Ask your hotel for local emergency contacts.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>When swimming in natural pools or springs, follow posted safety guidelines and never swim alone. Check water conditions with locals before diving in.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Money Matters -->
+        <div class="category-card">
+            <div class="category-header">
+                <div class="category-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h2 class="category-title">Money Matters</h2>
+            </div>
+            <div class="category-content">
+                <ul class="tips-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>ATMs are available in the town center, but it's wise to withdraw cash before arriving in Liliw. The nearest major banks are in Santa Cruz.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Most establishments prefer cash payments. Larger restaurants and hotels may accept credit cards, but smaller shops and street vendors are cash-only.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Budget approximately ₱1,500-2,500 per person per day for meals, transportation, and entrance fees. Bargaining is acceptable in local shops but be respectful.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>GCash and PayMaya are increasingly accepted in Liliw. Load up your e-wallet as a backup payment method.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Keep small bills (₱20, ₱50, ₱100) handy for tricycle fares, street food, and small purchases. Vendors may not always have change for large bills.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="faq-section">
+    <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="faq-accordion">
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How long should I spend in Liliw?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>A day trip is sufficient to see the main attractions, but staying overnight allows you to experience the town more leisurely. For a comprehensive visit including all heritage sites, natural attractions, and the shoe-making experience, we recommend 2-3 days.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Is Liliw suitable for family trips with children?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Absolutely! Liliw is very family-friendly. Children will enjoy the natural pools, heritage tours (especially the old churches), and watching how shoes are made. Most restaurants have kid-friendly menus, and accommodations welcome families.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Do people speak English in Liliw?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Basic English is widely understood, especially in tourist areas, hotels, and restaurants. However, locals primarily speak Tagalog. Learning a few basic Tagalog phrases will be appreciated and help you connect with locals better.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Are there accommodations in Liliw?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes, Liliw has several guesthouses, inns, and resorts ranging from budget to mid-range options. For more upscale accommodations, consider staying in nearby Santa Cruz or Nagcarlan. Book in advance during peak season and festivals.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What's the best souvenir to bring home from Liliw?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Handcrafted shoes and slippers are the obvious choice - they're locally made, unique, and reasonably priced. Uraro cookies are another popular pasalubong. You can also find handwoven products and local delicacies in the market.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Is there mobile internet/WiFi available?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Mobile coverage is available from major networks (Globe, Smart) in the town center. WiFi is available in most hotels, cafes, and some restaurants. However, connection speeds may be slower than in urban areas. Download important maps and information before your trip.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Can I visit Liliw as part of a Laguna tour?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes! Liliw is often included in Laguna tourism circuits. You can easily combine it with visits to Pagsanjan Falls, Nagcarlan Underground Cemetery, or the hot springs in Los Baños. Many tour operators offer day packages covering multiple Laguna destinations.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What should I know about local customs and etiquette?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Filipinos are warm and hospitable. Greet with "Magandang araw" (Good day) and use "po" and "opo" when addressing elders. Dress modestly when visiting churches. Remove shoes before entering homes. Tipping is appreciated but not mandatory - 10% in restaurants is standard.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Info Card -->
+<section class="contact-info-section">
+    <div class="container">
+        <div class="contact-card">
+            <div class="contact-icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <h3>Need More Information?</h3>
+            <p>For more travel tips and updates about Liliw, feel free to reach out to our tourism office.</p>
+            <div class="contact-details">
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <span>(049) 557-XXXX</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>tourism@liliw.gov.ph</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Liliw Tourism Office, Municipal Hall, Liliw, Laguna</span>
+                </div>
+            </div>
+            <a href="{{ url_for('tourism_info') }}" class="btn-primary">Visit Tourism Office</a>
+        </div>
+    </div>
+</section>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/travel-tips.css') }}">
+
+{% include 'footer.html' %}

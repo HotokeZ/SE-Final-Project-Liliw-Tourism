@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if hotel else 'Add' }} Hotel - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{{ 'Edit' if hotel else 'Add New' }} Hotel</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-section">
+            <form class="form-container" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name">Hotel Name *</label>
+                    <input type="text" id="name" name="name" value="{{ hotel.name if hotel else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4">{{ hotel.description if hotel else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" value="{{ hotel.address if hotel else '' }}">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" name="phone" value="{{ hotel.phone if hotel else '' }}" placeholder="e.g., (049) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" value="{{ hotel.email if hotel else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="price_range">Price Range</label>
+                    <input type="text" id="price_range" name="price_range" value="{{ hotel.price_range if hotel else '' }}" placeholder="e.g., ₱1,500 - ₱3,500 per night">
+                </div>
+
+                <div class="form-group">
+                    <label for="map_embed">Google Maps Embed URL</label>
+                    <input type="text" id="map_embed" name="map_embed" value="{{ hotel.map_embed if hotel else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="image">{{ 'Change' if hotel else 'Upload' }} Image</label>
+                    <input type="file" id="image" name="image" accept="image/*">
+                    {% if hotel and hotel.image_url %}
+                    <div style="margin-top: 10px;">
+                        <img src="{{ hotel.image_url }}" alt="Current image" style="max-width: 200px; border-radius: 8px;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if hotel %}
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_active" {{ 'checked' if hotel.is_active else '' }}> Active (visible on website)
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_hotels') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Save Changes' if hotel else 'Add Hotel' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

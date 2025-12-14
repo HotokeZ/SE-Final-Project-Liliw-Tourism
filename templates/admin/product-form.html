@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if product else 'Add' }} Product - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{{ 'Edit' if product else 'Add New' }} Product</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-section">
+            <form class="form-container" method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Product Name *</label>
+                        <input type="text" id="name" name="name" value="{{ product.name if product else '' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="Footwear" {{ 'selected' if product and product.category == 'Footwear' else '' }}>Footwear</option>
+                            <option value="Bags" {{ 'selected' if product and product.category == 'Bags' else '' }}>Bags</option>
+                            <option value="Accessories" {{ 'selected' if product and product.category == 'Accessories' else '' }}>Accessories</option>
+                            <option value="Handicrafts" {{ 'selected' if product and product.category == 'Handicrafts' else '' }}>Handicrafts</option>
+                            <option value="Food" {{ 'selected' if product and product.category == 'Food' else '' }}>Food Products</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="price_range">Price Range</label>
+                    <input type="text" id="price_range" name="price_range" value="{{ product.price_range if product else '' }}" placeholder="e.g., ₱150 - ₱500">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Short Description</label>
+                    <textarea id="description" name="description" rows="3">{{ product.description if product else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_description">Full Description</label>
+                    <textarea id="full_description" name="full_description" rows="5">{{ product.full_description if product else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="making_process">Making Process</label>
+                    <textarea id="making_process" name="making_process" rows="4" placeholder="Describe how this product is made...">{{ product.making_process if product else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="image">{{ 'Change' if product else 'Upload' }} Image</label>
+                    <input type="file" id="image" name="image" accept="image/*">
+                    {% if product and product.image_url %}
+                    <div style="margin-top: 10px;">
+                        <img src="{{ product.image_url }}" alt="Current image" style="max-width: 200px; border-radius: 8px;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if product %}
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_active" {{ 'checked' if product.is_active else '' }}> Active (visible on website)
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Save Changes' if product else 'Add Product' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

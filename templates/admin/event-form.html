@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if event else 'Add' }} Event - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{{ 'Edit' if event else 'Add New' }} Event</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-section">
+            <form class="form-container" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Event Title *</label>
+                    <input type="text" id="title" name="title" value="{{ event.title if event else '' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="event_date">Start Date *</label>
+                        <input type="date" id="event_date" name="event_date" value="{{ event.event_date if event else '' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date">End Date (optional)</label>
+                        <input type="date" id="end_date" name="end_date" value="{{ event.end_date if event else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="start_time">Start Time</label>
+                        <input type="time" id="start_time" name="start_time" value="{{ event.start_time if event else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="end_time">End Time</label>
+                        <input type="time" id="end_time" name="end_time" value="{{ event.end_time if event else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" value="{{ event.location if event else '' }}" placeholder="e.g., Liliw Town Plaza">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="Festival" {{ 'selected' if event and event.category == 'Festival' else '' }}>Festival</option>
+                            <option value="Cultural" {{ 'selected' if event and event.category == 'Cultural' else '' }}>Cultural</option>
+                            <option value="Religious" {{ 'selected' if event and event.category == 'Religious' else '' }}>Religious</option>
+                            <option value="Community" {{ 'selected' if event and event.category == 'Community' else '' }}>Community</option>
+                            <option value="Other" {{ 'selected' if event and event.category == 'Other' else '' }}>Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Short Description</label>
+                    <textarea id="description" name="description" rows="3">{{ event.description if event else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_description">Full Description</label>
+                    <textarea id="full_description" name="full_description" rows="6">{{ event.full_description if event else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="image">{{ 'Change' if event else 'Upload' }} Image</label>
+                    <input type="file" id="image" name="image" accept="image/*">
+                    {% if event and event.image_url %}
+                    <div style="margin-top: 10px;">
+                        <img src="{{ event.image_url }}" alt="Current image" style="max-width: 200px; border-radius: 8px;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_featured" {{ 'checked' if event and event.is_featured else '' }}> Featured Event (show on homepage)
+                    </label>
+                </div>
+
+                {% if event %}
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_active" {{ 'checked' if event.is_active else '' }}> Active (visible on website)
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_events') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Save Changes' if event else 'Add Event' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

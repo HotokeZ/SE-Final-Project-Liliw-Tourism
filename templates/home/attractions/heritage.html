@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heritage Sites - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/heritage.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="heritage-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Cultural Heritage</h1>
+                <p>Step back in time and explore Liliw's rich history and architectural treasures</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Navigation -->
+    <section class="category-nav">
+        <div class="category-container">
+            <div class="category-tabs">
+                <a href="{{ url_for('natural') }}" class="category-btn">
+                    <i class="fas fa-mountain"></i>
+                    <span>Natural Attractions</span>
+                </a>
+                <a href="{{ url_for('heritage') }}" class="category-btn active">
+                    <i class="fas fa-landmark"></i>
+                    <span>Heritage Sites</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Heritage Sites -->
+    <section class="attractions-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Historical Landmarks</h2>
+                <p class="section-subtitle">Discover the stories and traditions that shaped Liliw's identity</p>
+            </div>
+
+            <div class="attractions-grid">
+                <a href="{{ url_for('indiv_attractions', attraction='gat-tayaw') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Gat Tayaw Statue">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Monument</span>
+                        <h3>Gat Tayaw Statue</h3>
+                        <p>Monument honoring Gat Tayaw Tiatco, Liliw's legendary hero who defended the town during Spanish colonization.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Town Center</span>
+                            <span><i class="fas fa-calendar"></i> Est. 1988</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='liliw-church') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="St. John the Baptist Church">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Church</span>
+                        <h3>St. John the Baptist Church</h3>
+                        <p>A beautiful Spanish colonial church built in 1646, featuring baroque architecture and centuries of religious heritage.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Town Plaza</span>
+                            <span><i class="fas fa-calendar"></i> Est. 1646</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='old-houses') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Historic Houses">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Architecture</span>
+                        <h3>Ancestral Houses</h3>
+                        <p>Well-preserved ancestral homes showcasing Filipino-Spanish colonial architecture with capiz windows and antique interiors.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Town Center</span>
+                            <span><i class="fas fa-calendar"></i> 1800s-1900s</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='plaza') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Town Plaza">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Public Space</span>
+                        <h3>Liliw Town Plaza</h3>
+                        <p>The vibrant heart of Liliw where community gatherings, festivals, and daily life converge in a beautifully landscaped setting.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Town Center</span>
+                            <span><i class="fas fa-calendar"></i> Est. 1800s</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='municipal-hall') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Municipal Hall">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Government</span>
+                        <h3>Historic Municipal Hall</h3>
+                        <p>A well-preserved government building reflecting American colonial architecture and serving as Liliw's administrative center.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Town Center</span>
+                            <span><i class="fas fa-calendar"></i> Est. 1920s</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='tsinelas-capital') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Tsinelas Capital">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Cultural</span>
+                        <h3>Tsinelas Capital</h3>
+                        <p>Explore the traditional footwear industry that made Liliw famous throughout the Philippines for its handcrafted slippers.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Various Shops</span>
+                            <span><i class="fas fa-calendar"></i> Since 1900s</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- History Timeline -->
+    <section class="timeline-section">
+        <div class="section-container">
+            <h2>Liliw Through the Ages</h2>
+            <p class="section-subtitle">A journey through the milestones that shaped our town</p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">1571</div>
+                    <div class="timeline-content">
+                        <h3>Foundation</h3>
+                        <p>Liliw was established as a town during the Spanish colonial period, named after the abundant "Dilidili" trees in the area.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">1646</div>
+                    <div class="timeline-content">
+                        <h3>Church Construction</h3>
+                        <p>St. John the Baptist Church was built, becoming the spiritual center of the community and a testament to Spanish baroque architecture.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">1896</div>
+                    <div class="timeline-content">
+                        <h3>Philippine Revolution</h3>
+                        <p>Liliw played a significant role in the fight for independence, with local heroes like Gat Tayaw leading the resistance.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">1900s</div>
+                    <div class="timeline-content">
+                        <h3>Tsinelas Industry</h3>
+                        <p>The footwear industry flourished, establishing Liliw as the "Tsinelas Capital" of the Philippines.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Info Section -->
+    <section class="info-section">
+        <div class="section-container">
+            <div class="info-grid">
+                <div class="info-card">
+                    <i class="fas fa-camera"></i>
+                    <h3>Photography Tips</h3>
+                    <p>The golden hour (early morning or late afternoon) provides the best lighting for capturing the beauty of historic structures.</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-book"></i>
+                    <h3>Guided Tours</h3>
+                    <p>Contact the tourism office for heritage walking tours with knowledgeable guides who share fascinating stories and local legends.</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-heart"></i>
+                    <h3>Respect Heritage</h3>
+                    <p>Please be respectful of religious sites, private properties, and historical artifacts. Help preserve these treasures for future generations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        // Hide category navigation on scroll down
+        let lastScroll = 0;
+        const categoryNav = document.querySelector('.category-nav');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll <= 0) {
+                categoryNav.classList.remove('hide');
+                return;
+            }
+
+            if (currentScroll > lastScroll && currentScroll > 100) {
+                // Scrolling down
+                categoryNav.classList.add('hide');
+            } else {
+                // Scrolling up
+                categoryNav.classList.remove('hide');
+            }
+
+            lastScroll = currentScroll;
+        });
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

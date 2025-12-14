@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/products.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Product Hero -->
+    <section class="product-hero">
+        <div class="hero-container">
+            <div class="breadcrumb">
+                <a href="{{ url_for('home') }}">Home</a>
+                <span>/</span>
+                <a href="{{ url_for('products') }}">Products</a>
+                <span>/</span>
+                <span>{{ product.name }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Details -->
+    <section class="product-details">
+        <div class="details-container">
+            <div class="product-gallery">
+                <div class="main-image">
+                    <img src="{{ url_for('static', filename='assets/images/products/' + product.main_image) if product.main_image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ product.name }}" id="mainProductImage">
+                </div>
+                {% if product.gallery %}
+                <div class="image-thumbnails">
+                    {% for image in product.gallery %}
+                    <img src="{{ url_for('static', filename='assets/images/products/' + image) if image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ product.name }}" class="thumbnail" onclick="changeImage(this)">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="product-content">
+                <div class="product-header">
+                    <span class="product-category">{{ product.category }}</span>
+                    <h1>{{ product.name }}</h1>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span>(4.5/5 from local reviews)</span>
+                    </div>
+                </div>
+
+                <div class="product-price-box">
+                    <span class="price-label">Price Range:</span>
+                    <span class="product-price">{{ product.price_range }}</span>
+                </div>
+
+                <div class="product-description">
+                    <h3>Description</h3>
+                    <p>{{ product.description }}</p>
+                </div>
+
+                {% if product.features %}
+                <div class="product-features">
+                    <h3>Features</h3>
+                    <ul>
+                        {% for feature in product.features %}
+                        <li><i class="fas fa-check-circle"></i> {{ feature }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if product.specifications %}
+                <div class="product-specs">
+                    <h3>Specifications</h3>
+                    <table class="specs-table">
+                        {% for spec in product.specifications %}
+                        <tr>
+                            <td class="spec-label">{{ spec.label }}</td>
+                            <td class="spec-value">{{ spec.value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                {% endif %}
+
+                <div class="product-actions">
+                    <a href="#where-to-buy" class="action-btn primary">
+                        <i class="fas fa-shopping-cart"></i> Where to Buy
+                    </a>
+                    <a href="{{ url_for('contact') }}" class="action-btn secondary">
+                        <i class="fas fa-envelope"></i> Inquire
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Artisan Story -->
+    {% if product.artisan_story %}
+    <section class="artisan-section">
+        <div class="section-container">
+            <div class="artisan-grid">
+                <div class="artisan-image">
+                    <img src="{{ url_for('static', filename='assets/images/products/' + product.artisan_image) if product.artisan_image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Local Artisan">
+                </div>
+                <div class="artisan-content">
+                    <h2>The Artisan's Story</h2>
+                    <p class="lead">{{ product.artisan_story.intro }}</p>
+                    <p>{{ product.artisan_story.detail }}</p>
+                    <blockquote>
+                        <p>"{{ product.artisan_story.quote }}"</p>
+                        <cite>- {{ product.artisan_story.artisan_name }}</cite>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Making Process -->
+    {% if product.making_process %}
+    <section class="process-section">
+        <div class="section-container">
+            <h2>How It's Made</h2>
+            <p class="section-subtitle">Discover the traditional craftsmanship behind each piece</p>
+
+            <div class="process-timeline">
+                {% for step in product.making_process %}
+                <div class="process-step">
+                    <div class="step-number">{{ loop.index }}</div>
+                    <div class="step-content">
+                        <h3>{{ step.title }}</h3>
+                        <p>{{ step.description }}</p>
+                    </div>
+                    {% if step.image %}
+                    <div class="step-image">
+                        <img src="{{ url_for('static', filename='assets/images/products/process/' + step.image) if step.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ step.title }}">
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Where to Buy -->
+    <section class="buy-locations" id="where-to-buy">
+        <div class="section-container">
+            <h2>Where to Buy</h2>
+            <p class="section-subtitle">Find {{ product.name }} at these trusted locations</p>
+
+            <div class="locations-grid">
+                {% for location in product.buy_locations %}
+                <div class="location-card">
+                    <div class="location-icon">
+                        <i class="fas fa-{{ location.icon }}"></i>
+                    </div>
+                    <h3>{{ location.name }}</h3>
+                    <p>{{ location.description }}</p>
+                    <div class="location-details">
+                        <span><i class="fas fa-map-marker-alt"></i> {{ location.address }}</span>
+                        {% if location.hours %}
+                        <span><i class="fas fa-clock"></i> {{ location.hours }}</span>
+                        {% endif %}
+                        {% if location.contact %}
+                        <span><i class="fas fa-phone"></i> {{ location.contact }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <section class="related-section">
+        <div class="section-container">
+            <h2>You May Also Like</h2>
+            <div class="related-grid">
+                {% for related in related_products %}
+                <a href="{{ url_for('indiv_product', product=related.slug) }}" class="related-card">
+                    <div class="related-image">
+                        <img src="{{ url_for('static', filename='assets/images/products/' + related.image) if related.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ related.name }}">
+                        <div class="related-overlay"></div>
+                    </div>
+                    <div class="related-info">
+                        <h4>{{ related.name }}</h4>
+                        <span class="related-price">{{ related.price }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        function changeImage(thumbnail) {
+            const mainImage = document.getElementById('mainProductImage');
+            mainImage.src = thumbnail.src;
+
+            // Remove active class from all thumbnails
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+
+            // Add active class to clicked thumbnail
+            thumbnail.classList.add('active');
+        }
+
+        // Set first thumbnail as active
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstThumbnail = document.querySelector('.thumbnail');
+            if (firstThumbnail) {
+                firstThumbnail.classList.add('active');
+            }
+        });
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

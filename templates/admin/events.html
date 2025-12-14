@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Events - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .calendar-header {
+            text-align: center;
+            font-weight: 600;
+            padding: 0.5rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 4px;
+        }
+        .calendar-day {
+            min-height: 80px;
+            padding: 0.5rem;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        .calendar-day .date {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .calendar-day .event {
+            background: var(--primary-light);
+            color: white;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            text-decoration: none;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .calendar-day .event:hover {
+            background: var(--primary-dark);
+        }
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .view-toggle button {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--light-gray);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .view-toggle button.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Manage Events</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h2>All Events</h2>
+            <a href="{{ url_for('admin_events_add') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Event
+            </a>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="view-toggle">
+                <button class="active" onclick="showView('table')"><i class="fas fa-list"></i> List View</button>
+                <button onclick="showView('calendar')"><i class="fas fa-calendar"></i> Calendar View</button>
+            </div>
+
+            <!-- Table View -->
+            <div id="table-view" class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                            <th>Featured</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if events %}
+                            {% for event in events %}
+                            <tr>
+                                <td>
+                                    {% if event.image_url %}
+                                    <img src="{{ event.image_url }}" alt="{{ event.title }}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                    {% else %}
+                                    <div style="width: 60px; height: 40px; background: #e0e0e0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-calendar" style="color: #999;"></i>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ event.title }}</td>
+                                <td>{{ event.event_date }}{% if event.end_date %} - {{ event.end_date }}{% endif %}</td>
+                                <td>{{ event.location or 'TBA' }}</td>
+                                <td>
+                                    {% if event.is_featured %}
+                                    <i class="fas fa-star" style="color: gold;"></i>
+                                    {% else %}
+                                    <i class="far fa-star" style="color: #ccc;"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status {{ 'status-approved' if event.is_active else 'status-rejected' }}">
+                                        {{ 'Active' if event.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin_events_edit', event_id=event.id) }}" class="btn-icon" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin_events_delete', event_id=event.id) }}" class="btn-icon danger" title="Delete" onclick="return confirm('Are you sure?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="no-data">No events found. <a href="{{ url_for('admin_events_add') }}">Add one now!</a></td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Calendar View (simplified) -->
+            <div id="calendar-view" style="display: none;">
+                <div class="calendar-grid">
+                    <div class="calendar-header">Sun</div>
+                    <div class="calendar-header">Mon</div>
+                    <div class="calendar-header">Tue</div>
+                    <div class="calendar-header">Wed</div>
+                    <div class="calendar-header">Thu</div>
+                    <div class="calendar-header">Fri</div>
+                    <div class="calendar-header">Sat</div>
+                    <!-- Calendar days would be generated dynamically -->
+                    {% for i in range(35) %}
+                    <div class="calendar-day">
+                        <div class="date">{{ (i % 31) + 1 }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p style="text-align: center; color: #666;">
+                    <i class="fas fa-info-circle"></i> Calendar view shows a preview. Use list view for full management.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+        
+        function showView(view) {
+            document.getElementById('table-view').style.display = view === 'table' ? 'block' : 'none';
+            document.getElementById('calendar-view').style.display = view === 'calendar' ? 'block' : 'none';
+            
+            document.querySelectorAll('.view-toggle button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

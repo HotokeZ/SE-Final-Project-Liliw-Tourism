@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if attraction else 'Add' }} Attraction - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <!-- Leaflet for interactive map (no integrity to avoid accidental CDN integrity mismatch) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Flatpickr for day+month picker (no year shown) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        #attractionMap { height: 320px; border-radius:8px; margin-top:0.5rem; }
+        .small-note { font-size:0.85rem; color:#666; }
+        /* suggestion list */
+        #loc_suggestions .suggestion { background: #fff; border: 1px solid #ddd; padding: 6px 8px; cursor: pointer; }
+        #loc_suggestions .suggestion:hover { background: #f2f2f2; }
+        #loc_suggestions .suggestions-box { position: absolute; z-index: 9999; left: 0; right: 0; max-height: 240px; overflow:auto; box-shadow:0 6px 18px rgba(0,0,0,0.08); }
+        /* Keep map beneath header and avoid overlap when scrolling (scoped to this page) */
+        .top-header { position: relative; z-index: 1200; }
+        #attractionMap, .leaflet-container { z-index: 1; position: relative; }
+        .leaflet-control { z-index: 2; }
+        /* Multi-image upload preview styles */
+        .file-upload-label { display:flex; align-items:center; gap:10px; padding:10px; border:2px dashed #ddd; border-radius:8px; cursor:pointer; color:#444; }
+        .file-upload-label i { font-size:1.3rem; }
+        .image-preview { margin-top:10px; }
+        .image-grid { display:flex; gap:8px; flex-wrap:wrap; }
+        .image-cell { position:relative; width:120px; height:90px; border-radius:6px; overflow:hidden; background:#f6f6f6; display:flex; align-items:center; justify-content:center; }
+        .image-cell img.thumb { width:100%; height:100%; object-fit:cover; display:block; }
+        .img-controls { position:absolute; top:6px; right:6px; display:flex; gap:6px; }
+        .btn-feature, .btn-remove { background: rgba(0,0,0,0.45); color:#fff; border: none; padding:6px; border-radius:4px; cursor:pointer; }
+        .featured-badge { position:absolute; left:6px; top:6px; background: rgba(255,215,0,0.95); color:#000; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+    </style>
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{{ 'Edit' if attraction else 'Add New' }} Attraction</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-section">
+            <form class="form-container" method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Name *</label>
+                        <input type="text" id="name" name="name" value="{{ attraction.name if attraction else '' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="natural" {{ 'selected' if attraction and attraction.category == 'natural' else '' }}>Natural</option>
+                            <option value="heritage" {{ 'selected' if attraction and attraction.category == 'heritage' else '' }}>Heritage</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Short Description</label>
+                    <textarea id="description" name="description" rows="3">{{ attraction.description if attraction else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_description">Full Description</label>
+                    <textarea id="full_description" name="full_description" rows="6">{{ attraction.full_description if attraction else '' }}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location_search">Find Location</label>
+                        <input type="search" id="location_search" placeholder="Type an address or place (e.g., Liliw, Laguna)">
+                        <div id="loc_suggestions" style="position:relative"></div>
+                    </div>
+
+                    <!-- Editable address stays next to search -->
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="location" value="{{ attraction.location if attraction else '' }}" placeholder="Street, Barangay, City">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entrance_fee">Entrance Fee (₱)</label>
+                        <input type="number" id="entrance_fee" name="entrance_fee" min="0" step="0.01" value="{{ attraction.entrance_fee if attraction else '' }}" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="width:100%;">
+                        <label>Pin Location on Map</label>
+                        <div id="attractionMap"></div>
+                        <input type="hidden" id="latitude" name="latitude" value="{{ attraction.latitude if attraction and attraction.latitude else '' }}">
+                        <input type="hidden" id="longitude" name="longitude" value="{{ attraction.longitude if attraction and attraction.longitude else '' }}">
+                        <div class="small-note">Drag the pin to set the exact location. Use the search box above to quickly find a place.</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="open_time">Opens At</label>
+                            <input type="time" id="open_time" name="open_time" value="{{ attraction.open_time if attraction and attraction.open_time else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="close_time">Closes At</label>
+                            <input type="time" id="close_time" name="close_time" value="{{ attraction.close_time if attraction and attraction.close_time else '' }}">
+                        </div>
+                    </div>
+                    <input type="hidden" id="hours" name="hours" value="{{ attraction.hours if attraction else '' }}">
+                    <div class="form-group">
+                        <label for="best_time">Best Time to Visit (pick specific day and month)</label>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="best_date_start">From</label>
+                                    <input type="text" id="best_date_start" name="best_date_start" placeholder="e.g., 12 May" value="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="best_date_end">To</label>
+                                    <input type="text" id="best_date_end" name="best_date_end" placeholder="e.g., 18 Sep" value="">
+                                </div>
+                            </div>
+                            <input type="hidden" id="best_time" name="best_time" value="{{ attraction.best_time if attraction else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="width:100%;">
+                        <label for="duration">Duration (range)</label>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <div style="flex:0 0 160px;">
+                                <label for="duration_min_value" class="small-note">From</label>
+                                <input type="number" id="duration_min_value" name="duration_min_value" min="0" step="0.1" value="{{ attraction.duration_min_value if attraction and attraction.duration_min_value else '' }}" placeholder="e.g., 1">
+                            </div>
+                            <div style="flex:0 0 140px;">
+                                <label for="duration_min_unit" class="small-note">Unit</label>
+                                <select id="duration_min_unit" name="duration_min_unit">
+                                    <option value="minute">minute(s)</option>
+                                    <option value="hour" selected>hour(s)</option>
+                                    <option value="day">day(s)</option>
+                                    <option value="week">week(s)</option>
+                                    <option value="month">month(s)</option>
+                                </select>
+                            </div>
+                            <div style="flex:0 0 160px;">
+                                <label for="duration_max_value" class="small-note">To</label>
+                                <input type="number" id="duration_max_value" name="duration_max_value" min="0" step="0.1" value="{{ attraction.duration_max_value if attraction and attraction.duration_max_value else '' }}" placeholder="e.g., 2">
+                            </div>
+                            <div style="flex:0 0 140px;">
+                                <label for="duration_max_unit" class="small-note">Unit</label>
+                                <select id="duration_max_unit" name="duration_max_unit">
+                                    <option value="minute">minute(s)</option>
+                                    <option value="hour" selected>hour(s)</option>
+                                    <option value="day">day(s)</option>
+                                    <option value="week">week(s)</option>
+                                    <option value="month">month(s)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input type="hidden" id="duration" name="duration" value="{{ attraction.duration if attraction else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="width:100%;">
+                        <label for="difficulty">Difficulty</label>
+                        <select id="difficulty" name="difficulty">
+                            <option value="">Select...</option>
+                            <option value="Easy" {{ 'selected' if attraction and attraction.difficulty == 'Easy' else '' }}>Easy</option>
+                            <option value="Moderate" {{ 'selected' if attraction and attraction.difficulty == 'Moderate' else '' }}>Moderate</option>
+                            <option value="Difficult" {{ 'selected' if attraction and attraction.difficulty == 'Difficult' else '' }}>Difficult</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact">Contact Phone (numbers only)</label>
+                    <input type="tel" id="contact" name="contact" pattern="[0-9]+" inputmode="numeric" value="{{ attraction.contact if attraction else '' }}" placeholder="e.g., 0491234567">
+                </div>
+
+                <div class="form-group">
+                    <label for="map_embed">Google Maps Embed URL</label>
+                    <input type="text" id="map_embed" name="map_embed" value="{{ attraction.map_embed if attraction else '' }}" placeholder="Paste Google Maps embed URL here">
+                </div>
+
+                <div class="form-group">
+                    <label for="landmark">Optional Landmark Description</label>
+                    <textarea id="landmark" name="landmark" rows="3">{{ attraction.landmark if attraction else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ 'Change' if attraction else 'Upload' }} Images</label>
+                    <div class="file-upload" aria-live="polite">
+                        <input type="file" id="featured-image" name="image" accept="image/*" multiple>
+                        <!-- Hidden input to submit gallery images (all except the chosen thumbnail) -->
+                        <input type="file" id="gallery-images" name="gallery_images" accept="image/*" multiple style="display:none">
+                        <div class="file-upload-label" role="button" tabindex="0" aria-controls="imagePreview" aria-label="Upload images">
+                            <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                            <span>Click to upload or drag and drop</span>
+                            <small>JPG, PNG or WEBP (MAX. 5MB)</small>
+                        </div>
+                        <div class="image-preview" id="imagePreview" style="display:none">
+                            <div class="image-grid-container">
+                                <div class="image-grid" id="imageGrid" aria-label="Selected images"></div>
+                                <div class="carousel-controls" id="carouselControls" style="display:none">
+                                    <button type="button" class="carousel-btn prev" aria-label="Previous images">&#10094;</button>
+                                    <button type="button" class="carousel-btn next" aria-label="Next images">&#10095;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if attraction and attraction.image_url %}
+                    <div style="margin-top: 10px;">
+                        <img src="{{ attraction.image_url }}" alt="Current image" style="max-width: 200px; border-radius: 8px;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if attraction %}
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_active" {{ 'checked' if attraction.is_active else '' }}> Active (visible on website)
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_attractions') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Save Changes' if attraction else 'Add Attraction' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var latInput = document.getElementById('latitude');
+            var lngInput = document.getElementById('longitude');
+            var mapEmbed = document.getElementById('map_embed');
+            var form = document.querySelector('form.form-container');
+            var map = null;
+            var marker = null;
+            var locSearch = document.getElementById('location_search');
+            var locSuggestions = document.getElementById('loc_suggestions');
+            var bestHidden = document.getElementById('best_time');
+            var openTime = document.getElementById('open_time');
+            var closeTime = document.getElementById('close_time');
+            var hoursHidden = document.getElementById('hours');
+            var startPicker = null;
+            var endPicker = null;
+            var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+            function formatDayMonth(date) {
+                if (!date) return '';
+                var d = date.getDate();
+                var m = monthNames[date.getMonth()];
+                return m + ' ' + d; // e.g., May 12
+            }
+
+            function packBestTime() {
+                // Read from flatpickr instances (day+month) and write "Month Day" or range
+                if (!bestHidden) return;
+                var s = '';
+                var e = '';
+                if (startPicker && startPicker.selectedDates && startPicker.selectedDates.length) s = formatDayMonth(startPicker.selectedDates[0]);
+                if (endPicker && endPicker.selectedDates && endPicker.selectedDates.length) e = formatDayMonth(endPicker.selectedDates[0]);
+                if (s && e) bestHidden.value = s + ' to ' + e;
+                else if (s) bestHidden.value = s;
+                else if (e) bestHidden.value = e;
+                else bestHidden.value = '';
+            }
+
+            // preferred-week removed — no-op
+
+            function packHours() {
+                if (!openTime || !closeTime || !hoursHidden) return;
+                var o = openTime.value || '';
+                var c = closeTime.value || '';
+                hoursHidden.value = o && c ? o + ' - ' + c : '';
+            }
+
+            function pluralize(unit, value) {
+                if (!unit) return '';
+                var v = parseFloat(value);
+                if (isNaN(v)) return unit + '(s)';
+                return unit + (Math.abs(v) === 1 ? '' : 's');
+            }
+
+            function packDuration() {
+                var durHidden = document.getElementById('duration');
+                if (!durHidden) return;
+                var minVal = document.getElementById('duration_min_value');
+                var minUnit = document.getElementById('duration_min_unit');
+                var maxVal = document.getElementById('duration_max_value');
+                var maxUnit = document.getElementById('duration_max_unit');
+                var mn = minVal && minVal.value !== '' ? minVal.value : '';
+                var mu = minUnit && minUnit.value ? minUnit.value : '';
+                var mx = maxVal && maxVal.value !== '' ? maxVal.value : '';
+                var xu = maxUnit && maxUnit.value ? maxUnit.value : '';
+                function fmt(v, u) {
+                    if (!v) return '';
+                    // trim trailing .0 for integers
+                    var display = (parseFloat(v) % 1 === 0) ? String(parseInt(v,10)) : String(v);
+                    return display + ' ' + (u ? (u + (Math.abs(parseFloat(v)) === 1 ? '' : 's')) : '');
+                }
+                var left = fmt(mn, mu);
+                var right = fmt(mx, xu);
+                if (left && right) {
+                    durHidden.value = left + ' to ' + right;
+                } else if (left) {
+                    durHidden.value = left;
+                } else if (right) {
+                    durHidden.value = right;
+                } else {
+                    durHidden.value = '';
+                }
+            }
+
+            // Ensure contact field only digits (run regardless of map availability)
+            var contact = document.getElementById('contact');
+            if (contact) {
+                contact.addEventListener('input', function () {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', function (evt) {
+                    packBestTime();
+                    packDuration();
+                    packHours();
+                });
+            }
+
+            // Map initialization guarded in case Leaflet failed to load
+            if (window.L) {
+                try {
+                    var lat = parseFloat(latInput.value) || 14.1833; // default center (Liliw-ish)
+                    var lng = parseFloat(lngInput.value) || 121.3333;
+                    map = L.map('attractionMap').setView([lat, lng], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                    marker.on('dragend', function (e) {
+                        var p = e.target.getLatLng();
+                        latInput.value = p.lat.toFixed(6);
+                        lngInput.value = p.lng.toFixed(6);
+                    });
+
+                    map.on('click', function (e) {
+                        marker.setLatLng(e.latlng);
+                        latInput.value = e.latlng.lat.toFixed(6);
+                        lngInput.value = e.latlng.lng.toFixed(6);
+                    });
+
+                    function tryParseEmbedAndSet(url) {
+                        if (!url) return false;
+                        var atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                        if (atMatch) {
+                            var aLat = parseFloat(atMatch[1]);
+                            var aLng = parseFloat(atMatch[2]);
+                            marker.setLatLng([aLat, aLng]);
+                            map.setView([aLat, aLng], 15);
+                            latInput.value = aLat.toFixed(6);
+                            lngInput.value = aLng.toFixed(6);
+                            return true;
+                        }
+                        var dMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+                        if (dMatch) {
+                            var dLat = parseFloat(dMatch[1]);
+                            var dLng = parseFloat(dMatch[2]);
+                            marker.setLatLng([dLat, dLng]);
+                            map.setView([dLat, dLng], 15);
+                            latInput.value = dLat.toFixed(6);
+                            lngInput.value = dLng.toFixed(6);
+                            return true;
+                        }
+                        var qMatch = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+                        if (qMatch) {
+                            var qLat = parseFloat(qMatch[1]);
+                            var qLng = parseFloat(qMatch[2]);
+                            marker.setLatLng([qLat, qLng]);
+                            map.setView([qLat, qLng], 15);
+                            latInput.value = qLat.toFixed(6);
+                            lngInput.value = qLng.toFixed(6);
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    if ((!latInput.value || !lngInput.value) && mapEmbed && mapEmbed.value) {
+                        tryParseEmbedAndSet(mapEmbed.value);
+                    }
+
+                    if (mapEmbed) {
+                        mapEmbed.addEventListener('change', function () {
+                            tryParseEmbedAndSet(this.value);
+                        });
+                    }
+                    // initialize flatpickr on the new day+month inputs
+                    if (window.flatpickr) {
+                        startPicker = flatpickr('#best_date_start', {
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'j F',
+                            allowInput: true,
+                            defaultDate: null,
+                            onChange: function () { packBestTime(); }
+                        });
+                        endPicker = flatpickr('#best_date_end', {
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'j F',
+                            allowInput: true,
+                            defaultDate: null,
+                            onChange: function () { packBestTime(); }
+                        });
+                        // If there is an existing packed best_time, attempt to parse and set pickers
+                        try {
+                            var existing = bestHidden.value || '';
+                            if (existing && existing.indexOf(' to ') > -1) {
+                                var parts = existing.split(' to ');
+                                // parts like 'May 12'
+                                startPicker.setDate(parts[0], false);
+                                endPicker.setDate(parts[1], false);
+                            } else if (existing) {
+                                startPicker.setDate(existing, false);
+                            }
+                        } catch (e) { /* ignore parse errors */ }
+                    } else {
+                        console.warn('Flatpickr not loaded; day+month pickers disabled.');
+                    }
+                } catch (err) {
+                    console.warn('Map initialization failed:', err);
+                }
+            } else {
+                console.warn('Leaflet library not loaded. Map disabled.');
+            }
+
+            // Location search using Nominatim (OpenStreetMap)
+            function clearSuggestions() {
+                if (!locSuggestions) return;
+                locSuggestions.innerHTML = '';
+            }
+
+            function showSuggestions(items) {
+                if (!locSuggestions) return;
+                clearSuggestions();
+                if (!items || !items.length) return;
+                var box = document.createElement('div');
+                box.className = 'suggestions-box';
+                items.forEach(function (it) {
+                    var d = document.createElement('div');
+                    d.className = 'suggestion';
+                    d.textContent = it.display_name;
+                    d.addEventListener('click', function () {
+                        if (marker && map) {
+                            marker.setLatLng([parseFloat(it.lat), parseFloat(it.lon)]);
+                            map.setView([parseFloat(it.lat), parseFloat(it.lon)], 15);
+                        }
+                        latInput.value = parseFloat(it.lat).toFixed(6);
+                        lngInput.value = parseFloat(it.lon).toFixed(6);
+                        // also populate address input
+                        var addressEl = document.getElementById('address');
+                        if (addressEl) addressEl.value = it.display_name;
+                        clearSuggestions();
+                    });
+                    box.appendChild(d);
+                });
+                locSuggestions.appendChild(box);
+            }
+
+            var searchTimer = null;
+            if (locSearch) {
+                locSearch.addEventListener('input', function () {
+                    var q = this.value.trim();
+                    clearTimeout(searchTimer);
+                    if (!q) { clearSuggestions(); return; }
+                    searchTimer = setTimeout(function () {
+                        var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&q=' + encodeURIComponent(q) + '&limit=6&addressdetails=1&accept-language=en';
+                        fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+                            showSuggestions(data);
+                        }).catch(function (err) {
+                            console.warn('Nominatim search failed', err);
+                        });
+                    }, 350);
+                });
+
+                // close suggestions on outside click
+                document.addEventListener('click', function (e) {
+                    if (!locSuggestions) return;
+                    if (!locSuggestions.contains(e.target) && e.target !== locSearch) clearSuggestions();
+                });
+            }
+
+            // Day+month inputs: update hidden field when changed (flatpickr also calls packBestTime)
+            var startEl = document.getElementById('best_date_start');
+            var endEl = document.getElementById('best_date_end');
+            if (startEl) startEl.addEventListener('change', packBestTime);
+            if (endEl) endEl.addEventListener('change', packBestTime);
+            // Duration inputs: update hidden duration when changed
+            var dMinVal = document.getElementById('duration_min_value');
+            var dMinUnit = document.getElementById('duration_min_unit');
+            var dMaxVal = document.getElementById('duration_max_value');
+            var dMaxUnit = document.getElementById('duration_max_unit');
+            if (dMinVal) dMinVal.addEventListener('input', packDuration);
+            if (dMinUnit) dMinUnit.addEventListener('change', packDuration);
+            if (dMaxVal) dMaxVal.addEventListener('input', packDuration);
+            if (dMaxUnit) dMaxUnit.addEventListener('change', packDuration);
+            // initialize hidden values on load
+            packBestTime();
+        });
+    </script>
+    <script>
+        (function () {
+            // Multi-image upload UI: preview grid, drag-and-drop, featured selection
+            var featuredInput = document.getElementById('featured-image');
+            var galleryInput = document.getElementById('gallery-images');
+            var fileUploadLabel = document.querySelector('.file-upload-label');
+            var imagePreview = document.getElementById('imagePreview');
+            var imageGrid = document.getElementById('imageGrid');
+            var formEl = document.querySelector('form.form-container');
+
+            if (!featuredInput || !imageGrid || !fileUploadLabel) return;
+
+            var selectedFiles = []; // Array of File objects
+            var featuredIndex = 0;
+            var MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+
+            function readFileAsDataURL(file) {
+                return new Promise(function (resolve, reject) {
+                    var fr = new FileReader();
+                    fr.onload = function () { resolve(fr.result); };
+                    fr.onerror = function () { reject(fr.error); };
+                    fr.readAsDataURL(file);
+                });
+            }
+
+            function renderGrid() {
+                imageGrid.innerHTML = '';
+                if (!selectedFiles.length) {
+                    imagePreview.style.display = 'none';
+                    return;
+                }
+                imagePreview.style.display = 'block';
+                selectedFiles.forEach(function (file, idx) {
+                    var cell = document.createElement('div');
+                    cell.className = 'image-cell';
+                    cell.setAttribute('data-idx', idx);
+                    var img = document.createElement('img');
+                    img.alt = file.name;
+                    img.className = 'thumb';
+                    readFileAsDataURL(file).then(function (dataUrl) { img.src = dataUrl; }).catch(function () { img.alt = 'Preview not available'; });
+
+                    var controls = document.createElement('div');
+                    controls.className = 'img-controls';
+
+                    var featBtn = document.createElement('button');
+                    featBtn.type = 'button';
+                    featBtn.className = 'btn-feature';
+                    featBtn.title = 'Set as featured image';
+                    featBtn.innerHTML = (idx === featuredIndex) ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                    featBtn.addEventListener('click', function () { setFeatured(idx); });
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn-remove';
+                    removeBtn.title = 'Remove image';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    removeBtn.addEventListener('click', function () { removeImage(idx); });
+
+                    controls.appendChild(featBtn);
+                    controls.appendChild(removeBtn);
+
+                    if (idx === featuredIndex) {
+                        var badge = document.createElement('div');
+                        badge.className = 'featured-badge';
+                        badge.textContent = 'Featured';
+                        cell.appendChild(badge);
+                    }
+
+                    cell.appendChild(img);
+                    cell.appendChild(controls);
+                    imageGrid.appendChild(cell);
+                });
+                // After rendering, update the underlying inputs so server receives files correctly
+                updateInputsFromSelection();
+            }
+
+            function updateInputsFromSelection() {
+                // Use DataTransfer to build FileList objects
+                try {
+                    var dtFeatured = new DataTransfer();
+                    var dtGallery = new DataTransfer();
+                    selectedFiles.forEach(function (f, idx) {
+                        if (idx === featuredIndex) dtFeatured.items.add(f);
+                        else dtGallery.items.add(f);
+                    });
+                    // Set files on inputs
+                    featuredInput.files = dtFeatured.files;
+                    galleryInput.files = dtGallery.files;
+                } catch (e) {
+                    // Some browsers in older environments may not allow constructing DataTransfer
+                    console.warn('Could not programmatically set file inputs:', e);
+                }
+            }
+
+            function removeImage(idx) {
+                if (idx < 0 || idx >= selectedFiles.length) return;
+                selectedFiles.splice(idx, 1);
+                if (featuredIndex >= selectedFiles.length) featuredIndex = Math.max(0, selectedFiles.length - 1);
+                renderGrid();
+            }
+
+            function setFeatured(idx) {
+                if (idx < 0 || idx >= selectedFiles.length) return;
+                featuredIndex = idx;
+                renderGrid();
+            }
+
+            function handleFiles(files) {
+                var arr = Array.prototype.slice.call(files || []);
+                arr.forEach(function (f) {
+                    if (!f.type.match('image.*')) return;
+                    if (f.size > MAX_FILE_SIZE) return;
+                    selectedFiles.push(f);
+                });
+                if (selectedFiles.length && featuredIndex === null) featuredIndex = 0;
+                renderGrid();
+            }
+
+            // Drag & drop support
+            function preventDefault(e) { e.preventDefault(); e.stopPropagation(); }
+            ['dragenter','dragover','dragleave','drop'].forEach(function (ev) { fileUploadLabel.addEventListener(ev, preventDefault); });
+            fileUploadLabel.addEventListener('drop', function (e) { handleFiles(e.dataTransfer.files); });
+
+            // Click label opens file dialog
+            fileUploadLabel.addEventListener('click', function () { featuredInput.click(); });
+            fileUploadLabel.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); featuredInput.click(); } });
+
+            featuredInput.addEventListener('change', function (e) {
+                handleFiles(e.target.files);
+                // clear input value so same file can be re-selected if removed
+                featuredInput.value = '';
+            });
+
+            // Before form submit, ensure featuredInput and galleryInput reflect selection
+            if (formEl) {
+                formEl.addEventListener('submit', function (e) {
+                    updateInputsFromSelection();
+                    // No further validation here; let server validate sizes/limits
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
