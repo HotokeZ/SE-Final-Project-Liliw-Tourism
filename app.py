@@ -7,6 +7,8 @@ import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 import re
+import traceback
+import json
 
 # Load environment variables from .env file in the same directory as app.py
 env_path = Path(__file__).parent / '.env'
@@ -90,6 +92,31 @@ def upload_bytes_get_url_to_bucket(file_bytes: bytes, file_ext: str, content_typ
         print(f"Failed to write file locally for {unique_filename}: {local_err}")
         return ''
 
+
+def _log_hotel_error(label: str, exc: Exception = None, payload: dict = None):
+    """Append detailed error information to logs/hotel_errors.log for debugging."""
+    try:
+        logs_dir = Path(__file__).parent / 'logs'
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        log_file = logs_dir / 'hotel_errors.log'
+        with log_file.open('a', encoding='utf-8') as f:
+            f.write(f"[{datetime.now().isoformat()}] {label}\n")
+            if exc is not None:
+                f.write('Exception:\n')
+                f.write(traceback.format_exc())
+                f.write('\n')
+            if payload is not None:
+                try:
+                    f.write('Payload:\n')
+                    f.write(json.dumps(payload, default=str, ensure_ascii=False, indent=2))
+                    f.write('\n')
+                except Exception as _j:
+                    f.write(f'Failed to serialize payload: {_j}\n')
+            f.write('\n')
+    except Exception as _e:
+        # fallback to console if file logging fails
+        print('Failed to write hotel error log:', _e)
+
 # Cache for product columns existence checks
 _PRODUCT_COLUMNS_CACHE = {}
 
@@ -120,6 +147,30 @@ def product_column_exists(col_name: str) -> bool:
 # Cache for events columns existence checks
 _EVENT_COLUMNS_CACHE = {}
 
+# Cache for hotels columns existence checks
+_HOTEL_COLUMNS_CACHE = {}
+
+def hotel_column_exists(col_name: str) -> bool:
+    """Check whether the `hotels` table has a column named `col_name`.
+    Performs a cheap select and caches the result. Returns False if Supabase is not configured.
+    """
+    global _HOTEL_COLUMNS_CACHE
+    if not supabase:
+        return False
+    # Avoid permanently caching negative results because the schema may change at runtime
+    if col_name in _HOTEL_COLUMNS_CACHE and _HOTEL_COLUMNS_CACHE[col_name] is True:
+        return True
+    try:
+        resp = supabase.table('hotels').select(col_name).limit(1).execute()
+        if hasattr(resp, 'error') and resp.error:
+            return False
+        # Cache positive result to reduce repeated checks
+        _HOTEL_COLUMNS_CACHE[col_name] = True
+        return True
+    except Exception as e:
+        print(f"hotel_column_exists check failed for '{col_name}': {e}")
+        return False
+
 def event_column_exists(col_name: str) -> bool:
     """Check whether the `events` table has a column named `col_name`.
     Performs a cheap select and caches the result. Returns False if Supabase is not configured.
@@ -127,6 +178,8 @@ def event_column_exists(col_name: str) -> bool:
     global _EVENT_COLUMNS_CACHE
     if not supabase:
         return False
+
+    
     if col_name in _EVENT_COLUMNS_CACHE:
         return _EVENT_COLUMNS_CACHE[col_name]
     try:
@@ -646,43 +699,58 @@ def add_media():
 
 @app.route('/plan')
 def plan():
-    return render_template('plan/stay.html')
+    hotels = []
+    if supabase:
+        try:
+            resp = supabase.table('hotels').select('*').order('created_at', desc=True).execute()
+            hotels = resp.data or []
+        except Exception as e:
+            print(f"Error fetching hotels for plan page: {e}")
+    return render_template('plan/stay.html', hotels=hotels)
 
 @app.route('/plan/stay')
 def stay():
-    return render_template('plan/stay.html')
+    hotels = []
+    if supabase:
+        try:
+            resp = supabase.table('hotels').select('*').order('created_at', desc=True).execute()
+            hotels = resp.data or []
+        except Exception as e:
+            print(f"Error fetching hotels for stay page: {e}")
+    return render_template('plan/stay.html', hotels=hotels)
 
 @app.route('/plan/stay/<hotel>')
 def indiv_hotel(hotel):
-    # Sample hotel data
-    hotel_data = {
-        'name': hotel.replace('-', ' ').title(),
-        'image': 'hero.JPG',
-        'rating': 4.5,
-        'price_range': '₱1,500 - ₱3,500 per night',
-        'address': 'Main Street, Liliw, Laguna',
-        'phone': '(049) 123-4567',
-        'email': 'info@hotel.com',
-        'description': 'Comfortable accommodation in the heart of Liliw',
-        'amenities': [
-            {'icon': 'wifi', 'name': 'Free WiFi'},
-            {'icon': 'parking', 'name': 'Free Parking'},
-            {'icon': 'swimming-pool', 'name': 'Swimming Pool'},
-            {'icon': 'utensils', 'name': 'Restaurant'},
-            {'icon': 'coffee', 'name': 'Breakfast Included'},
-            {'icon': 'concierge-bell', 'name': '24/7 Reception'}
-        ],
-        'rooms': [
-            {'name': 'Standard Room', 'price': '₱1,500', 'features': ['Queen bed', 'AC', 'Cable TV'], 'image': 'hero.JPG'},
-            {'name': 'Deluxe Room', 'price': '₱2,500', 'features': ['King bed', 'AC', 'Smart TV', 'Mini bar'], 'image': 'hero.JPG'}
-        ],
-        'policies': ['Check-in: 2:00 PM', 'Check-out: 12:00 NN', 'Free cancellation up to 48 hours'],
-        'map_embed': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3872.7!2d121.4!3d14.1'
-    }
+    hotel_data = None
+    similar_hotels = []
+    if supabase:
+        try:
+            resp = supabase.table('hotels').select('*').eq('slug', hotel).single().execute()
+            hotel_data = resp.data
+        except Exception as e:
+            print(f"Error fetching hotel '{hotel}': {e}")
+        try:
+            resp2 = supabase.table('hotels').select('name,slug,image_url,price_min,price_max').neq('slug', hotel).limit(4).execute()
+            similar_hotels = resp2.data or []
+        except Exception:
+            similar_hotels = []
 
-    similar_hotels = [
-        {'name': 'Other Hotel', 'slug': 'other-hotel', 'image': 'hero.JPG', 'price': '₱2,000', 'rating': 4.3},
-    ]
+    # Fallback sample if not found
+    if not hotel_data:
+        hotel_data = {
+            'name': hotel.replace('-', ' ').title(),
+            'image_url': 'hero.JPG',
+            'price_min': None,
+            'price_max': None,
+            'address': 'Main Street, Liliw, Laguna',
+            'phone': '(049) 123-4567',
+            'email': 'info@hotel.com',
+            'description': 'Comfortable accommodation in the heart of Liliw',
+            'amenities': [],
+            'rooms': [],
+            'policies': [],
+            'map_embed': ''
+        }
 
     return render_template('plan/indiv-hotel.html', hotel=hotel_data, similar_hotels=similar_hotels)
 
@@ -1558,6 +1626,13 @@ def admin_attractions():
 @admin_required
 def admin_attractions_add():
     if request.method == 'POST':
+        print('DEBUG: entered admin_hotels_add POST handler, supabase=', bool(supabase))
+        try:
+            print('DEBUG: request.method=', request.method)
+            print('DEBUG: request.form keys (add) =', list(request.form.keys()))
+            print('DEBUG: request.files keys (add) =', list(request.files.keys()))
+        except Exception:
+            pass
         if supabase:
             try:
                 name = request.form.get('name')
@@ -2316,9 +2391,76 @@ def admin_hotels_add():
                     'longitude': request.form.get('longitude'),
                     'is_active': True
                 }
+                # Try including category by default; if DB rejects because column missing, retry without it
+                # Debug: log form keys and category to help diagnose missing value
+                try:
+                    print('DEBUG: hotel add form keys =', list(request.form.keys()))
+                    print('DEBUG: hotel add category raw =', repr(request.form.get('category')))
+                except Exception:
+                    pass
 
-                supabase.table('hotels').insert(hotel_data).execute()
-                flash('Hotel added successfully!', 'success')
+                # Respect the submitted category only if present; do not force a 'Hotel' fallback here
+                category_val = (request.form.get('category') or '').strip()
+                hotel_data_with_cat = dict(hotel_data)
+                if category_val:
+                    hotel_data_with_cat['category'] = category_val
+
+                # Debug: print category value and payload we'll send to Supabase
+                try:
+                    print('DEBUG: category_val (to insert) =', repr(category_val))
+                    # don't print entire hotel_data_with_cat if it may be large; show relevant keys
+                    dbg_keys = {k: hotel_data_with_cat.get(k) for k in ['name','slug','category','price_min','price_max']}
+                    print('DEBUG: hotel_data_with_cat (summary) =', dbg_keys)
+                except Exception:
+                    pass
+
+                tried_without_category = False
+                try:
+                    resp = supabase.table('hotels').insert(hotel_data_with_cat).execute()
+                    if hasattr(resp, 'error') and resp.error:
+                        # If the error mentions missing column, retry without category
+                        err_text = str(resp.error)
+                        print('Supabase insert error for hotels:', resp.error)
+                        _log_hotel_error('Supabase insert error for hotels (first attempt)', exc=resp.error, payload=hotel_data_with_cat)
+                        if 'column "category" does not exist' in err_text.lower() or 'unrecognized column' in err_text.lower():
+                            tried_without_category = True
+                            # retry without category
+                            try:
+                                resp2 = supabase.table('hotels').insert(hotel_data).execute()
+                                if hasattr(resp2, 'error') and resp2.error:
+                                    print('Supabase insert error on retry (without category):', resp2.error)
+                                    _log_hotel_error('Supabase insert error for hotels (retry no category)', exc=resp2.error, payload=hotel_data)
+                                    flash('Failed to add hotel (DB error). See server logs.', 'error')
+                                else:
+                                    print('Hotel insert response (retry no category):', getattr(resp2, 'data', resp2))
+                                    flash('Hotel added successfully!', 'success')
+                            except Exception as e2:
+                                print('Exception while retrying insert without category:', e2)
+                                _log_hotel_error('Exception while retrying insert without category', exc=e2, payload=hotel_data)
+                                flash(f'Failed to add hotel (exception): {str(e2)}', 'error')
+                        else:
+                            flash('Failed to add hotel (DB error). See server logs.', 'error')
+                    else:
+                        print('Hotel insert response:', getattr(resp, 'data', resp))
+                        flash('Hotel added successfully!', 'success')
+                except Exception as e:
+                    print('Exception while inserting hotel:', e)
+                    _log_hotel_error('Exception while inserting hotel', exc=e, payload=hotel_data_with_cat)
+                    # If insert failed and we haven't tried without category, retry once without it
+                    if not tried_without_category:
+                        try:
+                            resp_retry = supabase.table('hotels').insert(hotel_data).execute()
+                            if hasattr(resp_retry, 'error') and resp_retry.error:
+                                print('Supabase insert error on retry (without category):', resp_retry.error)
+                                _log_hotel_error('Supabase insert error for hotels (retry no category)', exc=resp_retry.error, payload=hotel_data)
+                                flash('Failed to add hotel (DB error). See server logs.', 'error')
+                            else:
+                                print('Hotel insert response (retry no category):', getattr(resp_retry, 'data', resp_retry))
+                                flash('Hotel added successfully!', 'success')
+                        except Exception as e2:
+                            print('Exception while retrying insert without category:', e2)
+                            _log_hotel_error('Exception while retrying insert without category', exc=e2, payload=hotel_data)
+                            flash(f'Failed to add hotel (exception): {str(e2)}', 'error')
                 return redirect(url_for('admin_hotels'))
             except Exception as e:
                 print(f"Error adding hotel: {e}")
@@ -2330,6 +2472,13 @@ def admin_hotels_add():
 @admin_required
 def admin_hotels_edit(hotel_id):
     if request.method == 'POST':
+        print('DEBUG: entered admin_hotels_edit POST handler for id=', hotel_id, ' supabase=', bool(supabase))
+        try:
+            print('DEBUG: request.method=', request.method)
+            print('DEBUG: request.form keys (edit) =', list(request.form.keys()))
+            print('DEBUG: request.files keys (edit) =', list(request.files.keys()))
+        except Exception:
+            pass
         if supabase:
             try:
                 # handle images
@@ -2399,6 +2548,24 @@ def admin_hotels_edit(hotel_id):
                     'is_active': request.form.get('is_active') == 'on',
                     'updated_at': datetime.now().isoformat()
                 }
+                # Include category only if the column exists
+                try:
+                    if hotel_column_exists('category'):
+                        # Debug: log incoming form keys and requested category for edits
+                        try:
+                            print('DEBUG: hotel edit form keys =', list(request.form.keys()))
+                            print('DEBUG: hotel edit category raw =', repr(request.form.get('category')))
+                        except Exception:
+                            pass
+                        cat_val = (request.form.get('category') or '').strip()
+                        if cat_val:
+                            update_data['category'] = cat_val
+                            try:
+                                print('DEBUG: update_data[category] =', repr(update_data.get('category')))
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
 
                 # parse amenities
                 amenities_raw = request.form.get('amenities') or ''
@@ -2414,8 +2581,40 @@ def admin_hotels_edit(hotel_id):
                 if gallery_urls is not None:
                     update_data['gallery_urls'] = gallery_urls
 
-                supabase.table('hotels').update(update_data).eq('id', hotel_id).execute()
-                flash('Hotel updated successfully!', 'success')
+                try:
+                    # Persistent debug: write the incoming form and update payload to a log file
+                    try:
+                        import os, json
+                        os.makedirs(os.path.join(os.path.dirname(__file__), 'logs'), exist_ok=True)
+                        debug_path = os.path.join(os.path.dirname(__file__), 'logs', 'hotel_last_update.json')
+                        debug_dump = {
+                            'timestamp': datetime.now().isoformat(),
+                            'form_keys': list(request.form.keys()),
+                            'form_category_raw': request.form.get('category'),
+                            'hotel_column_exists_category': None,
+                            'update_data': update_data
+                        }
+                        try:
+                            debug_dump['hotel_column_exists_category'] = hotel_column_exists('category')
+                        except Exception:
+                            debug_dump['hotel_column_exists_category'] = 'error'
+                        with open(debug_path, 'w', encoding='utf-8') as f:
+                            json.dump(debug_dump, f, default=str, indent=2)
+                    except Exception as _:
+                        print('Could not write hotel update debug file:', _)
+
+                    resp = supabase.table('hotels').update(update_data).eq('id', hotel_id).execute()
+                    if hasattr(resp, 'error') and resp.error:
+                        print('Supabase update error for hotels:', resp.error)
+                        _log_hotel_error('Supabase update error for hotels', exc=resp.error, payload=update_data)
+                        flash('Failed to update hotel (DB error). See server logs.', 'error')
+                    else:
+                        print('Hotel update response:', getattr(resp, 'data', resp))
+                        flash('Hotel updated successfully!', 'success')
+                except Exception as e:
+                    print('Exception while updating hotel:', e)
+                    _log_hotel_error('Exception while updating hotel', exc=e, payload=update_data)
+                    flash(f'Failed to update hotel (exception): {str(e)}', 'error')
                 return redirect(url_for('admin_hotels'))
             except Exception as e:
                 print(f"Error updating hotel: {e}")

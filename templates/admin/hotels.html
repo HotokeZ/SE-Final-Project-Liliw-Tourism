@@ -40,9 +40,8 @@
                         <tr>
                             <th>Image</th>
                             <th>Name</th>
-                            <th>Address</th>
+                            <th>Category</th>
                             <th>Price Range</th>
-                            <th>Rating</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -61,15 +60,21 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ hotel.name }}</td>
-                                <td>{{ hotel.address or 'N/A' }}</td>
-                                <td>{{ hotel.price_range or 'N/A' }}</td>
+                                <td>{{ hotel.category or 'N/A' }}</td>
                                 <td>
-                                    {% if hotel.rating %}
-                                    <span style="color: gold;"><i class="fas fa-star"></i> {{ hotel.rating }}</span>
+                                    {% if hotel.price_min and hotel.price_max %}
+                                        {{ hotel.price_min|format_price }} - {{ hotel.price_max|format_price }}
+                                    {% elif hotel.price_min %}
+                                        From {{ hotel.price_min|format_price }}
+                                    {% elif hotel.price_max %}
+                                        Up to {{ hotel.price_max|format_price }}
+                                    {% elif hotel.price_range %}
+                                        {{ hotel.price_range }}
                                     {% else %}
-                                    <span style="color: #ccc;">No ratings</span>
+                                        N/A
                                     {% endif %}
                                 </td>
+                                <!-- rating column removed per admin preference -->
                                 <td>
                                     <span class="status {{ 'status-approved' if hotel.is_active else 'status-rejected' }}">
                                         {{ 'Active' if hotel.is_active else 'Inactive' }}
@@ -87,7 +92,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="7" class="no-data">No hotels found. <a href="{{ url_for('admin_hotels_add') }}">Add one now!</a></td>
+                                <td colspan="6" class="no-data">No hotels found. <a href="{{ url_for('admin_hotels_add') }}">Add one now!</a></td>
                             </tr>
                         {% endif %}
                     </tbody>

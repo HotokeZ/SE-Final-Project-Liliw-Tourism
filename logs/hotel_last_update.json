@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-12-15T04:01:41.880440",
+  "form_keys": [
+    "name",
+    "description",
+    "address",
+    "category",
+    "phone",
+    "email",
+    "websites",
+    "map_embed",
+    "price_min",
+    "price_max",
+    "amenities",
+    "latitude",
+    "longitude",
+    "is_active"
+  ],
+  "form_category_raw": "Resort",
+  "hotel_column_exists_category": true,
+  "update_data": {
+    "name": "asdasddaw",
+    "description": "lkaenflaenfla",
+    "address": "lkalkfnalkns",
+    "phone": "128198032",
+    "email": "alsklkdjlk@mail.cm",
+    "price_min": 1000.0,
+    "price_max": 3000000.0,
+    "map_embed": "",
+    "websites": [
+      "lkadjldjlwaj"
+    ],
+    "amenities": [
+      "vroom"
+    ],
+    "latitude": "14.167203",
+    "longitude": "121.202545",
+    "is_active": true,
+    "updated_at": "2025-12-15T04:01:41.855434",
+    "category": "Resort",
+    "gallery_urls": []
+  }
+}

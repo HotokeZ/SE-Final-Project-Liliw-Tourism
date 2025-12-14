@@ -14,7 +14,7 @@
     {% include 'header.html' %}
 
     <!-- Hero Section -->
-    <section class="hero-section" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{{ url_for('static', filename='uploads/' + hotel.image) if hotel.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}');">
+    <section class="hero-section" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{{ hotel.image_url or (url_for('static', filename='uploads/' + hotel.image) if hotel.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG')) }}');">
         <div class="hero-content">
             <div class="breadcrumb">
                 <a href="{{ url_for('index') }}">Home</a>
@@ -27,18 +27,18 @@
             </div>
             <h1>{{ hotel.name }}</h1>
             <div class="hero-meta">
-                <div class="rating">
-                    {% for i in range(hotel.rating|int) %}
-                    <i class="fas fa-star"></i>
-                    {% endfor %}
-                    {% if hotel.rating % 1 >= 0.5 %}
-                    <i class="fas fa-star-half-alt"></i>
-                    {% endif %}
-                    <span>{{ hotel.rating }}/5</span>
-                </div>
                 <div class="location">
                     <i class="fas fa-map-marker-alt"></i>
                     <span>{{ hotel.address }}</span>
+                </div>
+                <div class="price-summary">
+                    {% if hotel.price_min and hotel.price_max %}
+                        <span class="price">{{ hotel.price_min|format_price }} - {{ hotel.price_max|format_price }} /night</span>
+                    {% elif hotel.price_min %}
+                        <span class="price">From {{ hotel.price_min|format_price }} /night</span>
+                    {% elif hotel.price_max %}
+                        <span class="price">Up to {{ hotel.price_max|format_price }} /night</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -138,8 +138,13 @@
                             {% if hotel.amenities %}
                                 {% for amenity in hotel.amenities %}
                                 <div class="amenity-item">
-                                    <i class="fas fa-{{ amenity.icon or 'check' }}"></i>
-                                    <span>{{ amenity.name }}</span>
+                                    {% if amenity is mapping %}
+                                        <i class="fas fa-{{ amenity.icon or 'check' }}"></i>
+                                        <span>{{ amenity.name }}</span>
+                                    {% else %}
+                                        <i class="fas fa-check"></i>
+                                        <span>{{ amenity }}</span>
+                                    {% endif %}
                                 </div>
                                 {% endfor %}
                             {% else %}
@@ -328,14 +333,16 @@
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if hotel.website %}
-                                <div class="contact-item">
-                                    <i class="fas fa-globe"></i>
-                                    <div>
-                                        <strong>Website:</strong>
-                                        <p><a href="{{ hotel.website }}" target="_blank">{{ hotel.website }}</a></p>
+                                {% if hotel.websites %}
+                                    {% for w in hotel.websites %}
+                                    <div class="contact-item">
+                                        <i class="fas fa-globe"></i>
+                                        <div>
+                                            <strong>Website:</strong>
+                                            <p><a href="{{ w }}" target="_blank">{{ w }}</a></p>
+                                        </div>
                                     </div>
-                                </div>
+                                    {% endfor %}
                                 {% endif %}
                             </div>
                             <div class="map-container">
@@ -360,19 +367,10 @@
                 <div class="sidebar-card quick-info">
                     <div class="price-info">
                         <span class="label">Starting from</span>
-                        <div class="price">₱{{ hotel.price_min or '1,500' }}</div>
-                        <span class="per-night">per night</span>
-                    </div>
-                    <div class="rating-info">
-                        <div class="stars">
-                            {% for i in range(hotel.rating|int) %}
-                            <i class="fas fa-star"></i>
-                            {% endfor %}
-                            {% if hotel.rating % 1 >= 0.5 %}
-                            <i class="fas fa-star-half-alt"></i>
-                            {% endif %}
+                        <div class="price">
+                            {% if hotel.price_min %}{{ hotel.price_min|format_price }}{% else %}N/A{% endif %}
                         </div>
-                        <span>{{ hotel.rating }}/5 ({{ hotel.reviews_count or '0' }} reviews)</span>
+                        <span class="per-night">per night</span>
                     </div>
                     <div class="quick-contact">
                         <a href="tel:{{ hotel.phone }}" class="contact-btn">
@@ -386,6 +384,13 @@
                         </a>
                         {% endif %}
                     </div>
+                    {% if hotel.websites %}
+                    <div class="website-links" style="margin-top:10px;">
+                        {% for w in hotel.websites %}
+                            <a href="{{ w }}" target="_blank" class="btn btn-secondary" style="display:inline-block;margin-right:6px;">Visit Site</a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Booking Form -->
@@ -469,23 +474,19 @@
                 <!-- Similar Hotels -->
                 <div class="sidebar-card similar-places">
                     <h3>Similar Hotels</h3>
-                    {% if similar_hotels %}
-                        {% for similar in similar_hotels %}
-                        <a href="{{ url_for('indiv_hotel', id=similar.id) }}" class="similar-item">
-                            <img src="{{ url_for('static', filename='uploads/' + similar.image) if similar.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ similar.name }}">
-                            <div class="similar-info">
-                                <h4>{{ similar.name }}</h4>
-                                <div class="similar-rating">
-                                    <i class="fas fa-star"></i>
-                                    <span>{{ similar.rating }}</span>
+                        {% if similar_hotels %}
+                            {% for similar in similar_hotels %}
+                            <a href="{{ url_for('indiv_hotel', hotel=similar.get('slug') or (similar.get('name')|replace(' ', '-')|lower)) }}" class="similar-item">
+                                <img src="{{ similar.get('image_url') or url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ similar.get('name') }}">
+                                <div class="similar-info">
+                                    <h4>{{ similar.get('name') }}</h4>
+                                    <div class="similar-price">{% if similar.get('price_min') %}From {{ similar.get('price_min')|format_price }}{% else %}N/A{% endif %}</div>
                                 </div>
-                                <div class="similar-price">From ₱{{ similar.price_min }}</div>
-                            </div>
-                        </a>
-                        {% endfor %}
-                    {% else %}
-                        <p class="no-similar">More hotels coming soon!</p>
-                    {% endif %}
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <p class="no-similar">More hotels coming soon!</p>
+                        {% endif %}
                 </div>
             </aside>
         </div>

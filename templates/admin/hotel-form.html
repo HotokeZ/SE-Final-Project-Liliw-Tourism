@@ -14,6 +14,15 @@
         .tag-input input[type=text] { flex:1 1 320px; }
         .amenity-chip { background:#f1f1f1; padding:6px 8px; border-radius:16px; display:inline-flex; gap:6px; align-items:center; }
         .amenity-chip button { background:transparent; border:none; cursor:pointer; color:#888; }
+        /* Reuse product uploader styles */
+        .image-uploader .uploader-controls { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+        .image-grid { display:flex; gap:10px; flex-wrap:wrap; }
+        .image-item { position:relative; width:140px; height:100px; border-radius:8px; overflow:hidden; background:#f6f7fb; display:flex; align-items:center; justify-content:center; }
+        .image-item img{ width:100%; height:100%; object-fit:cover; display:block }
+        .image-item .feature-btn{ position:absolute; left:6px; top:6px; background:rgba(255,255,255,0.9); border:0; padding:4px 6px; border-radius:6px; cursor:pointer }
+        .image-item.featured { box-shadow:0 0 0 3px rgba(11,102,195,0.12); }
+        .image-item .remove-btn{ position:absolute; right:6px; top:6px; background:rgba(0,0,0,0.5); color:#fff; border:0; padding:4px 6px; border-radius:6px; cursor:pointer }
+        .image-uploader .hint{ color:#666; font-size:0.9rem }
     </style>
 </head>
 <body>
@@ -36,7 +45,7 @@
         {% endwith %}
 
         <div class="dashboard-section">
-            <form class="form-container" method="POST" enctype="multipart/form-data">
+            <form class="form-container" method="POST" enctype="multipart/form-data" onsubmit="try{ console.log('DEBUG client (onsubmit): category=', document.getElementById('category') ? document.getElementById('category').value : null); }catch(e){}">
                 <div class="form-group">
                     <label for="name">Hotel Name *</label>
                     <input type="text" id="name" name="name" value="{{ hotel.name if hotel else '' }}" required>
@@ -52,6 +61,17 @@
                     <input type="text" id="address" name="address" value="{{ hotel.address if hotel else '' }}">
                 </div>
 
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category">
+                        {% set current_cat = hotel.category if hotel and hotel.category else 'Hotel' %}
+                        <option value="Hotel" {{ 'selected' if current_cat == 'Hotel' else '' }}>Hotel</option>
+                        <option value="Resort" {{ 'selected' if current_cat == 'Resort' else '' }}>Resort</option>
+                        <option value="Inn" {{ 'selected' if current_cat == 'Inn' else '' }}>Inn</option>
+                        <option value="Homestay" {{ 'selected' if current_cat == 'Homestay' else '' }}>Homestay</option>
+                    </select>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="phone">Phone</label>
@@ -63,10 +83,6 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="price_range">Price Range</label>
-                    <input type="text" id="price_range" name="price_range" value="{{ hotel.price_range if hotel else '' }}" placeholder="e.g., ₱1,500 - ₱3,500 per night">
-                </div>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -92,18 +108,29 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="image">{{ 'Change' if hotel else 'Upload' }} Images</label>
-                        <div class="file-upload" aria-live="polite">
-                            <input type="file" id="featured-image" name="image" accept="image/*" multiple>
-                            <input type="file" id="gallery-images" name="gallery_images" accept="image/*" multiple style="display:none">
-                            <div class="file-upload-label" role="button" tabindex="0" aria-controls="imagePreview" aria-label="Upload images">
-                                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
-                                <span>Click to upload or drag and drop</span>
-                                <small>JPG, PNG or WEBP (MAX. 5MB)</small>
+                        <div id="imageUploader" class="image-uploader">
+                            <input type="file" id="featuredInput" name="image" accept="image/*" style="display:none">
+                            <input type="file" id="galleryInput" name="gallery_images" accept="image/*" multiple style="display:none">
+                            <div class="uploader-controls">
+                                <button type="button" id="addImagesBtn" class="btn btn-secondary">Add Images</button>
+                                <span class="hint">Select a featured image by clicking the star on a preview.</span>
                             </div>
-                            <div class="image-preview" id="imagePreview" style="display:none">
-                                <div class="image-grid-container">
-                                    <div class="image-grid" id="imageGrid" aria-label="Selected images"></div>
-                                </div>
+                            <div id="imageGrid" class="image-grid">
+                                {% if hotel %}
+                                    {% set existing_images = [] %}
+                                    {% if hotel.gallery_urls %}
+                                        {% set existing_images = hotel.gallery_urls %}
+                                    {% elif hotel.image_url %}
+                                        {% set existing_images = [hotel.image_url] %}
+                                    {% endif %}
+                                    {% for url in existing_images %}
+                                    <div class="image-item{% if hotel.image_url and hotel.image_url == url %} featured{% endif %}" data-src="{{ url }}">
+                                        <button type="button" class="feature-btn" title="Set as featured">★</button>
+                                        <img src="{{ url }}" alt="current">
+                                        <button type="button" class="remove-btn" title="Remove">✕</button>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
                             </div>
                         </div>
                         {% if hotel and (hotel.image_url or hotel.gallery_urls) %}
@@ -181,15 +208,60 @@
         }
     </script>
     <script>
+        // Debug helper: if URL contains ?preserve=1 then intercept form submit,
+        // log data to console and delay navigation so you can inspect DevTools.
+        (function(){
+            try{
+                var params = new URLSearchParams(window.location.search);
+                if(!params.get('preserve')) return;
+                var form = document.querySelector('form.form-container');
+                if(!form) return;
+
+                // create a small banner so it's obvious the page will delay
+                var banner = document.createElement('div');
+                banner.style.position = 'fixed';
+                banner.style.left = '12px';
+                banner.style.right = '12px';
+                banner.style.top = '12px';
+                banner.style.zIndex = 9999;
+                banner.style.background = '#fff3c4';
+                banner.style.border = '1px solid #f0c36d';
+                banner.style.padding = '10px 12px';
+                banner.style.borderRadius = '6px';
+                banner.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
+                banner.innerHTML = '<strong>DEBUG MODE:</strong> submit will be delayed so you can inspect DevTools. <button id="preserveSubmitNow" style="margin-left:12px;padding:6px 8px;">Submit now</button> <span id="preserveCountdown" style="margin-left:8px"></span>';
+                document.body.appendChild(banner);
+
+                var countdownEl = document.getElementById('preserveCountdown');
+                var manualBtn = document.getElementById('preserveSubmitNow');
+
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    try{
+                        var cat = document.getElementById('category') ? document.getElementById('category').value : null;
+                        var amenities = document.getElementById('amenities') ? document.getElementById('amenities').value : null;
+                        var websites = document.getElementById('websites') ? document.getElementById('websites').value : null;
+                        console.log('DEBUG preserve submit: category=', cat, ' amenities=', amenities, ' websites=', websites);
+                    }catch(er){ console.log('DEBUG preserve: error reading form fields', er); }
+
+                    // show 8-second countdown then submit
+                    var t = 8;
+                    countdownEl.textContent = 'Submitting in ' + t + 's...';
+                    var interval = setInterval(function(){ t--; if(t<=0){ clearInterval(interval); countdownEl.textContent='Submitting...'; form.submit(); } else { countdownEl.textContent = 'Submitting in ' + t + 's...'; } }, 1000);
+
+                    manualBtn.addEventListener('click', function(){ clearInterval(interval); countdownEl.textContent='Submitting now...'; form.submit(); });
+                }, { once: true });
+            }catch(e){ console.log('DEBUG preserve helper error', e); }
+        })();
+    </script>
+    <script>
         // small helpers: amenities chips, contact/price sanitizers, and map init
         document.addEventListener('DOMContentLoaded', function () {
             // contact numeric-only
             var phone = document.getElementById('phone');
             if (phone) phone.addEventListener('input', function () { this.value = this.value.replace(/[^0-9]/g, ''); });
 
-            // price_range allow numbers, dash and dot
-            var price = document.getElementById('price_range');
-            if (price) price.addEventListener('input', function () { this.value = this.value.replace(/[^0-9\.\-\s]/g, ''); });
+            // price inputs are numeric (min/max) — no legacy price_range field
 
             // amenities UI
             var amenitiesInput = document.getElementById('amenities_input');
@@ -263,6 +335,62 @@
                 if (mapEmbed && mapEmbed.value) tryParseEmbedAndSet(mapEmbed.value);
                 if (mapEmbed) mapEmbed.addEventListener('blur', function(){ tryParseEmbedAndSet(this.value); });
             }
+            // Image uploader behavior (copied from product-form)
+            (function(){
+                var addBtn = document.getElementById('addImagesBtn');
+                var featuredInput = document.getElementById('featuredInput');
+                var galleryInput = document.getElementById('galleryInput');
+                var imageGrid = document.getElementById('imageGrid');
+                // Helper to create preview node
+                function makePreview(fileOrUrl){
+                    var container = document.createElement('div'); container.className='image-item';
+                    var feat = document.createElement('button'); feat.type='button'; feat.className='feature-btn'; feat.textContent='★';
+                    var img = document.createElement('img');
+                    if(typeof fileOrUrl === 'string') { img.src = fileOrUrl; }
+                    else { img.src = URL.createObjectURL(fileOrUrl); img.dataset.fileName = fileOrUrl.name; }
+                    var rem = document.createElement('button'); rem.type='button'; rem.className='remove-btn'; rem.textContent='✕';
+                    container.appendChild(feat); container.appendChild(img); container.appendChild(rem);
+                    // feature toggle
+                    feat.addEventListener('click', function(){
+                        Array.from(imageGrid.querySelectorAll('.image-item')).forEach(function(it){ it.classList.remove('featured'); });
+                        container.classList.add('featured');
+                    });
+                    rem.addEventListener('click', function(){ container.remove(); });
+                    return container;
+                }
+                if(addBtn) addBtn.addEventListener('click', function(){ galleryInput.click(); });
+                if(galleryInput) galleryInput.addEventListener('change', function(e){ Array.from(e.target.files).forEach(function(f){ imageGrid.appendChild(makePreview(f)); }); });
+
+                // On form submit, pack files into inputs
+                var form = document.querySelector('form.form-container');
+                if(form){
+                    form.addEventListener('submit', function(evt){
+                        try{
+                            var catEl = document.getElementById('category');
+                            var amenitiesEl = document.getElementById('amenities');
+                            var websitesEl = document.getElementById('websites');
+                            console.log('DEBUG client: submitting hotel form — category=', catEl ? catEl.value : null, ' amenities=', amenitiesEl ? amenitiesEl.value : null, ' websites=', websitesEl ? websitesEl.value : null);
+                        }catch(e){ console.log('DEBUG client: error reading category before submit', e); }
+                        // collect files from previews and construct DataTransfer
+                        var dtFeatured = new DataTransfer();
+                        var dtGallery = new DataTransfer();
+                        var items = imageGrid.querySelectorAll('.image-item');
+                        if(items.length){
+                            var featuredNode = imageGrid.querySelector('.image-item.featured') || items[0];
+                            Array.from(items).forEach(function(it){
+                                var img = it.querySelector('img');
+                                if(img && img.dataset && img.dataset.fileName){
+                                    var name = img.dataset.fileName;
+                                    var f = Array.from(galleryInput.files).find(function(x){ return x.name === name; });
+                                    if(f){ dtGallery.items.add(f); if(it === featuredNode){ dtFeatured.items.add(f); } }
+                                }
+                            });
+                        }
+                        if(dtFeatured.files.length) featuredInput.files = dtFeatured.files;
+                        if(dtGallery.files.length) galleryInput.files = dtGallery.files;
+                    });
+                }
+            })();
         });
     </script>
 </body>

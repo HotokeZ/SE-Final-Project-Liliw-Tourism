@@ -41,183 +41,44 @@
     <section class="establishments-section">
         <div class="section-container">
             <div class="establishments-grid">
-                <!-- Hotels -->
-                <a href="{{ url_for('indiv_hotel', hotel='liliw-grand-hotel') }}" class="establishment-card" data-category="hotel">
-                    <div class="card-image">
-                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Grand Hotel">
-                        <div class="card-overlay"></div>
-                        <span class="card-badge">Hotel</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>Liliw Grand Hotel</h3>
-                        <div class="rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                            <span>4.5</span>
+                {% if hotels and hotels|length > 0 %}
+                    {% for hotel in hotels %}
+                    <a href="{{ url_for('indiv_hotel', hotel=hotel.get('slug') or (hotel.get('name')|replace(' ', '-')|lower)) }}" class="establishment-card" data-category="{{ (hotel.get('category') or 'hotel')|lower }}">
+                        <div class="card-image">
+                            <img src="{{ hotel.get('image_url') or url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ hotel.get('name') }}">
+                            <div class="card-overlay"></div>
+                            <span class="card-badge">{{ (hotel.get('category') or 'Hotel')|title }}</span>
                         </div>
-                        <p>Modern hotel with spacious rooms, conference facilities, and restaurant. Located in the heart of town center.</p>
-                        <div class="card-features">
-                            <span><i class="fas fa-wifi"></i> Free WiFi</span>
-                            <span><i class="fas fa-parking"></i> Parking</span>
-                            <span><i class="fas fa-utensils"></i> Restaurant</span>
+                        <div class="card-content">
+                            <h3>{{ hotel.get('name') }}</h3>
+                            <p>{{ (hotel.get('description') or '')[:140] }}</p>
+                            <div class="card-features">
+                                {% if hotel.get('amenities') %}
+                                    {% for a in hotel.get('amenities')[:3] %}
+                                        <span><i class="fas fa-check"></i> {{ a }}</span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <span class="price">
+                                    {% if hotel.get('price_min') and hotel.get('price_max') %}
+                                        {{ hotel.get('price_min')|format_price }} - {{ hotel.get('price_max')|format_price }} /night
+                                    {% elif hotel.get('price_min') %}
+                                        From {{ hotel.get('price_min')|format_price }} /night
+                                    {% elif hotel.get('price_max') %}
+                                        Up to {{ hotel.get('price_max')|format_price }} /night
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </span>
+                                <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
+                            </div>
                         </div>
-                        <div class="card-footer">
-                            <span class="price">₱1,500 - ₱3,000 /night</span>
-                            <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Resorts -->
-                <a href="{{ url_for('indiv_hotel', hotel='villa-escudero-resort') }}" class="establishment-card" data-category="resort">
-                    <div class="card-image">
-                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Villa Escudero Resort">
-                        <div class="card-overlay"></div>
-                        <span class="card-badge">Resort</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>Villa Escudero Resort</h3>
-                        <div class="rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <span>5.0</span>
-                        </div>
-                        <p>Premium resort featuring swimming pools, spa services, and authentic Filipino cultural experiences.</p>
-                        <div class="card-features">
-                            <span><i class="fas fa-swimming-pool"></i> Pool</span>
-                            <span><i class="fas fa-spa"></i> Spa</span>
-                            <span><i class="fas fa-map"></i> Tours</span>
-                        </div>
-                        <div class="card-footer">
-                            <span class="price">₱3,500 - ₱6,000 /night</span>
-                            <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="{{ url_for('indiv_hotel', hotel='hidden-valley-resort') }}" class="establishment-card" data-category="resort">
-                    <div class="card-image">
-                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Hidden Valley Resort">
-                        <div class="card-overlay"></div>
-                        <span class="card-badge">Resort</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>Hidden Valley Springs</h3>
-                        <div class="rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <span>4.8</span>
-                        </div>
-                        <p>Eco-resort nestled in a lush rainforest with natural hot springs and volcanic crater lake.</p>
-                        <div class="card-features">
-                            <span><i class="fas fa-hot-tub"></i> Hot Springs</span>
-                            <span><i class="fas fa-leaf"></i> Eco-Friendly</span>
-                            <span><i class="fas fa-hiking"></i> Nature Trails</span>
-                        </div>
-                        <div class="card-footer">
-                            <span class="price">₱2,800 - ₱5,500 /night</span>
-                            <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Inns -->
-                <a href="{{ url_for('indiv_hotel', hotel='travelers-inn') }}" class="establishment-card" data-category="inn">
-                    <div class="card-image">
-                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Travelers Inn">
-                        <div class="card-overlay"></div>
-                        <span class="card-badge">Inn</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>Travelers Inn Liliw</h3>
-                        <div class="rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="far fa-star"></i>
-                            <span>4.0</span>
-                        </div>
-                        <p>Budget-friendly inn offering clean rooms and basic amenities. Perfect for backpackers and solo travelers.</p>
-                        <div class="card-features">
-                            <span><i class="fas fa-wifi"></i> Free WiFi</span>
-                            <span><i class="fas fa-coffee"></i> Breakfast</span>
-                            <span><i class="fas fa-fan"></i> Air-Con</span>
-                        </div>
-                        <div class="card-footer">
-                            <span class="price">₱800 - ₱1,500 /night</span>
-                            <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Homestays -->
-                <a href="{{ url_for('indiv_hotel', hotel='casa-bella') }}" class="establishment-card" data-category="homestay">
-                    <div class="card-image">
-                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Casa Bella">
-                        <div class="card-overlay"></div>
-                        <span class="card-badge">Homestay</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>Casa Bella Homestay</h3>
-                        <div class="rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                            <span>4.6</span>
-                        </div>
-                        <p>Experience Filipino hospitality in this charming family-run homestay with home-cooked meals.</p>
-                        <div class="card-features">
-                            <span><i class="fas fa-home"></i> Home Stay</span>
-                            <span><i class="fas fa-utensils"></i> Meals Included</span>
-                            <span><i class="fas fa-users"></i> Family Friendly</span>
-                        </div>
-                        <div class="card-footer">
-                            <span class="price">₱1,000 - ₱2,000 /night</span>
-                            <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="{{ url_for('indiv_hotel', hotel='titas-place') }}" class="establishment-card" data-category="homestay">
-                    <div class="card-image">
-                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Tita's Place">
-                        <div class="card-overlay"></div>
-                        <span class="card-badge">Homestay</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>Tita's Place</h3>
-                        <div class="rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <span>4.9</span>
-                        </div>
-                        <p>Cozy homestay in a heritage house with traditional Filipino ambiance and warm hospitality.</p>
-                        <div class="card-features">
-                            <span><i class="fas fa-landmark"></i> Heritage</span>
-                            <span><i class="fas fa-coffee"></i> Breakfast</span>
-                            <span><i class="fas fa-bicycle"></i> Bike Rental</span>
-                        </div>
-                        <div class="card-footer">
-                            <span class="price">₱1,200 - ₱2,200 /night</span>
-                            <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-data">No properties found. Please check back later.</div>
+                {% endif %}
             </div>
         </div>
     </section>
