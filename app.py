@@ -406,7 +406,77 @@ def festivals():
 
 @app.route('/experiences/festivals/events')
 def events():
-    return render_template('experiences/festivals/events.html')
+    events_list = []
+    if supabase:
+        try:
+            resp = supabase.table('events').select('*').order('event_date', desc=False).execute()
+            rows = resp.data or []
+            for r in rows:
+                # determine image to use
+                image = r.get('image_url') or (r.get('gallery_urls') and (r.get('gallery_urls')[0] if isinstance(r.get('gallery_urls'), list) and len(r.get('gallery_urls'))>0 else None)) or url_for('static', filename='assets/images/attractions/natural/hero.JPG')
+                # format date display
+                start = r.get('event_date')
+                end = r.get('end_date')
+                display_date = ''
+                try:
+                    if start:
+                        sd = datetime.fromisoformat(start)
+                        if end:
+                            ed = datetime.fromisoformat(end)
+                            if sd.year == ed.year and sd.month == ed.month:
+                                display_date = f"{sd.day}-{ed.day} {sd.strftime('%B %Y')}"
+                            else:
+                                display_date = f"{sd.strftime('%d %B %Y')} - {ed.strftime('%d %B %Y')}"
+                        else:
+                            display_date = sd.strftime('%d %B %Y')
+                except Exception:
+                    display_date = start or ''
+
+                # format time display
+                display_time = ''
+                try:
+                    if r.get('all_day') or (not r.get('start_time') and not r.get('end_time')):
+                        display_time = 'All Day Event'
+                    else:
+                        st = r.get('start_time')
+                        et = r.get('end_time')
+                        if st and et:
+                            t1 = datetime.strptime(st, '%H:%M').strftime('%-I:%M %p') if '%' in '%-I' else datetime.strptime(st, '%H:%M').strftime('%I:%M %p').lstrip('0')
+                            t2 = datetime.strptime(et, '%H:%M').strftime('%-I:%M %p') if '%' in '%-I' else datetime.strptime(et, '%H:%M').strftime('%I:%M %p').lstrip('0')
+                            display_time = f"{t1} - {t2}"
+                        elif st:
+                            display_time = st
+                except Exception:
+                    display_time = (r.get('start_time') or '')
+
+                month = ''
+                try:
+                    if start:
+                        month = datetime.fromisoformat(start).strftime('%B').lower()
+                except Exception:
+                    month = ''
+
+                events_list.append({
+                    'id': r.get('id'),
+                    'title': r.get('title'),
+                    'image': image,
+                    'featured': bool(r.get('is_featured')),
+                    'description': r.get('description') or '',
+                    'full_description': r.get('full_description') or '',
+                    'display_date': display_date,
+                    'display_time': display_time,
+                    'location': r.get('location') or r.get('venue_address') or '',
+                    'start_date': start,
+                    'category': r.get('category') or '',
+                    'cta_text': r.get('cta_text'),
+                    'cta_url': r.get('cta_url'),
+                    'map_embed': r.get('map_embed'),
+                    'month': month
+                })
+        except Exception as e:
+            print(f"Error fetching events for public page: {e}")
+
+    return render_template('experiences/festivals/events.html', events=events_list)
 
 @app.route('/experiences/festivals/about')
 def festivals_about():
@@ -1911,18 +1981,13 @@ def admin_events_add():
                 title = request.form.get('title')
                 image_url = None
 
-                # Handle featured image upload (single)
+                # Handle featured image upload (single) using helper
                 if 'image' in request.files:
                     file = request.files['image']
                     if file and file.filename:
                         file_ext = file.filename.rsplit('.', 1)[-1].lower()
-                        unique_filename = f"events/{uuid.uuid4()}.{file_ext}"
                         file_bytes = file.read()
-                        supabase.storage.from_('blog-images').upload(
-                            unique_filename, file_bytes,
-                            {'content-type': file.content_type}
-                        )
-                        image_url = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
+                        image_url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='blog-images', prefix='events/')
 
                 # Handle gallery images (multiple)
                 gallery_urls = []
@@ -1930,13 +1995,10 @@ def admin_events_add():
                 for gf in gallery_files:
                     if gf and gf.filename:
                         gf_ext = gf.filename.rsplit('.', 1)[-1].lower()
-                        gf_name = f"events/gallery/{uuid.uuid4()}.{gf_ext}"
                         gf_bytes = gf.read()
-                        supabase.storage.from_('blog-images').upload(
-                            gf_name, gf_bytes,
-                            {'content-type': gf.content_type}
-                        )
-                        gallery_urls.append(f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{gf_name}")
+                        url = upload_bytes_get_url_to_bucket(gf_bytes, gf_ext, gf.content_type, bucket='blog-images', prefix='events/gallery/')
+                        if url:
+                            gallery_urls.append(url)
 
                 # Extra optional fields from form
                 cta_text = request.form.get('cta_text') or None
@@ -2091,13 +2153,8 @@ def admin_events_edit(event_id):
                     file = request.files['image']
                     if file and file.filename:
                         file_ext = file.filename.rsplit('.', 1)[-1].lower()
-                        unique_filename = f"events/{uuid.uuid4()}.{file_ext}"
                         file_bytes = file.read()
-                        supabase.storage.from_('blog-images').upload(
-                            unique_filename, file_bytes,
-                            {'content-type': file.content_type}
-                        )
-                        update_data['image_url'] = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
+                        update_data['image_url'] = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='blog-images', prefix='events/')
 
                 # Handle gallery uploads: append to existing gallery_urls if present
                 gallery_files = request.files.getlist('gallery_images') or []
@@ -2106,13 +2163,10 @@ def admin_events_edit(event_id):
                     for gf in gallery_files:
                         if gf and gf.filename:
                             gf_ext = gf.filename.rsplit('.', 1)[-1].lower()
-                            gf_name = f"events/gallery/{uuid.uuid4()}.{gf_ext}"
                             gf_bytes = gf.read()
-                            supabase.storage.from_('blog-images').upload(
-                                gf_name, gf_bytes,
-                                {'content-type': gf.content_type}
-                            )
-                            gallery_urls.append(f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{gf_name}")
+                            url = upload_bytes_get_url_to_bucket(gf_bytes, gf_ext, gf.content_type, bucket='blog-images', prefix='events/gallery/')
+                            if url:
+                                gallery_urls.append(url)
                     # Try to fetch existing gallery and merge
                     try:
                         resp = supabase.table('events').select('gallery_urls').eq('id', event_id).single().execute()
