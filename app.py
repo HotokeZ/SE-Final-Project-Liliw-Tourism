@@ -2231,32 +2231,92 @@ def admin_hotels_add():
             try:
                 name = request.form.get('name')
                 image_url = None
-                
+                gallery_urls = []
+
+                # support multiple files (featured + gallery)
                 if 'image' in request.files:
-                    file = request.files['image']
-                    if file and file.filename:
-                        file_ext = file.filename.rsplit('.', 1)[-1].lower()
-                        unique_filename = f"hotels/{uuid.uuid4()}.{file_ext}"
-                        file_bytes = file.read()
-                        supabase.storage.from_('blog-images').upload(
-                            unique_filename, file_bytes,
-                            {'content-type': file.content_type}
-                        )
-                        image_url = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
-                
+                    files = request.files.getlist('image')
+                    uploaded = []
+                    for file in files:
+                        if file and getattr(file, 'filename', ''):
+                            file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                            file_bytes = file.read()
+                            url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, SUPABASE_PRODUCT_BUCKET, prefix='hotels/')
+                            if url:
+                                uploaded.append(url)
+                    if uploaded:
+                        image_url = uploaded[0]
+                        if len(uploaded) > 1:
+                            gallery_urls = uploaded[1:]
+                # also accept gallery_images separately
+                if not gallery_urls and 'gallery_images' in request.files:
+                    files = request.files.getlist('gallery_images')
+                    for file in files:
+                        if file and getattr(file, 'filename', ''):
+                            file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                            file_bytes = file.read()
+                            url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, SUPABASE_PRODUCT_BUCKET, prefix='hotels/')
+                            if url:
+                                gallery_urls.append(url)
+
+                # sanitize phone to digits only
+                phone_raw = request.form.get('phone') or ''
+                phone = re.sub(r'[^0-9]', '', phone_raw)
+
+                # price min / max
+                price_min_raw = request.form.get('price_min') or ''
+                price_max_raw = request.form.get('price_max') or ''
+                try:
+                    price_min = float(price_min_raw) if price_min_raw != '' else None
+                except Exception:
+                    price_min = None
+                try:
+                    price_max = float(price_max_raw) if price_max_raw != '' else None
+                except Exception:
+                    price_max = None
+
+                # amenities (expect JSON array string or comma-separated)
+                amenities_raw = request.form.get('amenities') or ''
+                amenities = []
+                try:
+                    import json
+                    parsed = json.loads(amenities_raw)
+                    if isinstance(parsed, list):
+                        amenities = parsed
+                except Exception:
+                    # fallback: comma separated
+                    amenities = [a.strip() for a in amenities_raw.split(',') if a.strip()]
+
+                # websites (JSON or comma-separated)
+                websites_raw = request.form.get('websites') or ''
+                websites = []
+                try:
+                    import json
+                    parsed = json.loads(websites_raw)
+                    if isinstance(parsed, list):
+                        websites = parsed
+                except Exception:
+                    websites = [w.strip() for w in websites_raw.split(',') if w.strip()]
+
                 hotel_data = {
                     'name': name,
                     'slug': generate_slug(name),
                     'description': request.form.get('description'),
                     'address': request.form.get('address'),
-                    'phone': request.form.get('phone'),
+                    'phone': phone,
                     'email': request.form.get('email'),
-                    'price_range': request.form.get('price_range'),
+                    'price_min': price_min,
+                    'price_max': price_max,
                     'image_url': image_url,
                     'map_embed': request.form.get('map_embed'),
+                    'websites': websites,
+                    'amenities': amenities,
+                    'gallery_urls': gallery_urls,
+                    'latitude': request.form.get('latitude'),
+                    'longitude': request.form.get('longitude'),
                     'is_active': True
                 }
-                
+
                 supabase.table('hotels').insert(hotel_data).execute()
                 flash('Hotel added successfully!', 'success')
                 return redirect(url_for('admin_hotels'))
@@ -2272,30 +2332,88 @@ def admin_hotels_edit(hotel_id):
     if request.method == 'POST':
         if supabase:
             try:
+                # handle images
+                image_url = None
+                gallery_urls = None
+                if 'image' in request.files:
+                    files = request.files.getlist('image')
+                    uploaded = []
+                    for file in files:
+                        if file and getattr(file, 'filename', ''):
+                            file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                            file_bytes = file.read()
+                            url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, SUPABASE_PRODUCT_BUCKET, prefix='hotels/')
+                            if url:
+                                uploaded.append(url)
+                    if uploaded:
+                        image_url = uploaded[0]
+                        if len(uploaded) > 1:
+                            gallery_urls = uploaded[1:]
+                if not gallery_urls and 'gallery_images' in request.files:
+                    files = request.files.getlist('gallery_images')
+                    gallery_urls = []
+                    for file in files:
+                        if file and getattr(file, 'filename', ''):
+                            file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                            file_bytes = file.read()
+                            url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, SUPABASE_PRODUCT_BUCKET, prefix='hotels/')
+                            if url:
+                                gallery_urls.append(url)
+
+                # parse price min/max
+                price_min_raw = request.form.get('price_min') or ''
+                price_max_raw = request.form.get('price_max') or ''
+                try:
+                    price_min = float(price_min_raw) if price_min_raw != '' else None
+                except Exception:
+                    price_min = None
+                try:
+                    price_max = float(price_max_raw) if price_max_raw != '' else None
+                except Exception:
+                    price_max = None
+
+                # parse websites
+                websites_raw = request.form.get('websites') or ''
+                websites = []
+                try:
+                    import json
+                    parsed = json.loads(websites_raw)
+                    if isinstance(parsed, list):
+                        websites = parsed
+                except Exception:
+                    websites = [w.strip() for w in websites_raw.split(',') if w.strip()]
+
                 update_data = {
                     'name': request.form.get('name'),
                     'description': request.form.get('description'),
                     'address': request.form.get('address'),
-                    'phone': request.form.get('phone'),
+                    'phone': re.sub(r'[^0-9]', '', (request.form.get('phone') or '')),
                     'email': request.form.get('email'),
-                    'price_range': request.form.get('price_range'),
+                    'price_min': price_min,
+                    'price_max': price_max,
                     'map_embed': request.form.get('map_embed'),
+                    'websites': websites,
+                    'amenities': None,
+                    'latitude': request.form.get('latitude'),
+                    'longitude': request.form.get('longitude'),
                     'is_active': request.form.get('is_active') == 'on',
                     'updated_at': datetime.now().isoformat()
                 }
-                
-                if 'image' in request.files:
-                    file = request.files['image']
-                    if file and file.filename:
-                        file_ext = file.filename.rsplit('.', 1)[-1].lower()
-                        unique_filename = f"hotels/{uuid.uuid4()}.{file_ext}"
-                        file_bytes = file.read()
-                        supabase.storage.from_('blog-images').upload(
-                            unique_filename, file_bytes,
-                            {'content-type': file.content_type}
-                        )
-                        update_data['image_url'] = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
-                
+
+                # parse amenities
+                amenities_raw = request.form.get('amenities') or ''
+                try:
+                    import json
+                    parsed = json.loads(amenities_raw)
+                    if isinstance(parsed, list):
+                        update_data['amenities'] = parsed
+                except Exception:
+                    update_data['amenities'] = [a.strip() for a in amenities_raw.split(',') if a.strip()]
+                if image_url:
+                    update_data['image_url'] = image_url
+                if gallery_urls is not None:
+                    update_data['gallery_urls'] = gallery_urls
+
                 supabase.table('hotels').update(update_data).eq('id', hotel_id).execute()
                 flash('Hotel updated successfully!', 'success')
                 return redirect(url_for('admin_hotels'))

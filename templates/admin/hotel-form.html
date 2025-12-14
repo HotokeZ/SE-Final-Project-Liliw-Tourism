@@ -6,6 +6,15 @@
     <title>{{ 'Edit' if hotel else 'Add' }} Hotel - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #hotelMap { height: 280px; border-radius:8px; margin-top:0.5rem; }
+        .tag-input { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        .tag-input input[type=text] { flex:1 1 320px; }
+        .amenity-chip { background:#f1f1f1; padding:6px 8px; border-radius:16px; display:inline-flex; gap:6px; align-items:center; }
+        .amenity-chip button { background:transparent; border:none; cursor:pointer; color:#888; }
+    </style>
 </head>
 <body>
     {% include 'admin/sidebar.html' %}
@@ -59,19 +68,91 @@
                     <input type="text" id="price_range" name="price_range" value="{{ hotel.price_range if hotel else '' }}" placeholder="e.g., ₱1,500 - ₱3,500 per night">
                 </div>
 
-                <div class="form-group">
-                    <label for="map_embed">Google Maps Embed URL</label>
-                    <input type="text" id="map_embed" name="map_embed" value="{{ hotel.map_embed if hotel else '' }}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Website / Social Links</label>
+                        <div class="tag-input" id="websites_ui">
+                            <input type="text" id="websites_input" placeholder="Add a website or social link and press Enter">
+                            <div id="websites_list">
+                                {% if hotel and hotel.websites %}
+                                    {% for w in hotel.websites %}
+                                    <span class="amenity-chip">{{ w }} <button type="button" data-value="{{ w }}">×</button></span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <input type="hidden" id="websites" name="websites" value='{{ hotel.websites | tojson if hotel and hotel.websites else "[]" }}'>
+                    </div>
+                    <div class="form-group">
+                        <label for="map_embed">Google Maps Embed URL</label>
+                        <input type="text" id="map_embed" name="map_embed" value="{{ hotel.map_embed if hotel else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="image">{{ 'Change' if hotel else 'Upload' }} Images</label>
+                        <div class="file-upload" aria-live="polite">
+                            <input type="file" id="featured-image" name="image" accept="image/*" multiple>
+                            <input type="file" id="gallery-images" name="gallery_images" accept="image/*" multiple style="display:none">
+                            <div class="file-upload-label" role="button" tabindex="0" aria-controls="imagePreview" aria-label="Upload images">
+                                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                                <span>Click to upload or drag and drop</span>
+                                <small>JPG, PNG or WEBP (MAX. 5MB)</small>
+                            </div>
+                            <div class="image-preview" id="imagePreview" style="display:none">
+                                <div class="image-grid-container">
+                                    <div class="image-grid" id="imageGrid" aria-label="Selected images"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if hotel and (hotel.image_url or hotel.gallery_urls) %}
+                        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                            {% if hotel.image_url %}
+                            <img src="{{ hotel.image_url }}" alt="Featured" style="max-width:160px;border-radius:8px;">
+                            {% endif %}
+                            {% if hotel.gallery_urls %}
+                                {% for u in hotel.gallery_urls %}
+                                <img src="{{ u }}" alt="Gallery" style="max-width:120px;border-radius:6px;">
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price_min">Price (From)</label>
+                        <input type="number" id="price_min" name="price_min" step="0.01" value="{{ hotel.price_min if hotel and hotel.price_min is not none else '' }}" placeholder="e.g., 1500">
+                    </div>
+                    <div class="form-group">
+                        <label for="price_max">Price (To)</label>
+                        <input type="number" id="price_max" name="price_max" step="0.01" value="{{ hotel.price_max if hotel and hotel.price_max is not none else '' }}" placeholder="e.g., 3500">
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="image">{{ 'Change' if hotel else 'Upload' }} Image</label>
-                    <input type="file" id="image" name="image" accept="image/*">
-                    {% if hotel and hotel.image_url %}
-                    <div style="margin-top: 10px;">
-                        <img src="{{ hotel.image_url }}" alt="Current image" style="max-width: 200px; border-radius: 8px;">
+                    <label for="amenities_input">Amenities (add and press Enter or comma)</label>
+                    <div class="tag-input" id="amenities_ui">
+                        <input type="text" id="amenities_input" placeholder="e.g., Free WiFi, Parking, Breakfast">
+                        <div id="amenities_list">
+                            {% if hotel and hotel.amenities %}
+                                {% for a in hotel.amenities %}
+                                <span class="amenity-chip">{{ a }} <button type="button" data-value="{{ a }}">×</button></span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endif %}
+                    <input type="hidden" id="amenities" name="amenities" value='{{ hotel.amenities | tojson if hotel and hotel.amenities else "[]" }}'>
+                </div>
+
+                <div class="form-group">
+                    <label>Pin Location on Map</label>
+                    <div id="hotelMap"></div>
+                    <input type="hidden" id="latitude" name="latitude" value="{{ hotel.latitude if hotel and hotel.latitude else '' }}">
+                    <input type="hidden" id="longitude" name="longitude" value="{{ hotel.longitude if hotel and hotel.longitude else '' }}">
+                    <div class="small-note">Drag the pin to set the exact location or paste a Google Maps embed URL above.</div>
                 </div>
 
                 {% if hotel %}
@@ -98,6 +179,91 @@
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
+    </script>
+    <script>
+        // small helpers: amenities chips, contact/price sanitizers, and map init
+        document.addEventListener('DOMContentLoaded', function () {
+            // contact numeric-only
+            var phone = document.getElementById('phone');
+            if (phone) phone.addEventListener('input', function () { this.value = this.value.replace(/[^0-9]/g, ''); });
+
+            // price_range allow numbers, dash and dot
+            var price = document.getElementById('price_range');
+            if (price) price.addEventListener('input', function () { this.value = this.value.replace(/[^0-9\.\-\s]/g, ''); });
+
+            // amenities UI
+            var amenitiesInput = document.getElementById('amenities_input');
+            var amenitiesHidden = document.getElementById('amenities');
+            var amenitiesList = document.getElementById('amenities_list');
+
+            function readAmenities() {
+                try { return JSON.parse(amenitiesHidden.value || '[]'); } catch (e) { return []; }
+            }
+            function writeAmenities(arr) { amenitiesHidden.value = JSON.stringify(arr || []); }
+            function renderAmenities() {
+                amenitiesList.innerHTML = '';
+                var items = readAmenities();
+                items.forEach(function(it){
+                    var span = document.createElement('span');
+                    span.className = 'amenity-chip';
+                    span.innerHTML = document.createTextNode(it).textContent + ' ';
+                    var btn = document.createElement('button'); btn.type='button'; btn.textContent='×'; btn.setAttribute('data-value', it);
+                    btn.addEventListener('click', function(){ removeAmenity(it); });
+                    span.appendChild(btn);
+                    amenitiesList.appendChild(span);
+                });
+            }
+            function addAmenity(val) {
+                if (!val) return;
+                var items = readAmenities();
+                val = val.trim(); if (!val) return;
+                if (items.indexOf(val) === -1) items.push(val);
+                writeAmenities(items); renderAmenities();
+            }
+            function removeAmenity(val) { var items = readAmenities(); var idx = items.indexOf(val); if (idx>-1) items.splice(idx,1); writeAmenities(items); renderAmenities(); }
+
+            if (amenitiesInput) {
+                amenitiesInput.addEventListener('keydown', function(e){
+                    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); var v = this.value.replace(/,/g,''); addAmenity(v); this.value = ''; }
+                });
+                amenitiesInput.addEventListener('blur', function(){ if (this.value) { addAmenity(this.value); this.value=''; } });
+            }
+            renderAmenities();
+
+            // websites UI (repeatable link chips)
+            var websitesInput = document.getElementById('websites_input');
+            var websitesHidden = document.getElementById('websites');
+            var websitesList = document.getElementById('websites_list');
+
+            function readWebsites() { try { return JSON.parse(websitesHidden.value || '[]'); } catch(e){ return []; } }
+            function writeWebsites(arr) { websitesHidden.value = JSON.stringify(arr || []); }
+            function renderWebsites() { websitesList.innerHTML = ''; var items = readWebsites(); items.forEach(function(it){ var span = document.createElement('span'); span.className='amenity-chip'; span.textContent = it + ' '; var btn=document.createElement('button'); btn.type='button'; btn.textContent='×'; btn.addEventListener('click', function(){ removeWebsite(it); }); span.appendChild(btn); websitesList.appendChild(span); }); }
+            function addWebsite(v){ if(!v) return; var items = readWebsites(); v=v.trim(); if(!v) return; if(items.indexOf(v)===-1) items.push(v); writeWebsites(items); renderWebsites(); }
+            function removeWebsite(v){ var items=readWebsites(); var idx=items.indexOf(v); if(idx>-1) items.splice(idx,1); writeWebsites(items); renderWebsites(); }
+            if (websitesInput) {
+                websitesInput.addEventListener('keydown', function(e){ if (e.key==='Enter' || e.key===','){ e.preventDefault(); addWebsite(this.value.replace(/,/g,'')); this.value=''; } });
+                websitesInput.addEventListener('blur', function(){ if (this.value) { addWebsite(this.value); this.value=''; } });
+            }
+            renderWebsites();
+
+            // Map initialization (Leaflet)
+            if (window.L) {
+                var latInput = document.getElementById('latitude');
+                var lngInput = document.getElementById('longitude');
+                var mapEmbed = document.getElementById('map_embed');
+                var lat = parseFloat(latInput.value) || 14.1833;
+                var lng = parseFloat(lngInput.value) || 121.3333;
+                var map = L.map('hotelMap').setView([lat,lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+                var marker = L.marker([lat,lng], {draggable:true}).addTo(map);
+                marker.on('dragend', function(e){ var p = e.target.getLatLng(); latInput.value = p.lat.toFixed(6); lngInput.value = p.lng.toFixed(6); });
+                map.on('click', function(e){ marker.setLatLng(e.latlng); latInput.value = e.latlng.lat.toFixed(6); lngInput.value = e.latlng.lng.toFixed(6); });
+
+                function tryParseEmbedAndSet(url){ if(!url) return false; var atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/); if(atMatch){ var aLat=parseFloat(atMatch[1]); var aLng=parseFloat(atMatch[2]); marker.setLatLng([aLat,aLng]); map.setView([aLat,aLng],15); latInput.value=aLat.toFixed(6); lngInput.value=aLng.toFixed(6); return true;} var dMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/); if(dMatch){ var dLat=parseFloat(dMatch[1]); var dLng=parseFloat(dMatch[2]); marker.setLatLng([dLat,dLng]); map.setView([dLat,dLng],15); latInput.value=dLat.toFixed(6); lngInput.value=dLng.toFixed(6); return true;} return false; }
+                if (mapEmbed && mapEmbed.value) tryParseEmbedAndSet(mapEmbed.value);
+                if (mapEmbed) mapEmbed.addEventListener('blur', function(){ tryParseEmbedAndSet(this.value); });
+            }
+        });
     </script>
 </body>
 </html>
