@@ -117,6 +117,30 @@ def product_column_exists(col_name: str) -> bool:
         _PRODUCT_COLUMNS_CACHE[col_name] = False
         return False
 
+# Cache for events columns existence checks
+_EVENT_COLUMNS_CACHE = {}
+
+def event_column_exists(col_name: str) -> bool:
+    """Check whether the `events` table has a column named `col_name`.
+    Performs a cheap select and caches the result. Returns False if Supabase is not configured.
+    """
+    global _EVENT_COLUMNS_CACHE
+    if not supabase:
+        return False
+    if col_name in _EVENT_COLUMNS_CACHE:
+        return _EVENT_COLUMNS_CACHE[col_name]
+    try:
+        resp = supabase.table('events').select(col_name).limit(1).execute()
+        if hasattr(resp, 'error') and resp.error:
+            _EVENT_COLUMNS_CACHE[col_name] = False
+            return False
+        _EVENT_COLUMNS_CACHE[col_name] = True
+        return True
+    except Exception as e:
+        print(f"event_column_exists check failed for '{col_name}': {e}")
+        _EVENT_COLUMNS_CACHE[col_name] = False
+        return False
+
 def admin_required(f):
     """Decorator to require admin login"""
     @wraps(f)
@@ -1923,6 +1947,7 @@ def admin_events_add():
                 venue_lng = request.form.get('venue_lng') or None
                 all_day = request.form.get('all_day') == 'on' or (not request.form.get('start_time') and not request.form.get('end_time'))
 
+                # Build minimal event payload and only include optional keys if DB has those columns
                 event_data = {
                     'title': title,
                     'slug': generate_slug(title),
@@ -1934,18 +1959,56 @@ def admin_events_add():
                     'end_time': request.form.get('end_time') or None,
                     'location': request.form.get('location'),
                     'category': request.form.get('category'),
-                    'image_url': image_url,
-                    'gallery_urls': gallery_urls or None,
-                    'cta_text': cta_text,
-                    'cta_url': cta_url,
-                    'venue_address': venue_address,
-                    'map_embed': map_embed,
-                    'venue_lat': float(venue_lat) if venue_lat else None,
-                    'venue_lng': float(venue_lng) if venue_lng else None,
-                    'all_day': all_day,
                     'is_featured': request.form.get('is_featured') == 'on',
                     'is_active': True
                 }
+
+                # Optional persisted fields (only add if column exists)
+                try:
+                    if image_url and event_column_exists('image_url'):
+                        event_data['image_url'] = image_url
+                except Exception:
+                    pass
+                try:
+                    if gallery_urls and event_column_exists('gallery_urls'):
+                        event_data['gallery_urls'] = gallery_urls
+                except Exception:
+                    pass
+                try:
+                    if cta_text and event_column_exists('cta_text'):
+                        event_data['cta_text'] = cta_text
+                except Exception:
+                    pass
+                try:
+                    if cta_url and event_column_exists('cta_url'):
+                        event_data['cta_url'] = cta_url
+                except Exception:
+                    pass
+                try:
+                    if venue_address and event_column_exists('venue_address'):
+                        event_data['venue_address'] = venue_address
+                except Exception:
+                    pass
+                try:
+                    if map_embed and event_column_exists('map_embed'):
+                        event_data['map_embed'] = map_embed
+                except Exception:
+                    pass
+                try:
+                    if venue_lat and event_column_exists('venue_lat'):
+                        event_data['venue_lat'] = float(venue_lat)
+                except Exception:
+                    pass
+                try:
+                    if venue_lng and event_column_exists('venue_lng'):
+                        event_data['venue_lng'] = float(venue_lng)
+                except Exception:
+                    pass
+                try:
+                    if event_column_exists('all_day'):
+                        event_data['all_day'] = all_day
+                except Exception:
+                    pass
                 
                 supabase.table('events').insert(event_data).execute()
                 flash('Event added successfully!', 'success')
@@ -1971,6 +2034,7 @@ def admin_events_edit(event_id):
                 venue_lng = request.form.get('venue_lng') or None
                 all_day = request.form.get('all_day') == 'on' or (not request.form.get('start_time') and not request.form.get('end_time'))
 
+                # base update data
                 update_data = {
                     'title': request.form.get('title'),
                     'description': request.form.get('description'),
@@ -1981,17 +2045,47 @@ def admin_events_edit(event_id):
                     'end_time': request.form.get('end_time') or None,
                     'location': request.form.get('location'),
                     'category': request.form.get('category'),
-                    'cta_text': cta_text,
-                    'cta_url': cta_url,
-                    'venue_address': venue_address,
-                    'map_embed': map_embed,
-                    'venue_lat': float(venue_lat) if venue_lat else None,
-                    'venue_lng': float(venue_lng) if venue_lng else None,
-                    'all_day': all_day,
                     'is_featured': request.form.get('is_featured') == 'on',
                     'is_active': request.form.get('is_active') == 'on',
                     'updated_at': datetime.now().isoformat()
                 }
+
+                # Optional persisted update fields
+                try:
+                    if event_column_exists('cta_text'):
+                        update_data['cta_text'] = cta_text
+                except Exception:
+                    pass
+                try:
+                    if event_column_exists('cta_url'):
+                        update_data['cta_url'] = cta_url
+                except Exception:
+                    pass
+                try:
+                    if event_column_exists('venue_address'):
+                        update_data['venue_address'] = venue_address
+                except Exception:
+                    pass
+                try:
+                    if event_column_exists('map_embed'):
+                        update_data['map_embed'] = map_embed
+                except Exception:
+                    pass
+                try:
+                    if venue_lat and event_column_exists('venue_lat'):
+                        update_data['venue_lat'] = float(venue_lat)
+                except Exception:
+                    pass
+                try:
+                    if venue_lng and event_column_exists('venue_lng'):
+                        update_data['venue_lng'] = float(venue_lng)
+                except Exception:
+                    pass
+                try:
+                    if event_column_exists('all_day'):
+                        update_data['all_day'] = all_day
+                except Exception:
+                    pass
                 
                 if 'image' in request.files:
                     file = request.files['image']
