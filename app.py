@@ -1886,7 +1886,8 @@ def admin_events_add():
             try:
                 title = request.form.get('title')
                 image_url = None
-                
+
+                # Handle featured image upload (single)
                 if 'image' in request.files:
                     file = request.files['image']
                     if file and file.filename:
@@ -1898,7 +1899,30 @@ def admin_events_add():
                             {'content-type': file.content_type}
                         )
                         image_url = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
-                
+
+                # Handle gallery images (multiple)
+                gallery_urls = []
+                gallery_files = request.files.getlist('gallery_images') or []
+                for gf in gallery_files:
+                    if gf and gf.filename:
+                        gf_ext = gf.filename.rsplit('.', 1)[-1].lower()
+                        gf_name = f"events/gallery/{uuid.uuid4()}.{gf_ext}"
+                        gf_bytes = gf.read()
+                        supabase.storage.from_('blog-images').upload(
+                            gf_name, gf_bytes,
+                            {'content-type': gf.content_type}
+                        )
+                        gallery_urls.append(f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{gf_name}")
+
+                # Extra optional fields from form
+                cta_text = request.form.get('cta_text') or None
+                cta_url = request.form.get('cta_url') or None
+                venue_address = request.form.get('venue_address') or None
+                map_embed = request.form.get('map_embed') or None
+                venue_lat = request.form.get('venue_lat') or None
+                venue_lng = request.form.get('venue_lng') or None
+                all_day = request.form.get('all_day') == 'on' or (not request.form.get('start_time') and not request.form.get('end_time'))
+
                 event_data = {
                     'title': title,
                     'slug': generate_slug(title),
@@ -1911,6 +1935,14 @@ def admin_events_add():
                     'location': request.form.get('location'),
                     'category': request.form.get('category'),
                     'image_url': image_url,
+                    'gallery_urls': gallery_urls or None,
+                    'cta_text': cta_text,
+                    'cta_url': cta_url,
+                    'venue_address': venue_address,
+                    'map_embed': map_embed,
+                    'venue_lat': float(venue_lat) if venue_lat else None,
+                    'venue_lng': float(venue_lng) if venue_lng else None,
+                    'all_day': all_day,
                     'is_featured': request.form.get('is_featured') == 'on',
                     'is_active': True
                 }
@@ -1930,6 +1962,15 @@ def admin_events_edit(event_id):
     if request.method == 'POST':
         if supabase:
             try:
+                # Prepare update data including optional fields
+                cta_text = request.form.get('cta_text') or None
+                cta_url = request.form.get('cta_url') or None
+                venue_address = request.form.get('venue_address') or None
+                map_embed = request.form.get('map_embed') or None
+                venue_lat = request.form.get('venue_lat') or None
+                venue_lng = request.form.get('venue_lng') or None
+                all_day = request.form.get('all_day') == 'on' or (not request.form.get('start_time') and not request.form.get('end_time'))
+
                 update_data = {
                     'title': request.form.get('title'),
                     'description': request.form.get('description'),
@@ -1940,6 +1981,13 @@ def admin_events_edit(event_id):
                     'end_time': request.form.get('end_time') or None,
                     'location': request.form.get('location'),
                     'category': request.form.get('category'),
+                    'cta_text': cta_text,
+                    'cta_url': cta_url,
+                    'venue_address': venue_address,
+                    'map_embed': map_embed,
+                    'venue_lat': float(venue_lat) if venue_lat else None,
+                    'venue_lng': float(venue_lng) if venue_lng else None,
+                    'all_day': all_day,
                     'is_featured': request.form.get('is_featured') == 'on',
                     'is_active': request.form.get('is_active') == 'on',
                     'updated_at': datetime.now().isoformat()
@@ -1956,6 +2004,29 @@ def admin_events_edit(event_id):
                             {'content-type': file.content_type}
                         )
                         update_data['image_url'] = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
+
+                # Handle gallery uploads: append to existing gallery_urls if present
+                gallery_files = request.files.getlist('gallery_images') or []
+                if gallery_files:
+                    gallery_urls = []
+                    for gf in gallery_files:
+                        if gf and gf.filename:
+                            gf_ext = gf.filename.rsplit('.', 1)[-1].lower()
+                            gf_name = f"events/gallery/{uuid.uuid4()}.{gf_ext}"
+                            gf_bytes = gf.read()
+                            supabase.storage.from_('blog-images').upload(
+                                gf_name, gf_bytes,
+                                {'content-type': gf.content_type}
+                            )
+                            gallery_urls.append(f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{gf_name}")
+                    # Try to fetch existing gallery and merge
+                    try:
+                        resp = supabase.table('events').select('gallery_urls').eq('id', event_id).single().execute()
+                        existing = resp.data or {}
+                        existing_gallery = existing.get('gallery_urls') or []
+                        update_data['gallery_urls'] = (existing_gallery or []) + gallery_urls
+                    except Exception:
+                        update_data['gallery_urls'] = gallery_urls
                 
                 supabase.table('events').update(update_data).eq('id', event_id).execute()
                 flash('Event updated successfully!', 'success')
