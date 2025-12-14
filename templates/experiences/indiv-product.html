@@ -10,6 +10,28 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/products.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Override hover effects and prepare modal/map styles -->
+    <style>
+        /* Remove overlay/hover effects that clash with product visuals */
+        .related-overlay { display: none !important; }
+        .related-card .related-image img { transition: none !important; transform: none !important; }
+        .related-card:hover .related-image img { transform: none !important; }
+        .location-card { cursor: pointer; transition: none !important; }
+        .location-card:hover { transform: none !important; box-shadow: none !important; }
+        /* Card layout for buy locations to separate each store visually */
+        .locations-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+        .location-card { background: #fff; border: 1px solid #e6e9ef; padding: 12px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .location-card h3 { margin:0 0 6px 0; font-size:1.05rem; }
+        .location-card p { margin:0 0 8px 0; color:#444; }
+        .location-details { display:flex; flex-direction:column; gap:6px; color:#666; font-size:0.95rem; }
+        /* Modal styles for store map */
+        #storeMapModal { display:none; position:fixed; inset:0; z-index:3000; background: rgba(0,0,0,0.6); align-items:center; justify-content:center; }
+        #storeMapModal .modal-box { width:90%; max-width:900px; background:#fff; border-radius:8px; overflow:hidden; }
+        #storeMapModal .modal-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid #eee; }
+        #storeMapModal .modal-body { width:100%; height:480px; }
+        #storeMapModal .modal-actions { display:flex; gap:8px; padding:10px; justify-content:flex-end; border-top:1px solid #eee; }
+        #storeMapModal .gm-link { word-break:break-all; font-size:0.9rem; color:#0366d6; }
+    </style>
 </head>
 <body>
     {% include 'header.html' %}
@@ -31,16 +53,60 @@
     <section class="product-details">
         <div class="details-container">
             <div class="product-gallery">
-                <div class="main-image">
-                    <img src="{{ url_for('static', filename='assets/images/products/' + product.main_image) if product.main_image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ product.name }}" id="mainProductImage">
+                <!-- Simple image carousel (replaces thumbnails) -->
+                <div class="product-carousel" id="productCarousel">
+                    <button class="carousel-prev" aria-label="Previous">‹</button>
+                    <div class="carousel-track">
+                        {% set images = [] %}
+                        {% if product.main_image %}
+                            {% set _ = images.append(product.main_image) %}
+                        {% endif %}
+                        {% if product.gallery %}
+                            {% for image in product.gallery %}
+                                {% if image %}
+                                    {% set _ = images.append(image) %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if images %}
+                            {% for img in images %}
+                                {% if img[:4].lower() == 'http' or img.startswith('/') %}
+                                    <div class="carousel-slide">
+                                        <img src="{{ img }}" alt="{{ product.name }}">
+                                    </div>
+                                {% else %}
+                                    <div class="carousel-slide">
+                                        <img src="{{ url_for('static', filename='assets/images/products/' + img) }}" alt="{{ product.name }}">
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="carousel-slide">
+                                <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ product.name }}">
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button class="carousel-next" aria-label="Next">›</button>
                 </div>
-                {% if product.gallery %}
-                <div class="image-thumbnails">
-                    {% for image in product.gallery %}
-                    <img src="{{ url_for('static', filename='assets/images/products/' + image) if image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ product.name }}" class="thumbnail" onclick="changeImage(this)">
-                    {% endfor %}
-                </div>
-                {% endif %}
+                <style>
+                    /* Product carousel: fixed image size (match attractions) and no CSS transitions */
+                    .product-carousel { max-width: 880px; margin: 0 auto; position: relative; }
+                    .product-carousel .carousel-track { position: relative; overflow: hidden; border-radius: 8px; background: #f6f7fb; }
+                    /* Support both pre-rendered slides and the JS-created .carousel-main container */
+                    .product-carousel .carousel-slide { display: none; }
+                    .product-carousel .carousel-slide.active { display: block; }
+                    .product-carousel .carousel-slide img,
+                    .product-carousel .carousel-main img { display: block; width: 100%; height: 460px; object-fit: contain; object-position: center; background-color: #f6f7fb; }
+                    /* Ensure no CSS transitions are applied to image properties */
+                    .product-carousel img { transition: none !important; -webkit-transition: none !important; }
+                    .product-carousel .carousel-prev, .product-carousel .carousel-next {
+                        position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.85); border:0; width:44px; height:44px; border-radius:50%; box-shadow:0 4px 12px rgba(0,0,0,0.08); cursor:pointer; font-size:22px; z-index:10;
+                    }
+                    .product-carousel .carousel-prev { left: 12px; }
+                    .product-carousel .carousel-next { right: 12px; }
+                    @media (max-width:700px){ .product-carousel .carousel-slide img, .product-carousel .carousel-main img { height: 260px; } }
+                </style>
             </div>
 
             <div class="product-content">
@@ -59,7 +125,7 @@
 
                 <div class="product-price-box">
                     <span class="price-label">Price Range:</span>
-                    <span class="product-price">{{ product.price_range }}</span>
+                    <span class="product-price">{{ product.price_range | format_price }}</span>
                 </div>
 
                 <div class="product-description">
@@ -133,17 +199,25 @@
             <h2>How It's Made</h2>
             <p class="section-subtitle">Discover the traditional craftsmanship behind each piece</p>
 
-            <div class="process-timeline">
+                <div class="process-timeline">
                 {% for step in product.making_process %}
                 <div class="process-step">
+                    {# Show numeric step only when there are multiple steps to display #}
+                    {% if loop.length > 1 %}
                     <div class="step-number">{{ loop.index }}</div>
+                    {% endif %}
                     <div class="step-content">
                         <h3>{{ step.title }}</h3>
                         <p>{{ step.description }}</p>
                     </div>
                     {% if step.image %}
                     <div class="step-image">
-                        <img src="{{ url_for('static', filename='assets/images/products/process/' + step.image) if step.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ step.title }}">
+                        {% set si = step.image %}
+                        {% if si[:4].lower() == 'http' or si.startswith('/') %}
+                            <img src="{{ si }}" alt="{{ step.title }}">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='assets/images/products/process/' + si) }}" alt="{{ step.title }}">
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -161,10 +235,8 @@
 
             <div class="locations-grid">
                 {% for location in product.buy_locations %}
-                <div class="location-card">
-                    <div class="location-icon">
-                        <i class="fas fa-{{ location.icon }}"></i>
-                    </div>
+                {# store card carries lat/lng data attributes for map modal; fallback to empty strings if missing #}
+                <div class="location-card" role="button" tabindex="0" data-lat="{{ location.lat if location.lat is defined else '' }}" data-lng="{{ location.lng if location.lng is defined else '' }}" data-name="{{ location.name }}" data-address="{{ location.address }}">
                     <h3>{{ location.name }}</h3>
                     <p>{{ location.description }}</p>
                     <div class="location-details">
@@ -179,6 +251,7 @@
                 </div>
                 {% endfor %}
             </div>
+            <p class="hint" style="margin-top:10px; color:#666; font-size:0.95rem;">Tip: Click a store card to open a map showing the exact location. Use the map to get directions or copy a Google Maps link.</p>
         </div>
     </section>
 
@@ -191,7 +264,14 @@
                 {% for related in related_products %}
                 <a href="{{ url_for('indiv_product', product=related.slug) }}" class="related-card">
                     <div class="related-image">
-                        <img src="{{ url_for('static', filename='assets/images/products/' + related.image) if related.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ related.name }}">
+                        {% set ri = related.image %}
+                        {% if ri and (ri[:4].lower() == 'http' or ri.startswith('/')) %}
+                            <img src="{{ ri }}" alt="{{ related.name }}">
+                        {% elif ri %}
+                            <img src="{{ url_for('static', filename='assets/images/products/' + ri) }}" alt="{{ related.name }}">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ related.name }}">
+                        {% endif %}
                         <div class="related-overlay"></div>
                     </div>
                     <div class="related-info">
@@ -209,26 +289,141 @@
 
     <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
     <script>
-        function changeImage(thumbnail) {
-            const mainImage = document.getElementById('mainProductImage');
-            mainImage.src = thumbnail.src;
+        // Simple carousel for product images
+        (function(){
+            function initCarousel(root){
+                const track = root.querySelector('.carousel-track');
+                if(!track) return;
 
-            // Remove active class from all thumbnails
-            document.querySelectorAll('.thumbnail').forEach(thumb => {
-                thumb.classList.remove('active');
+                // Collect image URLs that were rendered into slides
+                const imgEls = Array.from(track.querySelectorAll('img'));
+                const images = imgEls.map(i => i.getAttribute('src')).filter(Boolean);
+                if(images.length === 0) return;
+
+                // Replace track contents with a single main image + controls (like attractions gallery)
+                track.innerHTML = '';
+                const main = document.createElement('div');
+                main.className = 'carousel-main';
+
+                const btnPrev = document.createElement('button'); btnPrev.type='button'; btnPrev.className='carousel-prev'; btnPrev.setAttribute('aria-label','Previous image'); btnPrev.innerText='‹';
+                const mainImg = document.createElement('img'); mainImg.id = 'productCarouselImage'; mainImg.src = images[0]; mainImg.alt = root.getAttribute('data-alt') || '';
+                const btnNext = document.createElement('button'); btnNext.type='button'; btnNext.className='carousel-next'; btnNext.setAttribute('aria-label','Next image'); btnNext.innerText='›';
+
+                main.appendChild(btnPrev);
+                main.appendChild(mainImg);
+                main.appendChild(btnNext);
+                track.appendChild(main);
+
+                let current = 0;
+                const interval = parseInt(root.dataset.interval) || 0;
+                let timer = null;
+
+                function show(index){
+                    index = (index + images.length) % images.length;
+                    current = index;
+                    mainImg.src = images[current];
+                }
+                function next(){ show(current + 1); }
+                function prev(){ show(current - 1); }
+
+                btnPrev.addEventListener('click', function(e){ e.preventDefault(); prev(); resetTimer(); });
+                btnNext.addEventListener('click', function(e){ e.preventDefault(); next(); resetTimer(); });
+
+                function resetTimer(){ if(timer){ clearInterval(timer); timer = null; } if(interval > 0){ timer = setInterval(next, interval); } }
+
+                // keyboard navigation
+                root.addEventListener('keydown', function(e){ if(e.key === 'ArrowLeft') prev(); if(e.key === 'ArrowRight') next(); });
+
+                // initialize
+                show(0);
+                if(interval > 0) timer = setInterval(next, interval);
+            }
+
+            document.addEventListener('DOMContentLoaded', ()=>{
+                document.querySelectorAll('.product-carousel').forEach(initCarousel);
+            });
+        })();
+    </script>
+    <!-- Leaflet for store location modal -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Store map modal -->
+    <div id="storeMapModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <strong id="storeMapTitle">Store Location</strong>
+                <div>
+                    <button id="storeMapClose" type="button" class="btn btn-secondary">Close</button>
+                </div>
+            </div>
+            <div id="storeMapBody" class="modal-body"></div>
+            <div class="modal-actions">
+                <a id="storeGoogleLink" class="btn btn-primary" target="_blank" rel="noopener">Open in Google Maps</a>
+                <button id="storeCopyLink" type="button" class="btn btn-secondary">Copy Google Link</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            var modal = document.getElementById('storeMapModal');
+            var mapBody = document.getElementById('storeMapBody');
+            var titleEl = document.getElementById('storeMapTitle');
+            var closeBtn = document.getElementById('storeMapClose');
+            var linkBtn = document.getElementById('storeGoogleLink');
+            var copyBtn = document.getElementById('storeCopyLink');
+            var mapInstance = null;
+            var marker = null;
+
+            function showModal(){ modal.style.display = 'flex'; }
+            function hideModal(){ modal.style.display = 'none'; }
+
+            function buildGoogleLink(lat, lng){
+                return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lat + ',' + lng);
+            }
+
+            function initMap(lat, lng){
+                // create map container
+                mapBody.innerHTML = '<div id="storeMapInner" style="width:100%;height:100%"></div>';
+                try{
+                    mapInstance = L.map('storeMapInner').setView([lat, lng], 16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(mapInstance);
+                    marker = L.marker([lat, lng]).addTo(mapInstance);
+                }catch(e){ console.error('Map init error', e); }
+            }
+
+            // handle card clicks
+            document.querySelectorAll('.location-card').forEach(function(card){
+                card.addEventListener('click', function(){
+                    var lat = card.getAttribute('data-lat') || '';
+                    var lng = card.getAttribute('data-lng') || '';
+                    var name = card.getAttribute('data-name') || '';
+                    var address = card.getAttribute('data-address') || '';
+                    titleEl.textContent = name || 'Store Location';
+                    if(!lat || !lng){
+                        // No coordinates — show address only
+                        mapBody.innerHTML = '<div style="padding:18px">No coordinates for this location. Address: <div style="margin-top:6px; font-weight:600">'+ (address || 'N/A') +'</div></div>';
+                        linkBtn.style.display = 'none'; copyBtn.style.display = 'none';
+                        showModal();
+                        return;
+                    }
+                    // init map and set actions
+                    initMap(parseFloat(lat), parseFloat(lng));
+                    var gLink = buildGoogleLink(lat, lng);
+                    linkBtn.href = gLink; linkBtn.style.display = ''; copyBtn.style.display = '';
+                    copyBtn.onclick = function(){ navigator.clipboard.writeText(gLink).then(function(){ alert('Google Maps link copied'); }).catch(function(){ alert('Copy failed'); }); };
+                    showModal();
+                    // ensure tiles render after modal becomes visible
+                    setTimeout(function(){ try{ mapInstance.invalidateSize(); if(marker) mapInstance.setView(marker.getLatLng(), mapInstance.getZoom()); }catch(e){} }, 200);
+                });
+                card.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } });
             });
 
-            // Add active class to clicked thumbnail
-            thumbnail.classList.add('active');
-        }
-
-        // Set first thumbnail as active
-        document.addEventListener('DOMContentLoaded', () => {
-            const firstThumbnail = document.querySelector('.thumbnail');
-            if (firstThumbnail) {
-                firstThumbnail.classList.add('active');
-            }
-        });
+            closeBtn.addEventListener('click', function(){ hideModal(); });
+            // click outside modal to close
+            modal.addEventListener('click', function(e){ if(e.target === modal){ hideModal(); } });
+        })();
     </script>
     {% include 'scripts-includes.html' %}
 </body>

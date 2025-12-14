@@ -22,6 +22,7 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-here')
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')  # Optional, for server-side privileged ops
+SUPABASE_PRODUCT_BUCKET = os.getenv('SUPABASE_PRODUCT_BUCKET', 'product-images')
 
 # Check if credentials are loaded
 if not SUPABASE_URL or not SUPABASE_KEY:
@@ -57,6 +58,64 @@ def calculate_reading_time(content):
     """Calculate approximate reading time in minutes"""
     words = len(content.split())
     return max(1, round(words / 200))  # Average 200 words per minute
+
+
+def upload_bytes_get_url_to_bucket(file_bytes: bytes, file_ext: str, content_type: str, bucket: str, prefix: str = '') -> str:
+    """Upload raw bytes to the specified Supabase storage bucket and return a public URL.
+    Uses the admin client (service role) when available; falls back to the public client or local storage.
+    """
+    unique_filename = f"{prefix}{uuid.uuid4()}.{file_ext}"
+    # Try admin client first
+    if supabase_admin:
+        try:
+            supabase_admin.storage.from_(bucket).upload(unique_filename, file_bytes, {'content-type': content_type})
+            return supabase_admin.storage.from_(bucket).get_public_url(unique_filename)
+        except Exception as sup_err:
+            print(f"Supabase admin upload failed for {unique_filename}: {sup_err}")
+    # Try public client
+    try:
+        if supabase:
+            supabase.storage.from_(bucket).upload(unique_filename, file_bytes, {'content-type': content_type})
+            return f"{SUPABASE_URL}/storage/v1/object/public/{bucket}/{unique_filename}"
+    except Exception as pub_err:
+        print(f"Supabase public upload failed for {unique_filename}: {pub_err}")
+    # Fallback to local storage
+    try:
+        uploads_folder = Path(__file__).parent / 'static' / 'uploads'
+        uploads_folder.mkdir(parents=True, exist_ok=True)
+        file_path = uploads_folder / unique_filename
+        file_path.write_bytes(file_bytes)
+        return f"/static/uploads/{unique_filename}"
+    except Exception as local_err:
+        print(f"Failed to write file locally for {unique_filename}: {local_err}")
+        return ''
+
+# Cache for product columns existence checks
+_PRODUCT_COLUMNS_CACHE = {}
+
+def product_column_exists(col_name: str) -> bool:
+    """Check whether the `products` table has a column named `col_name`.
+    Performs a cheap select and caches the result. Returns False if Supabase is not configured.
+    """
+    global _PRODUCT_COLUMNS_CACHE
+    if not supabase:
+        return False
+    if col_name in _PRODUCT_COLUMNS_CACHE:
+        return _PRODUCT_COLUMNS_CACHE[col_name]
+    try:
+        # Try selecting the column; if the column doesn't exist the request will error
+        resp = supabase.table('products').select(col_name).limit(1).execute()
+        # Some clients return a response object with .error when the column is missing
+        if hasattr(resp, 'error') and resp.error:
+            _PRODUCT_COLUMNS_CACHE[col_name] = False
+            return False
+        # If we reach here assume column exists
+        _PRODUCT_COLUMNS_CACHE[col_name] = True
+        return True
+    except Exception as e:
+        print(f"product_column_exists check failed for '{col_name}': {e}")
+        _PRODUCT_COLUMNS_CACHE[col_name] = False
+        return False
 
 def admin_required(f):
     """Decorator to require admin login"""
@@ -127,6 +186,50 @@ def get_stats():
             print(f"Error getting stats: {e}")
     
     return stats
+
+
+# Template filter: format price values with PHP sign and comma separators
+import re as _re
+
+def format_price(value):
+    """Format a price or price-range into PHP currency with thousand separators.
+    Examples:
+      1500 -> ₱1,500
+      '1500 - 2500' -> ₱1,500 - ₱2,500
+      '₱1500' -> ₱1,500
+    """
+    if value is None:
+        return ''
+    # If it's already numeric
+    try:
+        if isinstance(value, (int, float)):
+            return f"₱{int(value):,}"
+        # If value is a numeric string
+        vstr = str(value).strip()
+        # If the whole string is a single number
+        if _re.fullmatch(r"[\d,]+(\.\d+)?", vstr):
+            num = int(_re.sub(r"[^0-9]", "", vstr))
+            return f"₱{num:,}"
+    except Exception:
+        pass
+
+    s = str(value)
+    # Replace all contiguous digit groups with formatted numbers (keep other chars like - or spaces)
+    def _replace_num(m):
+        digits = _re.sub(r"[^0-9]", "", m.group(0))
+        if not digits:
+            return m.group(0)
+        try:
+            n = int(digits)
+            return f"₱{n:,}"
+        except Exception:
+            return m.group(0)
+
+    formatted = _re.sub(r"\d[\d,\.]*\d|\d", _replace_num, s)
+    return formatted
+
+# register filter
+app.jinja_env.filters['format_price'] = format_price
 
 # ============================================
 # HOME & MAIN PAGES
@@ -214,7 +317,64 @@ def indiv_attractions(attraction):
 
 @app.route('/experiences')
 def experiences():
-    return render_template('experiences/products.html')
+    # Fetch products and partition into categories for the products page
+    footwear = []
+    bags = []
+    accessories = []
+    handicrafts = []
+    food = []
+    others = []
+
+    if supabase:
+        try:
+            resp = supabase.table('products').select('*').eq('is_active', True).order('created_at', desc=True).execute()
+            products = resp.data or []
+            for p in products:
+                cat = (p.get('category') or '').lower()
+                if cat == 'footwear':
+                    footwear.append(p)
+                elif cat == 'bags':
+                    bags.append(p)
+                elif cat == 'accessories':
+                    accessories.append(p)
+                elif cat == 'handicrafts':
+                    handicrafts.append(p)
+                elif 'food' in cat or cat == 'food products':
+                    food.append(p)
+                else:
+                    others.append(p)
+        except Exception as e:
+            print(f"Error fetching products: {e}")
+
+    # Server-side: build a single combined carousel.
+    # For each category, pick up to `max_per_category` most recent products and combine them.
+    max_per_category = 3
+    categories_all = [
+        ('footwear', footwear),
+        ('bags', bags),
+        ('accessories', accessories),
+        ('handicrafts', handicrafts),
+        ('food', food),
+        ('others', others),
+    ]
+
+    all_products = (footwear or []) + (bags or []) + (accessories or []) + (handicrafts or []) + (food or []) + (others or [])
+    slides = []
+    for key, items in categories_all:
+        items = items or []
+        # take up to max_per_category most recent (list is ordered desc by created_at)
+        for p in items[:max_per_category]:
+            slide_url = p.get('image_url') if p.get('image_url') else (p.get('gallery')[0] if p.get('gallery') else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))
+            slug = p.get('slug') if p.get('slug') else generate_slug(p.get('name', ''))
+            slide_link = url_for('indiv_product', product=slug)
+            slides.append({'url': slide_url, 'name': p.get('name', ''), 'link': slide_link, 'category': key})
+
+    carousels = []
+    if slides:
+        # single carousel combining selected slides from all categories
+        carousels.append({'title': 'Products Showcase', 'icon': 'fa-box-open', 'slides': slides})
+
+    return render_template('experiences/products.html', footwear=footwear, bags=bags, accessories=accessories, handicrafts=handicrafts, food=food, others=others, carousels=carousels, all_products=all_products)
 
 @app.route('/experiences/festivals')
 def festivals():
@@ -238,42 +398,145 @@ def products():
 
 @app.route('/experiences/products/<product>')
 def indiv_product(product):
-    # Sample product data
-    product_data = {
-        'name': product.replace('-', ' ').title(),
-        'category': 'Footwear',
-        'main_image': 'tsinelas.jpg',
-        'description': 'High-quality handcrafted product from Liliw',
-        'full_description': 'Detailed description of the product and its making process.',
-        'price': '₱150 - ₱500',
-        'features': ['Handmade', 'Durable materials', 'Comfortable fit', 'Various designs'],
-        'specifications': [
-            {'label': 'Material', 'value': 'Genuine leather'},
-            {'label': 'Available Sizes', 'value': '5-12'},
-            {'label': 'Colors', 'value': 'Multiple options'}
-        ],
-        'making_process': 'Our artisans carefully craft each piece using traditional techniques passed down through generations.',
-        'process_steps': [
-            {'title': 'Material Selection', 'description': 'Choose high-quality leather and materials'},
-            {'title': 'Cutting & Shaping', 'description': 'Precisely cut and shape the components'},
-            {'title': 'Assembly', 'description': 'Skillfully assemble all pieces together'},
-            {'title': 'Finishing', 'description': 'Add final touches and quality check'}
-        ],
-        'sellers': [
-            {'name': 'Liliw Footwear Center', 'location': 'Town Center'},
-            {'name': 'Gat Tayaw Vendor Area', 'location': 'Near Plaza'}
-        ],
-        'gallery': ['tsinelas-1.jpg', 'tsinelas-2.jpg', 'tsinelas-3.jpg']
-    }
+    # Attempt to load product from Supabase (by slug). If unavailable, fall back to sample data.
+    product_data = None
+    related_products = []
+    if supabase:
+        try:
+            resp = supabase.table('products').select('*').eq('slug', product).single().execute()
+            if resp and resp.data:
+                p = resp.data
+                # Normalize gallery field (could be stored as JSON string, comma-separated, or list)
+                gallery = []
+                raw_gallery = p.get('gallery') or p.get('gallery_urls') or p.get('images') or p.get('image_url')
+                if isinstance(raw_gallery, str):
+                    # try JSON
+                    try:
+                        import json
+                        parsed = json.loads(raw_gallery)
+                        if isinstance(parsed, list):
+                            gallery = parsed
+                        else:
+                            # if it's a single string, split by comma
+                            gallery = [i.strip() for i in raw_gallery.split(',') if i.strip()]
+                    except Exception:
+                        gallery = [i.strip() for i in raw_gallery.split(',') if i.strip()]
+                elif isinstance(raw_gallery, list):
+                    gallery = raw_gallery
+                elif raw_gallery:
+                    gallery = [raw_gallery]
 
-    related_products = [
-        {'name': 'Leather Sandals', 'slug': 'leather-sandals', 'image': 'hero.JPG', 'price': '₱300 - ₱800'},
-        {'name': 'Leather Bags', 'slug': 'leather-bags', 'image': 'hero.JPG', 'price': '₱500 - ₱1,500'}
-    ]
+                # Normalize making/process steps
+                making_process = p.get('making_process') or p.get('process_steps') or p.get('process')
+                steps = []
+                if isinstance(making_process, str):
+                    # If string, attempt to parse JSON or fallback to a single-step description
+                    try:
+                        import json
+                        parsed = json.loads(making_process)
+                        if isinstance(parsed, list):
+                            steps = parsed
+                        else:
+                            steps = [{'title': 'Overview', 'description': making_process}]
+                    except Exception:
+                        steps = [{'title': 'Overview', 'description': making_process}]
+                elif isinstance(making_process, list):
+                    steps = making_process
+                elif making_process:
+                    # Unexpected type, coerce to string
+                    steps = [{'title': 'Overview', 'description': str(making_process)}]
 
-    return render_template('experiences/indiv-product.html',
-                         product=product_data,
-                         related_products=related_products)
+                # Artisan story maybe stored as JSON/object
+                artisan_story = p.get('artisan_story')
+                if isinstance(artisan_story, str):
+                    try:
+                        import json
+                        artisan_story = json.loads(artisan_story)
+                    except Exception:
+                        artisan_story = {'intro': artisan_story, 'detail': '', 'quote': '', 'artisan_name': ''}
+
+                # Buy locations normalization
+                buy_locations = p.get('buy_locations') or p.get('sellers') or []
+                if isinstance(buy_locations, str):
+                    try:
+                        import json
+                        parsed = json.loads(buy_locations)
+                        if isinstance(parsed, list):
+                            buy_locations = parsed
+                        else:
+                            buy_locations = []
+                    except Exception:
+                        buy_locations = []
+
+                # Build product object for template
+                product_data = {
+                    'name': p.get('name') or product.replace('-', ' ').title(),
+                    'category': p.get('category') or 'Uncategorized',
+                    'main_image': None,  # template will fallback to placeholder if needed
+                    'description': p.get('short_description') or p.get('description') or p.get('summary') or p.get('excerpt') or p.get('full_description') or '',
+                    'price_range': p.get('price_range') or p.get('price') or '',
+                    'features': p.get('features') if isinstance(p.get('features'), list) else (p.get('features') and [p.get('features')] or []),
+                    'specifications': p.get('specifications') if isinstance(p.get('specifications'), list) else [],
+                    'making_process': steps,
+                    'artisan_story': artisan_story,
+                    'artisan_image': p.get('artisan_image') or None,
+                    'buy_locations': buy_locations if isinstance(buy_locations, list) else [],
+                    'gallery': gallery,
+                    'slug': p.get('slug') or product.replace('-', ' ').lower(),
+                }
+
+                # main image preference
+                if p.get('image_url'):
+                    product_data['main_image'] = p.get('image_url')
+                elif gallery:
+                    product_data['main_image'] = gallery[0]
+
+                # related products: fetch a few similar items
+                try:
+                    rel_resp = supabase.table('products').select('id,name,slug,image_url,price_range').neq('slug', product).eq('category', p.get('category')).limit(4).execute()
+                    related_products = rel_resp.data or []
+                except Exception:
+                    related_products = []
+
+        except Exception as e:
+            print(f"Error fetching product {product}: {e}")
+
+    # Fallback sample product if DB not available or product not found
+    if not product_data:
+        product_data = {
+            'name': product.replace('-', ' ').title(),
+            'category': 'Footwear',
+            'main_image': 'tsinelas.jpg',
+            'description': 'High-quality handcrafted product from Liliw',
+            'full_description': 'Detailed description of the product and its making process.',
+            'price_range': '₱150 - ₱500',
+            'features': ['Handmade', 'Durable materials', 'Comfortable fit', 'Various designs'],
+            'specifications': [
+                {'label': 'Material', 'value': 'Genuine leather'},
+                {'label': 'Available Sizes', 'value': '5-12'},
+                {'label': 'Colors', 'value': 'Multiple options'}
+            ],
+            'making_process': [
+                {'title': 'Material Selection', 'description': 'Choose high-quality leather and materials'},
+                {'title': 'Cutting & Shaping', 'description': 'Precisely cut and shape the components'},
+                {'title': 'Assembly', 'description': 'Skillfully assemble all pieces together'},
+                {'title': 'Finishing', 'description': 'Add final touches and quality check'}
+            ],
+            'sellers': [
+                {'name': 'Liliw Footwear Center', 'location': 'Town Center'},
+                {'name': 'Gat Tayaw Vendor Area', 'location': 'Near Plaza'}
+            ],
+            'gallery': ['tsinelas-1.jpg', 'tsinelas-2.jpg', 'tsinelas-3.jpg']
+        }
+
+    # If related_products wasn't set earlier, provide simple defaults
+    if not related_products:
+        related_products = [
+            {'name': 'Leather Sandals', 'slug': 'leather-sandals', 'image': 'hero.JPG', 'price': '₱300 - ₱800'},
+            {'name': 'Leather Bags', 'slug': 'leather-bags', 'image': 'hero.JPG', 'price': '₱500 - ₱1,500'}
+        ]
+
+    return render_template('experiences/indiv-product.html', product=product_data, related_products=related_products)
 
 @app.route('/experiences/gallery')
 def gallery():
@@ -1205,6 +1468,15 @@ def admin_attractions_add():
             try:
                 name = request.form.get('name')
                 image_url = None
+                # Category selected (no free-text 'other' field required)
+                category_value = request.form.get('category')
+                # Handle category with optional 'Other' free-text
+                category_field = request.form.get('category')
+                category_other = (request.form.get('category_other') or '').strip()
+                if category_field == 'Other' and category_other:
+                    category_value = category_other
+                else:
+                    category_value = category_field
                 gallery_urls = []
                 # Choose storage client (prefer admin for uploads)
                 storage_client = supabase_admin if supabase_admin else supabase
@@ -1278,9 +1550,17 @@ def admin_attractions_edit(attraction_id):
     if request.method == 'POST':
         if supabase:
             try:
+                # category with 'Other' handling
+                category_field = request.form.get('category')
+                category_other = (request.form.get('category_other') or '').strip()
+                if category_field == 'Other' and category_other:
+                    category_value = category_other
+                else:
+                    category_value = category_field
+
                 update_data = {
                     'name': request.form.get('name'),
-                    'category': request.form.get('category'),
+                    'category': category_value,
                     'description': request.form.get('description'),
                     'full_description': request.form.get('full_description'),
                     'location': request.form.get('location'),
@@ -1388,30 +1668,72 @@ def admin_products_add():
             try:
                 name = request.form.get('name')
                 image_url = None
-                
+                # Handle featured image (single) and gallery images (multiple)
+                gallery_urls = []
+                # Featured image comes from input name 'image'
                 if 'image' in request.files:
                     file = request.files['image']
                     if file and file.filename:
                         file_ext = file.filename.rsplit('.', 1)[-1].lower()
-                        unique_filename = f"products/{uuid.uuid4()}.{file_ext}"
                         file_bytes = file.read()
-                        supabase.storage.from_('blog-images').upload(
-                            unique_filename, file_bytes,
-                            {'content-type': file.content_type}
-                        )
-                        image_url = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
+                        url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, SUPABASE_PRODUCT_BUCKET, prefix='products/')
+                        if url:
+                            image_url = url
+                            gallery_urls.append(url)
+
+                # Gallery images may be provided as multiple files named 'gallery_images'
+                gallery_files = request.files.getlist('gallery_images') or []
+                for gf in gallery_files:
+                    try:
+                        if gf and gf.filename:
+                            gext = gf.filename.rsplit('.', 1)[-1].lower()
+                            gbytes = gf.read()
+                            gurl = upload_bytes_get_url_to_bucket(gbytes, gext, gf.content_type, SUPABASE_PRODUCT_BUCKET, prefix='products/')
+                            if gurl:
+                                gallery_urls.append(gurl)
+                    except Exception as gerr:
+                        print(f"Gallery image upload failed: {gerr}")
                 
+                # parse buy_locations_json and inquire_links_json safely
+                try:
+                    import json as _json
+                    _buy_locations_raw = request.form.get('buy_locations_json')
+                    buy_locations_val = _json.loads(_buy_locations_raw) if _buy_locations_raw and _buy_locations_raw.strip() else []
+                except Exception as _e:
+                    print(f"Error parsing buy_locations_json: {_e}")
+                    buy_locations_val = []
+                try:
+                    import json as _json2
+                    _inquire_raw = request.form.get('inquire_links_json')
+                    inquire_links_val = _json2.loads(_inquire_raw) if _inquire_raw and _inquire_raw.strip() else []
+                except Exception as _e:
+                    print(f"Error parsing inquire_links_json: {_e}")
+                    inquire_links_val = []
+
                 product_data = {
                     'name': name,
                     'slug': generate_slug(name),
-                    'category': request.form.get('category'),
+                    'category': request.form.get('category') or 'Other',
                     'description': request.form.get('description'),
                     'full_description': request.form.get('full_description'),
                     'price_range': request.form.get('price_range'),
                     'image_url': image_url,
+                    'gallery': gallery_urls or None,
                     'making_process': request.form.get('making_process'),
                     'is_active': True
                 }
+                # Only include buy_locations/inquire_links if the table has those columns
+                try:
+                    if buy_locations_val and product_column_exists('buy_locations'):
+                        product_data['buy_locations'] = buy_locations_val
+                except Exception:
+                    # defensive: don't block insert if detection fails
+                    pass
+                try:
+                    if inquire_links_val and product_column_exists('inquire_links'):
+                        product_data['inquire_links'] = inquire_links_val
+                except Exception:
+                    pass
                 
                 supabase.table('products').insert(product_data).execute()
                 flash('Product added successfully!', 'success')
@@ -1428,6 +1750,22 @@ def admin_products_edit(product_id):
     if request.method == 'POST':
         if supabase:
             try:
+                # parse JSON hidden fields safely for update
+                try:
+                    import json as _json3
+                    _buy_locations_raw = request.form.get('buy_locations_json')
+                    buy_locations_val = _json3.loads(_buy_locations_raw) if _buy_locations_raw and _buy_locations_raw.strip() else []
+                except Exception as _e:
+                    print(f"Error parsing buy_locations_json (edit): {_e}")
+                    buy_locations_val = []
+                try:
+                    import json as _json4
+                    _inquire_raw = request.form.get('inquire_links_json')
+                    inquire_links_val = _json4.loads(_inquire_raw) if _inquire_raw and _inquire_raw.strip() else []
+                except Exception as _e:
+                    print(f"Error parsing inquire_links_json (edit): {_e}")
+                    inquire_links_val = []
+
                 update_data = {
                     'name': request.form.get('name'),
                     'category': request.form.get('category'),
@@ -1438,18 +1776,60 @@ def admin_products_edit(product_id):
                     'is_active': request.form.get('is_active') == 'on',
                     'updated_at': datetime.now().isoformat()
                 }
+                # Only include buy_locations/inquire_links if the table has those columns
+                try:
+                    if product_column_exists('buy_locations'):
+                        update_data['buy_locations'] = buy_locations_val
+                except Exception:
+                    pass
+                try:
+                    if product_column_exists('inquire_links'):
+                        update_data['inquire_links'] = inquire_links_val
+                except Exception:
+                    pass
                 
                 if 'image' in request.files:
                     file = request.files['image']
                     if file and file.filename:
                         file_ext = file.filename.rsplit('.', 1)[-1].lower()
-                        unique_filename = f"products/{uuid.uuid4()}.{file_ext}"
                         file_bytes = file.read()
-                        supabase.storage.from_('blog-images').upload(
-                            unique_filename, file_bytes,
-                            {'content-type': file.content_type}
-                        )
-                        update_data['image_url'] = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
+                        url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, SUPABASE_PRODUCT_BUCKET, prefix='products/')
+                        if url:
+                            update_data['image_url'] = url
+                            # initialize gallery if not present
+                            try:
+                                existing = supabase.table('products').select('gallery').eq('id', product_id).single().execute()
+                                existing_gallery = existing.data.get('gallery') if existing and existing.data else []
+                                if existing_gallery is None:
+                                    existing_gallery = []
+                            except Exception:
+                                existing_gallery = []
+                            update_data['gallery'] = (existing_gallery or []) + [url]
+
+                # Handle gallery_images multiple files
+                gallery_files = request.files.getlist('gallery_images') or []
+                if gallery_files:
+                    gallery_urls = []
+                    for gf in gallery_files:
+                        try:
+                            if gf and gf.filename:
+                                gext = gf.filename.rsplit('.', 1)[-1].lower()
+                                gbytes = gf.read()
+                                gurl = upload_bytes_get_url_to_bucket(gbytes, gext, gf.content_type, SUPABASE_PRODUCT_BUCKET, prefix='products/')
+                                if gurl:
+                                    gallery_urls.append(gurl)
+                        except Exception as gerr:
+                            print(f"Gallery upload failed: {gerr}")
+                    if gallery_urls:
+                        # append to existing gallery
+                        try:
+                            existing = supabase.table('products').select('gallery').eq('id', product_id).single().execute()
+                            existing_gallery = existing.data.get('gallery') if existing and existing.data else []
+                            if existing_gallery is None:
+                                existing_gallery = []
+                        except Exception:
+                            existing_gallery = []
+                        update_data['gallery'] = (existing_gallery or []) + gallery_urls
                 
                 supabase.table('products').update(update_data).eq('id', product_id).execute()
                 flash('Product updated successfully!', 'success')

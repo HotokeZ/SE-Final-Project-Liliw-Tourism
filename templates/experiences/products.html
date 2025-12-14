@@ -24,34 +24,84 @@
         </div>
     </section>
 
-    <!-- Featured Product -->
-    <section class="featured-product">
+    <!-- Products Showcase: mini carousels per category -->
+    <section class="products-showcase">
         <div class="section-container">
-            <div class="featured-grid">
-                <div class="featured-image">
-                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Tsinelas">
-                </div>
-                <div class="featured-content">
-                    <span class="featured-tag">Most Popular</span>
-                    <h2>Liliw Tsinelas</h2>
-                    <p class="lead">The pride of Liliw - handcrafted slippers that have made our town the "Tsinelas Capital of the Philippines."</p>
-                    <p>For generations, skilled artisans have been crafting beautiful, comfortable footwear using traditional techniques passed down through families. Each pair tells a story of craftsmanship, creativity, and local pride.</p>
-                    <div class="featured-highlights">
-                        <div class="highlight-item">
-                            <i class="fas fa-hands"></i>
-                            <span>Handmade by local artisans</span>
-                        </div>
-                        <div class="highlight-item">
-                            <i class="fas fa-palette"></i>
-                            <span>Customizable designs</span>
-                        </div>
-                        <div class="highlight-item">
-                            <i class="fas fa-tag"></i>
-                            <span>Affordable prices</span>
+            <h2>Products Showcase</h2>
+            <p class="section-subtitle">A quick look at a few items from each category</p>
+
+            <div class="showcase-grid">
+                {# DEBUG: show counts to diagnose empty carousels (remove in production) #}
+                {# Loop categories and render up to 2 images per category as a mini carousel #}
+                {# Build carousels only if one wasn't provided by the view (avoid overwriting server data) #}
+                {% if carousels is not defined %}
+                {% set categories = [
+                    {'key': 'footwear', 'title': 'Footwear & Leather Goods', 'items': footwear, 'icon': 'fa-shoe-prints'},
+                    {'key': 'food', 'title': 'Local Delicacies', 'items': food, 'icon': 'fa-cookie'},
+                    {'key': 'handicrafts', 'title': 'Handicrafts & Souvenirs', 'items': handicrafts, 'icon': 'fa-hammer'},
+                    {'key': 'others', 'title': 'Others', 'items': others, 'icon': 'fa-box-open'}
+                ] %}
+
+                {% set all_products = (footwear or []) + (bags or []) + (accessories or []) + (handicrafts or []) + (food or []) + (others or []) %}
+                {% set carousels = [] %}
+
+                {# Build carousels list from categories (server-side assembly so we can reliably check length) #}
+                {% for cat in categories %}
+                    {% set slides = [] %}
+                    {% for p in cat['items'][:2] %}
+                        {% if p.image_url %}
+                            {% set slide_url = p.image_url %}
+                        {% elif p.gallery and p.gallery|length > 0 %}
+                            {% set slide_url = p.gallery[0] %}
+                        {% else %}
+                            {% set slide_url = url_for('static', filename='assets/images/attractions/natural/hero.JPG') %}
+                        {% endif %}
+                        {% set slide_link = url_for('indiv_product', product=(p.slug if p.slug else p.name|lower|replace(' ', '-'))) %}
+                        {% set slides = slides + [{'url': slide_url, 'name': p.name, 'link': slide_link}] %}
+                    {% endfor %}
+                    {% if slides|length > 0 %}
+                        {% set carousels = carousels + [{'title': cat.title, 'icon': cat.icon, 'slides': slides}] %}
+                    {% endif %}
+                {% endfor %}
+
+                {# Fallback: use available products if no category carousels were built #}
+                {% if carousels|length == 0 and all_products|length > 0 %}
+                    {% set slides = [] %}
+                    {% for p in all_products[:2] %}
+                        {% if p.image_url %}
+                            {% set slide_url = p.image_url %}
+                        {% elif p.gallery and p.gallery|length > 0 %}
+                            {% set slide_url = p.gallery[0] %}
+                        {% else %}
+                            {% set slide_url = url_for('static', filename='assets/images/attractions/natural/hero.JPG') %}
+                        {% endif %}
+                        {% set slide_link = url_for('indiv_product', product=(p.slug if p.slug else p.name|lower|replace(' ', '-'))) %}
+                        {% set slides = slides + [{'url': slide_url, 'name': p.name, 'link': slide_link}] %}
+                    {% endfor %}
+                    {% set carousels = carousels + [{'title': 'Featured', 'icon': 'fa-star', 'slides': slides}] %}
+                {% endif %}
+                {% endif %}
+
+                {# Render carousels from the assembled list #}
+                {% for c in carousels %}
+                    <div class="showcase-item">
+                        <h4 class="showcase-title"><i class="fas {{ c.icon }}"></i> {{ c.title }}</h4>
+                        <div class="mini-carousel" data-interval="4000">
+                            <div class="mini-slides">
+                                {% for s in c.slides %}
+                                <div class="mini-slide">
+                                    <a href="{{ s.link }}">
+                                        <img src="{{ s.url }}" alt="{{ s.name }}">
+                                        <div class="mini-caption">{{ s.name }}</div>
+                                    </a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button class="mini-prev" aria-label="Previous">‹</button>
+                            <button class="mini-next" aria-label="Next">›</button>
                         </div>
                     </div>
-                    <a href="{{ url_for('indiv_product', product='tsinelas') }}" class="featured-btn">Learn More <i class="fas fa-arrow-right"></i></a>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </section>
@@ -63,168 +113,111 @@
             <p class="section-subtitle">From traditional crafts to delicious local delicacies</p>
 
             <!-- Category: Footwear -->
+            <div class="category-container">
             <div class="product-category">
                 <h3 class="category-title"><i class="fas fa-shoe-prints"></i> Footwear & Leather Goods</h3>
                 <div class="products-grid">
-                    <a href="{{ url_for('indiv_product', product='tsinelas') }}" class="product-card">
+                    {% for p in footwear %}
+                    <a href="{{ url_for('indiv_product', product=p.slug if p.slug else p.name|lower|replace(' ','-') ) }}" class="product-card">
                         <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Tsinelas">
-                            <div class="product-overlay"></div>
-                            <span class="product-badge">Bestseller</span>
-                        </div>
-                        <div class="product-info">
-                            <h4>Liliw Tsinelas</h4>
-                            <p>Handcrafted slippers in various styles and colors</p>
-                            <span class="product-price">₱150 - ₱500</span>
-                        </div>
-                    </a>
-
-                    <a href="{{ url_for('indiv_product', product='leather-sandals') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Leather Sandals">
+                            <img src="{{ (p.image_url or (p.gallery[0] if p.gallery else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))) }}" alt="{{ p.name }}">
                             <div class="product-overlay"></div>
                         </div>
-                        <div class="product-info">
-                            <h4>Leather Sandals</h4>
-                            <p>Premium leather sandals for comfort and style</p>
-                            <span class="product-price">₱300 - ₱800</span>
+                        <div class="product-card-content">
+                            <span class="product-name-label">Product</span>
+                            <h3>{{ p.name }}</h3>
+                            <span class="product-price-label">Description</span>
+                            <p class="product-description">{{ p.description or '' }}</p>
+                            <span class="product-price-label">Price</span>
+                            <span class="product-price">{{ p.price_range|format_price if p.price_range else (p.price|format_price if p.get('price') else '') }}</span>
                         </div>
                     </a>
-
-                    <a href="{{ url_for('indiv_product', product='leather-bags') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Leather Bags">
-                            <div class="product-overlay"></div>
-                        </div>
-                        <div class="product-info">
-                            <h4>Leather Bags</h4>
-                            <p>Handcrafted bags and accessories</p>
-                            <span class="product-price">₱500 - ₱1,500</span>
-                        </div>
-                    </a>
-
-                    <a href="{{ url_for('indiv_product', product='custom-footwear') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Custom Footwear">
-                            <div class="product-overlay"></div>
-                            <span class="product-badge">Custom</span>
-                        </div>
-                        <div class="product-info">
-                            <h4>Custom Designs</h4>
-                            <p>Create your own unique footwear design</p>
-                            <span class="product-price">₱400 - ₱1,000</span>
-                        </div>
-                    </a>
+                    {% else %}
+                    <p class="muted">No footwear products yet.</p>
+                    {% endfor %}
                 </div>
+            </div>
             </div>
 
             <!-- Category: Food Products -->
+            <div class="category-container">
             <div class="product-category">
                 <h3 class="category-title"><i class="fas fa-cookie"></i> Local Delicacies</h3>
                 <div class="products-grid">
-                    <a href="{{ url_for('indiv_product', product='uraro') }}" class="product-card">
+                    {% for p in food %}
+                    <a href="{{ url_for('indiv_product', product=p.slug if p.slug else p.name|lower|replace(' ','-') ) }}" class="product-card">
                         <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Uraro Cookies">
+                            <img src="{{ (p.image_url or (p.gallery[0] if p.gallery else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))) }}" alt="{{ p.name }}">
                             <div class="product-overlay"></div>
                         </div>
-                        <div class="product-info">
-                            <h4>Uraro Cookies</h4>
-                            <p>Traditional arrowroot cookies - crispy and delicious</p>
-                            <span class="product-price">₱80 - ₱150</span>
+                        <div class="product-card-content">
+                            <span class="product-name-label">Product</span>
+                            <h3>{{ p.name }}</h3>
+                            <span class="product-price-label">Description</span>
+                            <p class="product-description">{{ p.description or '' }}</p>
+                            <span class="product-price-label">Price</span>
+                            <span class="product-price">{{ p.price_range|format_price if p.price_range else (p.price|format_price if p.get('price') else '') }}</span>
                         </div>
                     </a>
-
-                    <a href="{{ url_for('indiv_product', product='pastillas') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Pastillas">
-                            <div class="product-overlay"></div>
-                        </div>
-                        <div class="product-info">
-                            <h4>Pastillas de Leche</h4>
-                            <p>Sweet milk candy wrapped in colorful paper</p>
-                            <span class="product-price">₱100 - ₱200</span>
-                        </div>
-                    </a>
-
-                    <a href="{{ url_for('indiv_product', product='buko-pie') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Buko Pie">
-                            <div class="product-overlay"></div>
-                            <span class="product-badge">Fresh</span>
-                        </div>
-                        <div class="product-info">
-                            <h4>Buko Pie</h4>
-                            <p>Fresh coconut pie with flaky crust</p>
-                            <span class="product-price">₱150 - ₱250</span>
-                        </div>
-                    </a>
-
-                    <a href="{{ url_for('indiv_product', product='pilipit') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Pilipit">
-                            <div class="product-overlay"></div>
-                        </div>
-                        <div class="product-info">
-                            <h4>Pilipit</h4>
-                            <p>Twisted sweet dough fried to golden perfection</p>
-                            <span class="product-price">₱60 - ₱120</span>
-                        </div>
-                    </a>
+                    {% else %}
+                    <p class="muted">No food products yet.</p>
+                    {% endfor %}
                 </div>
+            </div>
             </div>
 
             <!-- Category: Handicrafts -->
+            <div class="category-container">
             <div class="product-category">
                 <h3 class="category-title"><i class="fas fa-hammer"></i> Handicrafts & Souvenirs</h3>
                 <div class="products-grid">
-                    <a href="{{ url_for('indiv_product', product='bamboo-crafts') }}" class="product-card">
+                    {% for p in handicrafts %}
+                    <a href="{{ url_for('indiv_product', product=p.slug if p.slug else p.name|lower|replace(' ','-') ) }}" class="product-card">
                         <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Bamboo Crafts">
+                            <img src="{{ (p.image_url or (p.gallery[0] if p.gallery else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))) }}" alt="{{ p.name }}">
                             <div class="product-overlay"></div>
                         </div>
-                        <div class="product-info">
-                            <h4>Bamboo Crafts</h4>
-                            <p>Eco-friendly bamboo home decor and utensils</p>
-                            <span class="product-price">₱100 - ₱500</span>
+                        <div class="product-card-content">
+                            <span class="product-name-label">Product</span>
+                            <h3>{{ p.name }}</h3>
+                            <span class="product-price-label">Description</span>
+                            <p class="product-description">{{ p.description or '' }}</p>
+                            <span class="product-price-label">Price</span>
+                            <span class="product-price">{{ p.price_range|format_price if p.price_range else (p.price|format_price if p.get('price') else '') }}</span>
                         </div>
                     </a>
-
-                    <a href="{{ url_for('indiv_product', product='woven-bags') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Woven Products">
-                            <div class="product-overlay"></div>
-                        </div>
-                        <div class="product-info">
-                            <h4>Woven Bags</h4>
-                            <p>Traditional hand-woven bags and baskets</p>
-                            <span class="product-price">₱200 - ₱600</span>
-                        </div>
-                    </a>
-
-                    <a href="{{ url_for('indiv_product', product='wood-carvings') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Wood Carvings">
-                            <div class="product-overlay"></div>
-                        </div>
-                        <div class="product-info">
-                            <h4>Wood Carvings</h4>
-                            <p>Intricately carved wooden sculptures and decor</p>
-                            <span class="product-price">₱300 - ₱2,000</span>
-                        </div>
-                    </a>
-
-                    <a href="{{ url_for('indiv_product', product='souvenir-items') }}" class="product-card">
-                        <div class="product-image">
-                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Souvenir Items">
-                            <div class="product-overlay"></div>
-                        </div>
-                        <div class="product-info">
-                            <h4>Souvenir Items</h4>
-                            <p>Keychains, magnets, and memorabilia</p>
-                            <span class="product-price">₱50 - ₱300</span>
-                        </div>
-                    </a>
+                    {% else %}
+                    <p class="muted">No handicrafts yet.</p>
+                    {% endfor %}
                 </div>
+            </div>
+            </div>
+
+            <!-- Category: Others -->
+            <div class="category-container">
+            <div class="product-category">
+                <h3 class="category-title"><i class="fas fa-box-open"></i> Others</h3>
+                <div class="products-grid">
+                    {% for p in others %}
+                    <a href="{{ url_for('indiv_product', product=p.slug if p.slug else p.name|lower|replace(' ','-') ) }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ (p.image_url or (p.gallery[0] if p.gallery else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))) }}" alt="{{ p.name }}">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-card-content">
+                            <span class="product-name-label">Product</span>
+                            <h3>{{ p.name }}</h3>
+                            <span class="product-price-label">Description</span>
+                            <p class="product-description">{{ p.description or '' }}</p>
+                            <span class="product-price-label">Price</span>
+                            <span class="product-price">{{ p.price_range|format_price if p.price_range else (p.price|format_price if p.get('price') else '') }}</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="muted">No other products yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
             </div>
         </div>
     </section>
@@ -270,6 +263,107 @@
     {% include 'footer.html' %}
 
     <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+    // Rolling-film mini-carousel: continuous smooth scroll, seamless loop by duplicating slides
+    (function(){
+        function waitForImages(root){
+            const imgs = Array.from(root.querySelectorAll('img'));
+            if(imgs.length === 0) return Promise.resolve();
+            return Promise.all(imgs.map(img => new Promise(res => {
+                if(img.complete && img.naturalWidth !== 0) return res();
+                img.addEventListener('load', res);
+                img.addEventListener('error', res);
+                // safety: timeout in case load doesn't fire
+                setTimeout(res, 800);
+            })));
+        }
+
+        function initRolling(el){
+            const slidesWrap = el.querySelector('.mini-slides');
+            if(!slidesWrap) return;
+            let originalNodes = Array.from(slidesWrap.children);
+            if(originalNodes.length === 0) return;
+
+            // Basic layout enforcement
+            el.style.overflow = 'hidden';
+            slidesWrap.style.display = 'flex';
+            slidesWrap.style.flexWrap = 'nowrap';
+            slidesWrap.style.willChange = 'transform';
+            slidesWrap.style.transition = 'none';
+
+            // Duplicate until the track is wide enough to cover at least two viewport widths
+            let copies = 1;
+            // append at least one copy first
+            function appendCopy(){
+                for(const n of originalNodes){
+                    slidesWrap.appendChild(n.cloneNode(true));
+                }
+                copies++;
+            }
+            appendCopy(); // now copies >=2
+
+            // Wait for images to load, then ensure width
+            waitForImages(slidesWrap).then(()=>{
+                let attempts = 0;
+                while(slidesWrap.scrollWidth < el.clientWidth * 2 && attempts < 6){
+                    appendCopy();
+                    attempts++;
+                }
+
+                // width of a single original set
+                const originalWidth = Math.round(slidesWrap.scrollWidth / copies);
+                let totalWidth = originalWidth;
+                let offset = 0;
+                const speed = parseFloat(el.dataset.speed) || 80; // pixels per second
+                let running = true;
+                let lastTs = null;
+
+                function step(ts){
+                    if(lastTs === null) lastTs = ts;
+                    const dt = (ts - lastTs) / 1000;
+                    lastTs = ts;
+                    if(running){
+                        offset -= speed * dt;
+                        if(Math.abs(offset) >= totalWidth){
+                            offset += totalWidth;
+                        }
+                        slidesWrap.style.transform = `translateX(${offset}px)`;
+                    }
+                    requestAnimationFrame(step);
+                }
+
+                // Pause on hover
+                el.addEventListener('mouseenter', ()=> { running = false; });
+                el.addEventListener('mouseleave', ()=> { running = true; lastTs = null; });
+
+                // Prev/Next small nudge
+                const prev = el.querySelector('.mini-prev');
+                const next = el.querySelector('.mini-next');
+                const nudge = Math.max(120, Math.floor(originalWidth / Math.max(1, originalNodes.length)) );
+                prev && prev.addEventListener('click', (e)=>{ e.preventDefault(); offset = Math.min(offset + nudge, 0); });
+                next && next.addEventListener('click', (e)=>{ e.preventDefault(); offset -= nudge; });
+
+                // Recalculate on resize
+                let resizeTimer = null;
+                window.addEventListener('resize', ()=>{
+                    if(resizeTimer) clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(()=>{
+                        // ensure track still covers two viewports; append copies if needed
+                        let attempts = 0;
+                        while(slidesWrap.scrollWidth < el.clientWidth * 2 && attempts < 6){ appendCopy(); attempts++; }
+                    }, 150);
+                });
+
+                // Start
+                requestAnimationFrame(step);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', ()=>{
+            document.querySelectorAll('.mini-carousel').forEach(initRolling);
+        });
+    })();
+    </script>
     {% include 'scripts-includes.html' %}
 </body>
 </html>
