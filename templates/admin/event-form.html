@@ -6,6 +6,8 @@
     <title>{{ 'Edit' if event else 'Add' }} Event - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <!-- Leaflet for map picker (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     {% include 'admin/sidebar.html' %}
@@ -109,6 +111,41 @@
                     </label>
                 </div>
 
+                <div class="form-group">
+                    <label for="cta_text">Call To Action Text (optional)</label>
+                    <input type="text" id="cta_text" name="cta_text" value="{{ event.cta_text if event else '' }}" placeholder="e.g., Learn More">
+                </div>
+                <div class="form-group">
+                    <label for="cta_url">Call To Action URL (optional)</label>
+                    <input type="url" id="cta_url" name="cta_url" value="{{ event.cta_url if event else '' }}" placeholder="https://example.com/event-details">
+                </div>
+
+                <div class="form-group">
+                    <label for="venue_address">Venue Address (optional)</label>
+                    <input type="text" id="venue_address" name="venue_address" value="{{ event.venue_address if event else '' }}" placeholder="Full venue address">
+                </div>
+
+                <div class="form-group">
+                    <label for="map_embed">Map Embed (iframe HTML) (optional)</label>
+                    <textarea id="map_embed" name="map_embed" rows="3">{{ event.map_embed if event else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Venue Coordinates</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button type="button" id="pickOnMapBtn" class="btn btn-secondary">Pick on Map</button>
+                        <span id="venueCoordsReadout">{{ (event.venue_lat ~ ', ' ~ event.venue_lng) if event and event.venue_lat and event.venue_lng else 'No location' }}</span>
+                    </div>
+                    <input type="hidden" id="venue_lat" name="venue_lat" value="{{ event.venue_lat if event else '' }}">
+                    <input type="hidden" id="venue_lng" name="venue_lng" value="{{ event.venue_lng if event else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="all_day" id="all_day" {{ 'checked' if event and event.all_day else '' }}> All day event (no specific times)
+                    </label>
+                </div>
+
                 {% if event %}
                 <div class="form-group">
                     <label>
@@ -133,6 +170,74 @@
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
+    </script>
+    <!-- Map picker modal (Leaflet) -->
+    <div id="mapPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center;">
+        <div style="width:90%; max-width:900px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #eee;">
+                <strong>Pick Location on Map</strong>
+                <div>
+                    <button id="mapPickerCancel" type="button" class="btn btn-secondary">Cancel</button>
+                    <button id="mapPickerSave" type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+            <div style="padding:8px; border-bottom:1px solid #f1f1f1; display:flex; gap:8px; align-items:center;">
+                <input id="mapSearchInput" type="search" placeholder="Search for a place or address" style="flex:1; padding:8px; border:1px solid #dcdcdc; border-radius:4px;" />
+                <button id="mapSearchBtn" type="button" class="btn btn-secondary">Search</button>
+                <button id="mapClearBtn" type="button" class="btn btn-secondary">Clear</button>
+            </div>
+            <div id="mapPicker" style="width:100%; height:520px;"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Lightweight map picker API for this form
+        (function(){
+            var modal = document.getElementById('mapPickerModal');
+            var mapEl = document.getElementById('mapPicker');
+            var btnSave = document.getElementById('mapPickerSave');
+            var btnCancel = document.getElementById('mapPickerCancel');
+            var mapInstance = null; var marker = null; var resolvePicker = null;
+
+            function showModal(){ modal.style.display = 'flex'; setTimeout(function(){ if(mapInstance) mapInstance.invalidateSize(); }, 250); }
+            function hideModal(){ modal.style.display = 'none'; }
+
+            function initMapIfNeeded(){
+                if(mapInstance) return;
+                mapInstance = L.map(mapEl).setView([14.1516,121.3300], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution: '© OpenStreetMap contributors' }).addTo(mapInstance);
+                mapInstance.on('click', function(e){
+                    var lat = e.latlng.lat, lng = e.latlng.lng;
+                    if(marker){ marker.setLatLng(e.latlng); } else { marker = L.marker(e.latlng, {draggable:true}).addTo(mapInstance); marker.on('dragend', function(){}); }
+                });
+            }
+
+            document.getElementById('mapSearchBtn').addEventListener('click', function(){ var q = document.getElementById('mapSearchInput').value; if(!q) return; fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&q='+encodeURIComponent(q)).then(r=>r.json()).then(function(data){ if(!data||!data.length) return; var d=data[0]; initMapIfNeeded(); var lat=parseFloat(d.lat), lon=parseFloat(d.lon); if(marker) marker.setLatLng([lat,lon]); else { marker = L.marker([lat,lon], {draggable:true}).addTo(mapInstance); } mapInstance.setView([lat,lon],16); }); });
+            document.getElementById('mapClearBtn').addEventListener('click', function(){ document.getElementById('mapSearchInput').value=''; });
+
+            window.openMapPicker = function(initial){
+                return new Promise(function(resolve, reject){
+                    try{
+                        initMapIfNeeded();
+                        if(initial && initial.lat && initial.lng){ var ll=[initial.lat, initial.lng]; if(marker) marker.setLatLng(ll); else { marker = L.marker(ll, {draggable:true}).addTo(mapInstance); } try{ mapInstance.setView(ll,16); }catch(e){} }
+                        showModal(); resolvePicker = resolve;
+                    }catch(e){ reject(e); }
+                });
+            };
+
+            btnCancel.addEventListener('click', function(){ hideModal(); if(resolvePicker){ resolvePicker(null); resolvePicker=null; } });
+            btnSave.addEventListener('click', function(){ if(!marker){ alert('Please click on the map to place a marker.'); return; } var p = marker.getLatLng(); hideModal(); if(resolvePicker){ resolvePicker({lat:p.lat, lng:p.lng}); resolvePicker=null; } });
+
+            // Hook the form's Pick on Map button
+            var pickBtn = document.getElementById('pickOnMapBtn');
+            if(pickBtn){ pickBtn.addEventListener('click', function(){
+                var lat = parseFloat(document.getElementById('venue_lat').value) || null;
+                var lng = parseFloat(document.getElementById('venue_lng').value) || null;
+                var initial = (lat && lng) ? {lat:lat, lng:lng} : null;
+                window.openMapPicker(initial).then(function(coord){ if(coord){ document.getElementById('venue_lat').value = coord.lat; document.getElementById('venue_lng').value = coord.lng; document.getElementById('venueCoordsReadout').textContent = coord.lat.toFixed(6)+', '+coord.lng.toFixed(6); } }).catch(function(){});
+            }); }
+        })();
     </script>
     <style>
         /* Small styles for product image uploader preview */
