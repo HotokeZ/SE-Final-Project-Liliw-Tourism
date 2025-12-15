@@ -69,9 +69,14 @@
 
         <div class="page-header">
             <h2>Reported Blog Posts</h2>
+            <div class="nav-tabs">
+                <a href="#current-reports" class="tab active" onclick="showTab('current-reports'); return false;">Current Reports</a>
+                <a href="#report-history" class="tab" onclick="showTab('report-history'); return false;">Report History</a>
+            </div>
+            </style>
         </div>
 
-        <div class="dashboard-section">
+        <div id="current-reports" class="reports-list tab-content" style="display:block;">
             {% if reports %}
                 {% for r in reports %}
                 <div class="report-card">
@@ -85,19 +90,15 @@
                             <div style="color:#666; font-size:0.85rem;">Last: {{ r.last_reported_at[:10] if r.last_reported_at else 'Unknown' }}</div>
                         </div>
                     </div>
-
                     <div style="margin:0.5rem 0 1rem 0; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                         {% for reason, count in r.reasons.items() %}
                             <span class="report-reason" style="background:#fff3cd; color:#856404;">{{ reason }} ({{ count }})</span>
                         {% endfor %}
                     </div>
-
                     {% if r.latest_description %}
                     <p><strong>Latest report note:</strong> {{ r.latest_description }}</p>
                     {% endif %}
-
                     <p style="color:#666; font-size:0.9rem; margin-top:0.5rem;"><strong>Reporters:</strong> {{ r.reporters | join(', ') }}</p>
-
                     <div class="report-actions">
                         <a href="{{ url_for('view_blog', blog_id=r.blog_id) }}" target="_blank" class="btn btn-secondary">
                             <i class="fas fa-eye"></i> View Blog
@@ -122,11 +123,68 @@
                 </div>
             {% endif %}
         </div>
+        <div id="report-history" class="reports-list tab-content" style="display:none;">
+            {% if report_history %}
+                {% for r in report_history %}
+                <div class="report-card">
+                    <div class="report-header">
+                        <div>
+                            <strong style="font-size:1.05rem;">{{ r.title or ('Blog #' ~ r.blog_id) }}</strong>
+                            <div style="color:#666; font-size:0.9rem;">By: {{ r.author or 'Unknown' }}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:700; font-size:1rem;">{{ r.total_reports }} report{{ 's' if r.total_reports > 1 else '' }}</div>
+                            <div style="color:#666; font-size:0.85rem;">Last: {{ r.last_reported_at[:10] if r.last_reported_at else 'Unknown' }}</div>
+                        </div>
+                    </div>
+                    <div style="margin:0.5rem 0 1rem 0; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                        {% for reason, count in r.reasons.items() %}
+                            <span class="report-reason" style="background:#fff3cd; color:#856404;">{{ reason }} ({{ count }})</span>
+                        {% endfor %}
+                    </div>
+                    {% if r.latest_description %}
+                    <p><strong>Latest report note:</strong> {{ r.latest_description }}</p>
+                    {% endif %}
+                    <p style="color:#666; font-size:0.9rem; margin-top:0.5rem;"><strong>Reporters:</strong> {{ r.reporters | join(', ') }}</p>
+                    <div class="report-actions">
+                        <a href="{{ url_for('view_blog', blog_id=r.blog_id) }}" target="_blank" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> View Blog
+                        </a>
+                        <a href="{{ url_for('admin_blog_reject', blog_id=r.blog_id) }}" class="btn btn-danger">
+                            <i class="fas fa-ban"></i> Reject Blog
+                        </a>
+                        {% if r.latest_report_id %}
+                        <a href="{{ url_for('admin_report_dismiss', report_id=r.latest_report_id) }}" class="btn btn-success">
+                            <i class="fas fa-check"></i> Dismiss Latest Report
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="table-container">
+                    <p class="no-data" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-check-circle" style="font-size: 3rem; color: #4caf50; display: block; margin-bottom: 1rem;"></i>
+                        No report history at this time.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
     </main>
 
     <script>
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(function(el) {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll('.tab').forEach(function(el) {
+                el.classList.remove('active');
+            });
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelector('.tab[href="#' + tabId + '"]').classList.add('active');
         }
     </script>
 </body>

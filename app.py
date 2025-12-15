@@ -1515,10 +1515,14 @@ def admin_blog_approve(blog_id):
 def admin_blog_reject(blog_id):
     if supabase:
         try:
+            # Set status to rejected and archive the blog
             supabase.table('blogs').update({
-                'status': 'rejected'
+                'status': 'rejected',
+                'is_archived': True,
+                'is_deleted': False,
+                'deleted_at': datetime.now().isoformat()
             }).eq('id', blog_id).execute()
-            flash('Blog post rejected.', 'success')
+            flash('Blog post rejected and archived.', 'success')
         except Exception as e:
             print(f"Error rejecting blog: {e}")
             flash('Failed to reject blog post.', 'error')
@@ -2826,21 +2830,24 @@ def admin_review_delete(review_id):
 @admin_required
 def admin_reports():
     reports = []
-    aggregated = []
+    report_history = []
     if supabase:
         try:
-            resp = supabase.table('blog_reports').select('*, blogs(title, author)').order('created_at', desc=True).execute()
+            resp = supabase.table('blog_reports').select('*, blogs(id, title, author, is_archived, status)').order('created_at', desc=True).execute()
             rows = resp.data or []
 
             # Aggregate by blog_id
             groups = {}
             for r in rows:
+                blog = r.get('blogs') or {}
                 bid = r.get('blog_id')
                 if bid not in groups:
                     groups[bid] = {
                         'blog_id': bid,
-                        'title': (r.get('blogs') or {}).get('title') if r.get('blogs') else None,
-                        'author': (r.get('blogs') or {}).get('author') if r.get('blogs') else None,
+                        'title': blog.get('title'),
+                        'author': blog.get('author'),
+                        'is_archived': blog.get('is_archived'),
+                        'status': blog.get('status'),
                         'total_reports': 0,
                         'reasons': {},
                         'last_reported_at': None,
@@ -2862,13 +2869,21 @@ def admin_reports():
                 if rep and rep not in g['reporters']:
                     g['reporters'].append(rep)
 
-            # Convert groups to list sorted by last_reported_at desc
-            aggregated = sorted(groups.values(), key=lambda x: x['last_reported_at'] or '', reverse=True)
+            # Separate current and history
+            for g in groups.values():
+                if g['is_archived'] or (g['status'] in ['inactive', 'rejected']):
+                    report_history.append(g)
+                else:
+                    reports.append(g)
+
+            # Sort both lists
+            reports = sorted(reports, key=lambda x: x['last_reported_at'] or '', reverse=True)
+            report_history = sorted(report_history, key=lambda x: x['last_reported_at'] or '', reverse=True)
 
         except Exception as e:
             print(f"Error fetching reports: {e}")
 
-    return render_template('admin/reports.html', reports=aggregated)
+    return render_template('admin/reports.html', reports=reports, report_history=report_history)
 
 @app.route('/admin/reports/<int:report_id>/dismiss')
 @admin_required
