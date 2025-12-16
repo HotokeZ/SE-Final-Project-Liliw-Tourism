@@ -62,10 +62,7 @@
                         <i class="fas fa-images"></i>
                         Gallery
                     </button>
-                    <button class="tab-btn" data-tab="reviews">
-                        <i class="fas fa-comments"></i>
-                        Reviews
-                    </button>
+                    {# Reviews tab removed - feature not available #}
                 </div>
 
                 <!-- Tab Content -->
@@ -306,32 +303,7 @@
                     </div>
                 </div>
 
-                <div class="tab-content" id="reviews">
-                    <div class="section-card">
-                        <h2>Customer Reviews</h2>
-                        <div class="reviews-summary">
-                            <p class="no-reviews-summary">Customer reviews are available on the reviews tab below.</p>
-                        </div>
-                        <div class="reviews-list">
-                            {% if restaurant.reviews %}
-                                {% for review in restaurant.reviews %}
-                                <div class="review-item">
-                                    <div class="review-header">
-                                        <div class="reviewer-info">
-                                            <strong>{{ review.author }}</strong>
-                                            <span class="review-date">{{ review.date }}</span>
-                                        </div>
-                                        <div class="review-rating"></div>
-                                    </div>
-                                    <p class="review-text">{{ review.comment }}</p>
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <p class="no-reviews">No reviews yet. Be the first to review!</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+                {# Reviews section removed — no review system in use #}
 
             </main>
 

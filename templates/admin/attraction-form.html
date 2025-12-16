@@ -203,29 +203,42 @@
 
                 <div class="form-group">
                     <label>{{ 'Change' if attraction else 'Upload' }} Images</label>
-                    <div class="file-upload" aria-live="polite">
-                        <input type="file" id="featured-image" name="image" accept="image/*" multiple>
-                        <!-- Hidden input to submit gallery images (all except the chosen thumbnail) -->
+                    <div id="imageUploader" class="image-uploader">
+                        <input type="file" id="featured-image" name="image" accept="image/*" style="display:none">
                         <input type="file" id="gallery-images" name="gallery_images" accept="image/*" multiple style="display:none">
-                        <div class="file-upload-label" role="button" tabindex="0" aria-controls="imagePreview" aria-label="Upload images">
-                            <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
-                            <span>Click to upload or drag and drop</span>
-                            <small>JPG, PNG or WEBP (MAX. 5MB)</small>
+                        <div class="uploader-controls">
+                            <button type="button" id="addImagesBtn" class="btn btn-secondary">Add Images</button>
+                            <span class="hint">Select a featured image by clicking the star on a preview.</span>
                         </div>
-                        <div class="image-preview" id="imagePreview" style="display:none">
-                            <div class="image-grid-container">
-                                <div class="image-grid" id="imageGrid" aria-label="Selected images"></div>
-                                <div class="carousel-controls" id="carouselControls" style="display:none">
-                                    <button type="button" class="carousel-btn prev" aria-label="Previous images">&#10094;</button>
-                                    <button type="button" class="carousel-btn next" aria-label="Next images">&#10095;</button>
+                        <div id="imageGrid" class="image-grid" aria-label="Selected images"></div>
+                    </div>
+                    {% if attraction %}
+                    {% set existing_images = [] %}
+                    {% if attraction.gallery_urls %}
+                        {% set existing_images = attraction.gallery_urls %}
+                    {% elif attraction.image_url %}
+                        {% set existing_images = [attraction.image_url] %}
+                    {% endif %}
+                    {% if existing_images %}
+                    <div style="margin-top:10px;">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="existingImagesContainer">
+                            {% for url in existing_images %}
+                            <div class="image-cell existing" data-src="{{ url }}" style="width:120px;height:90px;position:relative;border-radius:6px;overflow:hidden;background:#f6f6f6;">
+                                <img src="{{ url }}" alt="existing-{{ loop.index0 }}" style="width:100%;height:100%;object-fit:cover;display:block">
+                                <div style="position:absolute;top:6px;right:6px;display:flex;gap:6px;">
+                                    <button type="button" class="btn-feature-existing" data-src="{{ url }}" title="Set as featured" style="background:rgba(0,0,0,0.45);color:#fff;border:none;padding:6px;border-radius:4px;">★</button>
+                                    <button type="button" class="btn-remove-existing" data-src="{{ url }}" title="Remove" style="background:rgba(0,0,0,0.45);color:#fff;border:none;padding:6px;border-radius:4px;">✕</button>
                                 </div>
+                                {% if attraction.image_url and attraction.image_url == url %}
+                                <div style="position:absolute;left:6px;top:6px;background:rgba(255,215,0,0.95);color:#000;padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Featured</div>
+                                {% endif %}
                             </div>
+                            {% endfor %}
                         </div>
+                        <input type="hidden" id="existing_gallery_urls" name="existing_gallery_urls" value='{{ existing_images|tojson }}'>
+                        <input type="hidden" id="existing_featured" name="existing_featured" value='{{ attraction.image_url if attraction.image_url else (existing_images[0] if existing_images|length else "") }}'>
                     </div>
-                    {% if attraction and attraction.image_url %}
-                    <div style="margin-top: 10px;">
-                        <img src="{{ attraction.image_url }}" alt="Current image" style="max-width: 200px; border-radius: 8px;">
-                    </div>
+                    {% endif %}
                     {% endif %}
                 </div>
 
@@ -541,12 +554,11 @@
             // Multi-image upload UI: preview grid, drag-and-drop, featured selection
             var featuredInput = document.getElementById('featured-image');
             var galleryInput = document.getElementById('gallery-images');
-            var fileUploadLabel = document.querySelector('.file-upload-label');
-            var imagePreview = document.getElementById('imagePreview');
+            var addBtn = document.getElementById('addImagesBtn');
             var imageGrid = document.getElementById('imageGrid');
             var formEl = document.querySelector('form.form-container');
 
-            if (!featuredInput || !imageGrid || !fileUploadLabel) return;
+            if (!featuredInput || !imageGrid || !addBtn) return;
 
             var selectedFiles = []; // Array of File objects
             var featuredIndex = 0;
@@ -564,10 +576,9 @@
             function renderGrid() {
                 imageGrid.innerHTML = '';
                 if (!selectedFiles.length) {
-                    imagePreview.style.display = 'none';
+                    imageGrid.innerHTML = '';
                     return;
                 }
-                imagePreview.style.display = 'block';
                 selectedFiles.forEach(function (file, idx) {
                     var cell = document.createElement('div');
                     cell.className = 'image-cell';
@@ -654,14 +665,14 @@
                 renderGrid();
             }
 
-            // Drag & drop support
-            function preventDefault(e) { e.preventDefault(); e.stopPropagation(); }
-            ['dragenter','dragover','dragleave','drop'].forEach(function (ev) { fileUploadLabel.addEventListener(ev, preventDefault); });
-            fileUploadLabel.addEventListener('drop', function (e) { handleFiles(e.dataTransfer.files); });
+            // Click Add Images opens file dialog
+            addBtn.addEventListener('click', function () { featuredInput.click(); });
+            addBtn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); featuredInput.click(); } });
 
-            // Click label opens file dialog
-            fileUploadLabel.addEventListener('click', function () { featuredInput.click(); });
-            fileUploadLabel.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); featuredInput.click(); } });
+            // Optional: allow dropping files on the grid area
+            function preventDefault(e) { e.preventDefault(); e.stopPropagation(); }
+            ['dragenter','dragover','dragleave','drop'].forEach(function (ev) { imageGrid.addEventListener(ev, preventDefault); });
+            imageGrid.addEventListener('drop', function (e) { handleFiles(e.dataTransfer.files); });
 
             featuredInput.addEventListener('change', function (e) {
                 handleFiles(e.target.files);
@@ -674,6 +685,50 @@
                 formEl.addEventListener('submit', function (e) {
                     updateInputsFromSelection();
                     // No further validation here; let server validate sizes/limits
+                });
+            }
+
+            // Manage existing uploaded images (from server) - removal and featured selection
+            var existingContainer = document.getElementById('existingImagesContainer');
+            var existingHidden = document.getElementById('existing_gallery_urls');
+            var existingFeaturedHidden = document.getElementById('existing_featured');
+            if (existingContainer && existingHidden) {
+                existingContainer.addEventListener('click', function (e) {
+                    var btn = e.target.closest('.btn-remove-existing, .btn-feature-existing');
+                    if (!btn) return;
+                    var src = btn.getAttribute('data-src');
+                    try {
+                        var list = JSON.parse(existingHidden.value || '[]');
+                    } catch (err) { list = []; }
+                    if (btn.classList.contains('btn-remove-existing')) {
+                        // remove image from list
+                        var idx = list.indexOf(src);
+                        if (idx !== -1) list.splice(idx, 1);
+                        existingHidden.value = JSON.stringify(list);
+                        // remove DOM node
+                        var cell = btn.closest('.image-cell.existing');
+                        if (cell) cell.remove();
+                        // if removed image was featured, clear featured hidden
+                        if (existingFeaturedHidden && existingFeaturedHidden.value === src) {
+                            existingFeaturedHidden.value = (list.length ? list[0] : '');
+                        }
+                    } else if (btn.classList.contains('btn-feature-existing')) {
+                        if (existingFeaturedHidden) existingFeaturedHidden.value = src;
+                        // update badges
+                        Array.from(existingContainer.querySelectorAll('.image-cell.existing')).forEach(function (c) {
+                            c.querySelectorAll('.featured-badge, .featured-mark').forEach(function (n) { n.remove(); });
+                            var cellSrc = c.getAttribute('data-src');
+                            if (cellSrc === src) {
+                                var badge = document.createElement('div');
+                                badge.className = 'featured-badge';
+                                badge.textContent = 'Featured';
+                                badge.style.position = 'absolute';
+                                badge.style.left = '6px';
+                                badge.style.top = '6px';
+                                c.appendChild(badge);
+                            }
+                        });
+                    }
                 });
             }
         })();

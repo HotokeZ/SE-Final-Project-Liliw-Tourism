@@ -57,6 +57,41 @@
     margin-bottom: 1.5rem;
 }
 
+/* Pin the hero meta card to the top-right of the viewport so it doesn't
+   drift down while scrolling and block content. On small screens this
+   falls back to in-flow placement. */
+.hero-meta {
+    position: fixed;
+    top: 76px; /* sits below the fixed header */
+    right: 24px;
+    background: rgba(255,255,255,0.98);
+    color: #1a1a1a;
+    padding: 10px 14px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+    z-index: 1100;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    min-width: 220px;
+}
+
+.hero-meta .location i { color: #0229bf; margin-right: 8px; }
+.hero-meta .price { font-weight: 700; color: #0229bf; }
+
+@media (max-width: 900px) {
+    .hero-meta {
+        position: static;
+        display: block;
+        background: transparent;
+        color: #fff;
+        box-shadow: none;
+        padding: 0;
+        min-width: auto;
+        margin-top: 1rem;
+    }
+}
+
 .establishments-hero {
     position: relative;
     height: 400px;
@@ -121,6 +156,108 @@
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
     background: #f0f0f0;
+}
+
+/* Tab buttons (overview / amenities / rooms ...) styling */
+.detail-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+.tab-btn {
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: transparent;
+    border: 2px solid #dfe8ff;
+    color: #0229bf;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+}
+.tab-btn i { color: #0229bf; }
+.tab-btn.active {
+    background: linear-gradient(135deg, #0229bf, #0052cc);
+    color: #fff;
+    border-color: transparent;
+}
+
+/* Photo gallery grid */
+.photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 1rem;
+}
+.photo-gallery .gallery-item {
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f7f9ff;
+}
+.photo-gallery .gallery-item img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+    cursor: zoom-in;
+}
+.photo-gallery .gallery-item img:hover { transform: scale(1.03); }
+
+/* Lightbox */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.8);
+    z-index: 2000;
+}
+.lightbox img { max-width: 92%; max-height: 86%; border-radius: 6px; }
+.close-lightbox {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* Map container sizing */
+.map-container iframe, .map-container embed {
+    width: 100%;
+    height: 320px;
+    border: 0;
+}
+
+/* Similar hotels in sidebar - size and layout to match stay cards */
+.sidebar .similar-places .similar-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    padding: 10px;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(2,41,191,0.06);
+    margin-bottom: 10px;
+}
+.sidebar .similar-places .similar-item img {
+    width: 88px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+.sidebar .similar-places .similar-info h4 { margin: 0; font-size: 1rem; }
+.sidebar .similar-places .similar-info { flex: 1; }
+
+@media (max-width: 900px) {
+    .photo-gallery .gallery-item img { height: 110px; }
+    .sidebar .similar-places .similar-item { padding: 8px; }
 }
 
 /* ===================================

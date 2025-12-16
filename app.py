@@ -830,7 +830,48 @@ def indiv_resto(restaurant):
         {'name': 'Other Restaurant', 'slug': 'other-restaurant', 'image': 'hero.JPG', 'cuisine': 'Filipino', 'price_range': '₱200-500'},
     ]
 
-    return render_template('plan/indiv-resto.html', resto=resto_data, similar_restos=similar_restos)
+    # Render using `restaurant` variable name expected by the template
+    return render_template('plan/indiv-resto.html', restaurant=resto_data, similar_restos=similar_restos)
+
+
+@app.route('/submit-booking', methods=['POST'])
+def submit_booking():
+    # Lightweight booking handler: accepts booking form and stores (if DB available) or flashes confirmation.
+    try:
+        hotel_id = request.form.get('hotel_id')
+        checkin = request.form.get('checkin')
+        checkout = request.form.get('checkout')
+        guests = request.form.get('guests')
+        name = request.form.get('name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+
+        booking_data = {
+            'hotel_id': hotel_id,
+            'checkin': checkin,
+            'checkout': checkout,
+            'guests': guests,
+            'name': name,
+            'email': email,
+            'phone': phone,
+            'created_at': datetime.now().isoformat()
+        }
+
+        if supabase:
+            try:
+                supabase.table('bookings').insert(booking_data).execute()
+                flash('Booking request submitted — we will contact you shortly.', 'success')
+            except Exception as e:
+                print(f"Booking insert failed: {e}")
+                flash('Booking received but failed to save to database.', 'warning')
+        else:
+            flash('Booking request received (no database configured).', 'success')
+
+    except Exception as e:
+        print(f"Error handling booking submission: {e}")
+        flash('Failed to submit booking request.', 'error')
+
+    return redirect(request.referrer or url_for('plan'))
 
 @app.route('/plan/travel-tips')
 def travel_tips():
@@ -1830,6 +1871,35 @@ def admin_attractions_edit(attraction_id):
                                 print('Failed to upload gallery image to Supabase storage:', _e)
                 if gallery_urls:
                     update_data['gallery_urls'] = gallery_urls
+
+                # Process existing gallery/featured state from form (when editing existing attraction)
+                try:
+                    existing_raw = request.form.get('existing_gallery_urls')
+                    if existing_raw is not None:
+                        import json as _json
+                        existing_list = _json.loads(existing_raw) if existing_raw and existing_raw.strip() else []
+                        if isinstance(existing_list, list):
+                            # If new gallery uploads exist, append them; otherwise honor existing list
+                            if gallery_urls:
+                                existing_list = existing_list + gallery_urls
+                            update_data['gallery_urls'] = existing_list
+
+                            # Determine featured image: if no new featured file uploaded, use existing_featured
+                            has_new_featured = False
+                            if 'image' in request.files:
+                                fcheck = request.files['image']
+                                if fcheck and fcheck.filename:
+                                    has_new_featured = True
+                            if not has_new_featured:
+                                existing_featured = request.form.get('existing_featured')
+                                if existing_featured:
+                                    update_data['image_url'] = existing_featured
+                                else:
+                                    # If user removed all existing images, clear featured
+                                    if not existing_list:
+                                        update_data['image_url'] = None
+                except Exception:
+                    pass
 
                 supabase.table('attractions').update(update_data).eq('id', attraction_id).execute()
                 flash('Attraction updated successfully!', 'success')
@@ -2973,58 +3043,7 @@ def admin_restaurants_delete(resto_id):
             flash('Failed to delete restaurant.', 'error')
     return redirect(url_for('admin_restaurants'))
 
-# ============================================
-# ADMIN - REVIEWS MANAGEMENT
-# ============================================
-
-@app.route('/admin/reviews')
-@admin_required
-def admin_reviews():
-    reviews = []
-    if supabase:
-        try:
-            response = supabase.table('reviews').select('*').order('created_at', desc=True).execute()
-            reviews = response.data or []
-        except Exception as e:
-            print(f"Error fetching reviews: {e}")
-    
-    return render_template('admin/reviews.html', reviews=reviews)
-
-@app.route('/admin/reviews/<int:review_id>/approve')
-@admin_required
-def admin_review_approve(review_id):
-    if supabase:
-        try:
-            supabase.table('reviews').update({'status': 'approved'}).eq('id', review_id).execute()
-            flash('Review approved!', 'success')
-        except Exception as e:
-            print(f"Error approving review: {e}")
-            flash('Failed to approve review.', 'error')
-    return redirect(url_for('admin_reviews'))
-
-@app.route('/admin/reviews/<int:review_id>/reject')
-@admin_required
-def admin_review_reject(review_id):
-    if supabase:
-        try:
-            supabase.table('reviews').update({'status': 'rejected'}).eq('id', review_id).execute()
-            flash('Review rejected.', 'success')
-        except Exception as e:
-            print(f"Error rejecting review: {e}")
-            flash('Failed to reject review.', 'error')
-    return redirect(url_for('admin_reviews'))
-
-@app.route('/admin/reviews/<int:review_id>/delete')
-@admin_required
-def admin_review_delete(review_id):
-    if supabase:
-        try:
-            supabase.table('reviews').delete().eq('id', review_id).execute()
-            flash('Review deleted.', 'success')
-        except Exception as e:
-            print(f"Error deleting review: {e}")
-            flash('Failed to delete review.', 'error')
-    return redirect(url_for('admin_reviews'))
+# (Reviews management removed — feature not used)
 
 # ============================================
 # ADMIN - REPORTS MANAGEMENT

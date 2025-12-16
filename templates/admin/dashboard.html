@@ -60,13 +60,7 @@
                 <span>Restaurants</span>
             </a>
             
-            <a href="{{ url_for('admin_reviews') }}" class="nav-item">
-                <i class="fas fa-star"></i>
-                <span>Reviews</span>
-                {% if pending_reviews > 0 %}
-                <span class="badge">{{ pending_reviews }}</span>
-                {% endif %}
-            </a>
+            {# Reviews removed - feature not in use #}
             
             <div class="nav-section">Reports</div>
             

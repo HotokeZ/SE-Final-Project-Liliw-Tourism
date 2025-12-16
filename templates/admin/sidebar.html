@@ -47,11 +47,6 @@
             <span>Restaurants</span>
         </a>
         
-        <a href="{{ url_for('admin_reviews') }}" class="nav-item {{ 'active' if 'review' in request.endpoint else '' }}">
-            <i class="fas fa-star"></i>
-            <span>Reviews</span>
-        </a>
-        
         <div class="nav-section">Reports</div>
         
         <a href="{{ url_for('admin_reports') }}" class="nav-item {{ 'active' if 'report' in request.endpoint else '' }}">
