@@ -1,0 +1,16 @@
+{% extends "index.html" %}
+
+{% block title %}Page Not Found - Liliw Tourism{% endblock %}
+
+{% block content %}
+<section class="error-section" style="min-height: 60vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 4rem 2rem;">
+    <div class="error-content">
+        <h1 style="font-size: 6rem; color: var(--primary-color); margin-bottom: 1rem;">404</h1>
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">Page Not Found</h2>
+        <p style="color: #666; margin-bottom: 2rem;">Sorry, the page you're looking for doesn't exist or has been moved.</p>
+        <a href="{{ url_for('home') }}" class="btn btn-primary" style="padding: 0.75rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 8px;">
+            Return Home
+        </a>
+    </div>
+</section>
+{% endblock %}

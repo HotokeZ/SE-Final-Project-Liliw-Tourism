@@ -1,0 +1,781 @@
+/* Travel Tips Page Styles */
+/* Primary Color: #0229bf */
+
+/* Hero Section */
+.travel-tips-hero {
+    position: relative;
+    height: 400px;
+    background: linear-gradient(135deg, #0229bf 0%, #0952d9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 60px;
+}
+
+.travel-tips-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('../assets/images/pattern.png') repeat;
+    opacity: 0.1;
+    animation: slidePattern 20s linear infinite;
+}
+
+@keyframes slidePattern {
+    0% { transform: translateX(0) translateY(0); }
+    100% { transform: translateX(50px) translateY(50px); }
+}
+
+.travel-tips-hero-content {
+    position: relative;
+    text-align: center;
+    color: white;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 30px;
+}
+
+.travel-tips-hero h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.travel-tips-hero p {
+    font-size: 1.3rem;
+    margin-bottom: 0;
+    opacity: 0.95;
+    animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Main Container */
+.travel-tips-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 30px 80px;
+}
+
+/* Category Tabs */
+.tips-category-tabs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0;
+}
+
+.tips-category-tab {
+    padding: 15px 30px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #6b7280;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tips-category-tab:hover {
+    color: #0229bf;
+    background: rgba(2, 41, 191, 0.05);
+}
+
+.tips-category-tab.active {
+    color: #0229bf;
+    border-bottom-color: #0229bf;
+}
+
+.tips-category-tab::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: #0229bf;
+    transition: width 0.3s ease;
+}
+
+.tips-category-tab.active::after {
+    width: 100%;
+}
+
+/* Tip Cards Grid */
+.tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 30px;
+    margin-bottom: 60px;
+}
+
+.tip-card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid #e5e7eb;
+    position: relative;
+    overflow: hidden;
+}
+
+.tip-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: #0229bf;
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.tip-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(2, 41, 191, 0.15);
+}
+
+.tip-card:hover::before {
+    transform: scaleY(1);
+}
+
+.tip-card-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #0229bf 0%, #0952d9 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.tip-card:hover .tip-card-icon {
+    transform: rotate(5deg) scale(1.05);
+}
+
+.tip-card-icon i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.tip-card-icon img {
+    width: 35px;
+    height: 35px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.tip-card h3 {
+    font-size: 1.4rem;
+    color: #1f2937;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.tip-card p {
+    color: #6b7280;
+    line-height: 1.7;
+    margin-bottom: 0;
+    font-size: 1rem;
+}
+
+/* Accordion/Expandable Sections */
+.tips-accordion {
+    margin-bottom: 60px;
+}
+
+.accordion-item {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.accordion-item:hover {
+    box-shadow: 0 4px 16px rgba(2, 41, 191, 0.1);
+}
+
+.accordion-header {
+    padding: 25px 30px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.accordion-header:hover {
+    background: rgba(2, 41, 191, 0.02);
+}
+
+.accordion-item.active .accordion-header {
+    background: rgba(2, 41, 191, 0.05);
+}
+
+.accordion-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.accordion-title i {
+    color: #0229bf;
+    font-size: 1.5rem;
+}
+
+.accordion-toggle {
+    width: 32px;
+    height: 32px;
+    background: #0229bf;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+    font-size: 1.2rem;
+}
+
+.accordion-item.active .accordion-toggle {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    padding: 0 30px;
+}
+
+.accordion-item.active .accordion-content {
+    max-height: 2000px;
+    padding: 0 30px 25px;
+}
+
+.accordion-content p {
+    color: #6b7280;
+    line-height: 1.8;
+    margin-bottom: 15px;
+}
+
+.accordion-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+}
+
+.accordion-content li {
+    padding: 10px 0 10px 30px;
+    color: #6b7280;
+    position: relative;
+    line-height: 1.6;
+}
+
+.accordion-content li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #0229bf;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Info Boxes */
+.info-box {
+    background: linear-gradient(135deg, rgba(2, 41, 191, 0.05) 0%, rgba(9, 82, 217, 0.05) 100%);
+    border-left: 4px solid #0229bf;
+    border-radius: 8px;
+    padding: 25px 30px;
+    margin: 30px 0;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.info-box-icon {
+    width: 50px;
+    height: 50px;
+    background: #0229bf;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.info-box-icon i {
+    color: white;
+    font-size: 1.4rem;
+}
+
+.info-box-content h4 {
+    color: #0229bf;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.info-box-content p {
+    color: #4b5563;
+    line-height: 1.7;
+    margin-bottom: 0;
+}
+
+.info-box.warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(251, 191, 36, 0.05) 100%);
+    border-left-color: #f59e0b;
+}
+
+.info-box.warning .info-box-icon {
+    background: #f59e0b;
+}
+
+.info-box.warning .info-box-content h4 {
+    color: #f59e0b;
+}
+
+.info-box.success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(52, 211, 153, 0.05) 100%);
+    border-left-color: #10b981;
+}
+
+.info-box.success .info-box-icon {
+    background: #10b981;
+}
+
+.info-box.success .info-box-content h4 {
+    color: #10b981;
+}
+
+/* Checklists */
+.tips-checklist {
+    background: white;
+    border-radius: 12px;
+    padding: 35px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin: 40px 0;
+    border: 1px solid #e5e7eb;
+}
+
+.tips-checklist h3 {
+    font-size: 1.6rem;
+    color: #1f2937;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #0229bf;
+    font-weight: 700;
+}
+
+.checklist-items {
+    display: grid;
+    gap: 15px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(2, 41, 191, 0.02);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.checklist-item:hover {
+    background: rgba(2, 41, 191, 0.05);
+    transform: translateX(5px);
+}
+
+.checklist-checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #0229bf;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.checklist-item.checked .checklist-checkbox {
+    background: #0229bf;
+}
+
+.checklist-checkbox i {
+    color: white;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.checklist-item.checked .checklist-checkbox i {
+    opacity: 1;
+}
+
+.checklist-text {
+    flex: 1;
+    color: #4b5563;
+    line-height: 1.6;
+    transition: color 0.3s ease;
+}
+
+.checklist-item.checked .checklist-text {
+    color: #9ca3af;
+    text-decoration: line-through;
+}
+
+/* Timeline Layout */
+.tips-timeline {
+    position: relative;
+    padding: 40px 0;
+    margin: 50px 0;
+}
+
+.tips-timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #0229bf 0%, #0952d9 100%);
+    transform: translateX(-50%);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 50px;
+    display: flex;
+    align-items: center;
+}
+
+.timeline-item:nth-child(odd) {
+    flex-direction: row;
+}
+
+.timeline-item:nth-child(even) {
+    flex-direction: row-reverse;
+}
+
+.timeline-content {
+    width: calc(50% - 50px);
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.timeline-content:hover {
+    box-shadow: 0 8px 24px rgba(2, 41, 191, 0.15);
+    transform: scale(1.02);
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    background: white;
+    border: 4px solid #0229bf;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(2, 41, 191, 0.2);
+}
+
+.timeline-marker i {
+    color: #0229bf;
+    font-size: 1.3rem;
+}
+
+.timeline-content h4 {
+    font-size: 1.3rem;
+    color: #0229bf;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.timeline-content p {
+    color: #6b7280;
+    line-height: 1.7;
+    margin-bottom: 0;
+}
+
+/* Section Headers */
+.tips-section-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.tips-section-header h2 {
+    font-size: 2.5rem;
+    color: #1f2937;
+    margin-bottom: 15px;
+    font-weight: 700;
+    position: relative;
+    display: inline-block;
+}
+
+.tips-section-header h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #0229bf 0%, #0952d9 100%);
+    border-radius: 2px;
+}
+
+.tips-section-header p {
+    color: #6b7280;
+    font-size: 1.1rem;
+    max-width: 700px;
+    margin: 25px auto 0;
+    line-height: 1.7;
+}
+
+/* Quick Links */
+.tips-quick-links {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 40px 0;
+    justify-content: center;
+}
+
+.quick-link-btn {
+    padding: 12px 28px;
+    background: white;
+    border: 2px solid #0229bf;
+    color: #0229bf;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quick-link-btn:hover {
+    background: #0229bf;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(2, 41, 191, 0.3);
+}
+
+.quick-link-btn i {
+    font-size: 1.1rem;
+}
+
+/* Responsive Design - 1040px */
+@media (max-width: 1040px) {
+    .travel-tips-hero h1 {
+        font-size: 3rem;
+    }
+
+    .tips-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+    }
+
+    .tips-timeline::before {
+        left: 30px;
+    }
+
+    .timeline-item:nth-child(odd),
+    .timeline-item:nth-child(even) {
+        flex-direction: row;
+        padding-left: 80px;
+    }
+
+    .timeline-content {
+        width: 100%;
+    }
+
+    .timeline-marker {
+        left: 30px;
+    }
+
+    .tips-category-tabs {
+        gap: 10px;
+    }
+
+    .tips-category-tab {
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+}
+
+/* Responsive Design - 768px */
+@media (max-width: 768px) {
+    .travel-tips-hero {
+        height: 320px;
+        margin-bottom: 40px;
+    }
+
+    .travel-tips-hero h1 {
+        font-size: 2.3rem;
+    }
+
+    .travel-tips-hero p {
+        font-size: 1.1rem;
+    }
+
+    .travel-tips-container {
+        padding: 0 20px 60px;
+    }
+
+    .tips-category-tabs {
+        flex-direction: column;
+        border-bottom: none;
+        gap: 8px;
+    }
+
+    .tips-category-tab {
+        width: 100%;
+        text-align: center;
+        border-bottom: none;
+        border-left: 3px solid transparent;
+        padding: 15px 20px;
+    }
+
+    .tips-category-tab.active {
+        border-left-color: #0229bf;
+        background: rgba(2, 41, 191, 0.05);
+    }
+
+    .tips-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .tip-card {
+        padding: 25px;
+    }
+
+    .accordion-header {
+        padding: 20px;
+    }
+
+    .accordion-title {
+        font-size: 1.1rem;
+    }
+
+    .accordion-content {
+        padding: 0 20px;
+    }
+
+    .accordion-item.active .accordion-content {
+        padding: 0 20px 20px;
+    }
+
+    .info-box {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .tips-checklist {
+        padding: 25px 20px;
+    }
+
+    .tips-timeline::before {
+        left: 20px;
+    }
+
+    .timeline-item:nth-child(odd),
+    .timeline-item:nth-child(even) {
+        padding-left: 60px;
+    }
+
+    .timeline-marker {
+        left: 20px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .timeline-marker i {
+        font-size: 1.1rem;
+    }
+
+    .tips-section-header h2 {
+        font-size: 2rem;
+    }
+
+    .tips-quick-links {
+        flex-direction: column;
+    }
+
+    .quick-link-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .travel-tips-hero h1 {
+        font-size: 1.9rem;
+    }
+
+    .travel-tips-hero p {
+        font-size: 1rem;
+    }
+
+    .tip-card-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .tip-card-icon i {
+        font-size: 1.5rem;
+    }
+
+    .tips-section-header h2 {
+        font-size: 1.7rem;
+    }
+
+    .timeline-content {
+        padding: 20px;
+    }
+}

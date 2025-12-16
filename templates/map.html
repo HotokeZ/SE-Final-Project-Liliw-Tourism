@@ -1,0 +1,262 @@
+{% include 'header.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Interactive Map</h1>
+                <p>Explore Liliw's attractions, establishments, and points of interest</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section style="padding: 60px 200px; background: #fff;">
+        <div class="section-container" style="padding: 0; max-width: 100%; border-radius: 0; box-shadow: none;">
+            <div class="map-controls" style="background: #f5f7fa; padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; color: #0229bf;">Filter Locations</h3>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button class="filter-btn active" data-category="all">
+                        <i class="fas fa-map-marked-alt"></i> All Locations
+                    </button>
+                    <button class="filter-btn" data-category="natural">
+                        <i class="fas fa-tree"></i> Natural Attractions
+                    </button>
+                    <button class="filter-btn" data-category="heritage">
+                        <i class="fas fa-landmark"></i> Heritage Sites
+                    </button>
+                    <button class="filter-btn" data-category="hotels">
+                        <i class="fas fa-hotel"></i> Hotels
+                    </button>
+                    <button class="filter-btn" data-category="restaurants">
+                        <i class="fas fa-utensils"></i> Restaurants
+                    </button>
+                    <button class="filter-btn" data-category="shops">
+                        <i class="fas fa-shopping-bag"></i> Shops
+                    </button>
+                </div>
+            </div>
+
+            <!-- Location Cards Grid -->
+            <div class="locations-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-top: 40px;">
+                <!-- Natural Attractions -->
+                <div class="location-card" data-category="natural">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-water fa-2x"></i>
+                    </div>
+                    <h4>Buruwisan Falls</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Natural Attraction</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">A stunning waterfall surrounded by lush greenery, perfect for nature lovers.</p>
+                    <a href="{{ url_for('indiv_attractions', attraction='buruwisan-falls') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <div class="location-card" data-category="natural">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-tree fa-2x"></i>
+                    </div>
+                    <h4>Mount Banahaw</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Natural Attraction</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">A mystical mountain offering challenging trails and breathtaking views.</p>
+                    <a href="{{ url_for('indiv_attractions', attraction='mount-banahaw') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <!-- Heritage Sites -->
+                <div class="location-card" data-category="heritage">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-church fa-2x"></i>
+                    </div>
+                    <h4>Liliw Church</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Heritage Site</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">Historic church built in the Spanish colonial era, showcasing beautiful architecture.</p>
+                    <a href="{{ url_for('indiv_attractions', attraction='liliw-church') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <div class="location-card" data-category="heritage">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-home fa-2x"></i>
+                    </div>
+                    <h4>Gat Tayaw Ancestral House</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Heritage Site</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">A well-preserved ancestral house showcasing Filipino-Spanish architecture.</p>
+                    <a href="{{ url_for('indiv_attractions', attraction='gat-tayaw') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <!-- Hotels -->
+                <div class="location-card" data-category="hotels">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-hotel fa-2x"></i>
+                    </div>
+                    <h4>Liliw Boutique Hotel</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Accommodation</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">Modern hotel with comfortable rooms and excellent amenities.</p>
+                    <a href="{{ url_for('indiv_hotel', hotel='liliw-boutique-hotel') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <div class="location-card" data-category="hotels">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-bed fa-2x"></i>
+                    </div>
+                    <h4>Mountain View Inn</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Accommodation</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">Cozy inn with panoramic mountain views and warm hospitality.</p>
+                    <a href="{{ url_for('indiv_hotel', hotel='mountain-view-inn') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <!-- Restaurants -->
+                <div class="location-card" data-category="restaurants">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-utensils fa-2x"></i>
+                    </div>
+                    <h4>Tahanan Restaurant</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Dining</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">Traditional Filipino cuisine in a charming rustic setting.</p>
+                    <a href="{{ url_for('indiv_resto', restaurant='tahanan-restaurant') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <div class="location-card" data-category="restaurants">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-coffee fa-2x"></i>
+                    </div>
+                    <h4>Cafe Liliw</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Cafe</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">Cozy cafe serving local coffee and pastries.</p>
+                    <a href="{{ url_for('indiv_resto', restaurant='cafe-liliw') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <!-- Shops -->
+                <div class="location-card" data-category="shops">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-shopping-bag fa-2x"></i>
+                    </div>
+                    <h4>Tsinelas Capital</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Shopping</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">Shop for the famous Liliw slippers and footwear.</p>
+                    <a href="{{ url_for('products') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+
+                <div class="location-card" data-category="shops">
+                    <div class="location-icon" style="background: linear-gradient(135deg, #0229bf, #2196f3); color: white; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-gift fa-2x"></i>
+                    </div>
+                    <h4>Pasalubong Center</h4>
+                    <p style="color: #757575; margin-bottom: 10px;">Shopping</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">Local delicacies and souvenirs to take home.</p>
+                    <a href="{{ url_for('products') }}" class="btn" style="margin-top: 15px; padding: 10px 24px; font-size: 0.9rem;">View Details</a>
+                </div>
+            </div>
+
+            <!-- Interactive Map Container -->
+            <div class="map-wrapper" style="position: relative; width: 100%; height: 700px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                <iframe
+                    id="interactive-map"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30926.742076891234!2d121.43!3d14.13!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd63c2c2e3e3e3%3A0x1234567890abcdef!2sLiliw%2C%20Laguna!5e0!3m2!1sen!2sph!4v1234567890123"
+                    width="100%"
+                    height="100%"
+                    style="border:0;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+
+        </div>
+    </section>
+
+    <style>
+        .location-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .location-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(2, 41, 191, 0.15);
+        }
+
+        .location-card.hidden {
+            display: none;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn i {
+            color: inherit !important;
+        }
+
+        .filter-btn.active i {
+            color: white !important;
+        }
+
+        @media (max-width: 768px) {
+            section {
+                padding: 40px 20px !important;
+            }
+
+            .map-wrapper {
+                height: 400px !important;
+            }
+
+            .locations-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const locationCards = document.querySelectorAll('.location-card');
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    filterBtns.forEach(b => b.classList.remove('active'));
+
+                    // Add active class to clicked button
+                    btn.classList.add('active');
+
+                    // Get selected category
+                    const category = btn.getAttribute('data-category');
+
+                    // Filter cards
+                    locationCards.forEach(card => {
+                        if (category === 'all') {
+                            card.classList.remove('hidden');
+                        } else {
+                            if (card.getAttribute('data-category') === category) {
+                                card.classList.remove('hidden');
+                            } else {
+                                card.classList.add('hidden');
+                            }
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+
+    {% include 'footer.html' %}
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

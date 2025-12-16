@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Hotels - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Manage Hotels</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h2>All Hotels & Accommodations</h2>
+            <a href="{{ url_for('admin_hotels_add') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Hotel
+            </a>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price Range</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if hotels %}
+                            {% for hotel in hotels %}
+                            <tr>
+                                <td>
+                                    {% if hotel.image_url %}
+                                    <img src="{{ hotel.image_url }}" alt="{{ hotel.name }}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                    {% else %}
+                                    <div style="width: 60px; height: 40px; background: #e0e0e0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-hotel" style="color: #999;"></i>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ hotel.name }}</td>
+                                <td>{{ hotel.category or 'N/A' }}</td>
+                                <td>
+                                    {% if hotel.price_min and hotel.price_max %}
+                                        {{ hotel.price_min|format_price }} - {{ hotel.price_max|format_price }}
+                                    {% elif hotel.price_min %}
+                                        From {{ hotel.price_min|format_price }}
+                                    {% elif hotel.price_max %}
+                                        Up to {{ hotel.price_max|format_price }}
+                                    {% elif hotel.price_range %}
+                                        {{ hotel.price_range }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <!-- rating column removed per admin preference -->
+                                <td>
+                                    <span class="status {{ 'status-approved' if hotel.is_active else 'status-rejected' }}">
+                                        {{ 'Active' if hotel.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin_hotels_edit', hotel_id=hotel.id) }}" class="btn-icon" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin_hotels_delete', hotel_id=hotel.id) }}" class="btn-icon danger" title="Delete" onclick="return confirm('Are you sure?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="no-data">No hotels found. <a href="{{ url_for('admin_hotels_add') }}">Add one now!</a></td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

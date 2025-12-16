@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Where to Stay - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/establishments.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/plan.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="establishments-hero stay-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Where to Stay</h1>
+                <p>Find comfortable accommodations for your Liliw adventure</p>
+            </div>
+        </div>
+    </section>
+
+        <!-- Filter Section -->
+    <section class="filter-section">
+        <div class="filter-container">
+            <div class="filter-options">
+                <div class="plan-tabs-container">
+                    <div class="plan-tabs">
+                        <button class="plan-tab active" data-tab="tab-stays">Stays</button>
+                        <button class="plan-tab" data-tab="tab-restaurants">Where to Eat</button>
+                        <div class="tab-slider"></div>
+                    </div>
+                </div>
+                <div class="filter-buttons" data-for="tab-stays">
+                    <button class="filter-btn active" data-filter="all">All Properties</button>
+                    {% for category in hotel_categories %}
+                    <button class="filter-btn" data-filter="{{ category|lower }}">{{ category }}</button>
+                    {% endfor %}
+                </div>
+                <div class="filter-buttons" data-for="tab-restaurants" style="display: none;">
+                    <button class="filter-btn active" data-filter="all">All Cuisines</button>
+                    {% for category in restaurant_categories %}
+                    <button class="filter-btn" data-filter="{{ category|lower }}">{{ category }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Establishments Grid -->
+    <section class="establishments-section">
+        <div class="section-container">
+            <div id="tab-stays" class="tab-content active">
+                <div class="establishments-grid">
+                    {% if hotels and hotels|length > 0 %}
+                        {% for hotel in hotels %}
+                        <a href="{{ url_for('indiv_hotel', hotel=hotel.get('slug') or (hotel.get('name')|replace(' ', '-')|lower)) }}" class="establishment-card" data-category="{{ (hotel.get('category') or 'hotel')|lower }}">
+                            <div class="card-image">
+                                <img src="{{ hotel.get('image_url') or url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ hotel.get('name') }}">
+                                <div class="card-overlay"></div>
+                                <span class="card-badge">{{ (hotel.get('category') or 'Hotel')|title }}</span>
+                            </div>
+                            <div class="card-content">
+                                <h3>{{ hotel.get('name') }}</h3>
+                                <p>{{ (hotel.get('description') or '')[:140] }}</p>
+                                <div class="card-features">
+                                    {% if hotel.get('amenities') %}
+                                        {% for a in hotel.get('amenities')[:3] %}
+                                            <span><i class="fas fa-check"></i> {{ a }}</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer">
+                                    <span class="price">
+                                        {% if hotel.get('price_min') and hotel.get('price_max') %}
+                                            {{ hotel.get('price_min')|format_price }} - {{ hotel.get('price_max')|format_price }} /night
+                                        {% elif hotel.get('price_min') %}
+                                            From {{ hotel.get('price_min')|format_price }} /night
+                                        {% elif hotel.get('price_max') %}
+                                            Up to {{ hotel.get('price_max')|format_price }} /night
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </span>
+                                    <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-data">No properties found. Please check back later.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div id="tab-restaurants" class="tab-content" style="display:none">
+                <div class="establishments-grid">
+                    {% if restaurants and restaurants|length > 0 %}
+                        {% for resto in restaurants %}
+                        <a href="{{ url_for('indiv_resto', restaurant=resto.get('slug') or (resto.get('name')|replace(' ', '-')|lower)) }}" class="establishment-card restaurant-card" data-category="{{ (resto.get('category') or 'restaurant')|lower }}">
+                            <div class="card-image">
+                                <img src="{{ (resto.get('image_gallery') and resto.get('image_gallery')[0]) or resto.get('image_url') or url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ resto.get('name') }}">
+                                <div class="card-overlay"></div>
+                                <span class="card-badge">Restaurant</span>
+                            </div>
+                            <div class="card-content">
+                                <h3>{{ resto.get('name') }}</h3>
+                                <p>{{ (resto.get('description') or '')[:140] }}</p>
+                                <div class="card-features">
+                                    <span><i class="fas fa-utensils"></i> {{ resto.get('category') or 'Various' }}</span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="price">{{ resto.get('price_range') or 'N/A' }}</span>
+                                    <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-data">No restaurants found. Please check back later.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tips Section -->
+    <section class="tips-section">
+        <div class="section-container">
+            <h2>Booking Tips</h2>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <i class="fas fa-calendar-check"></i>
+                    <h3>Book in Advance</h3>
+                    <p>Reserve your accommodation early, especially during festival seasons and holidays.</p>
+                </div>
+                <div class="tip-card">
+                    <i class="fas fa-phone-alt"></i>
+                    <h3>Contact Directly</h3>
+                    <p>Call establishments directly for better rates and special packages.</p>
+                </div>
+                <div class="tip-card">
+                    <i class="fas fa-question-circle"></i>
+                    <h3>Ask About Inclusions</h3>
+                    <p>Inquire about complimentary breakfast, WiFi, and other amenities.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.plan-tab');
+            const slider = document.querySelector('.tab-slider');
+            const filterButtonContainers = document.querySelectorAll('.filter-buttons');
+
+            function moveSlider(targetTab) {
+                const tabRect = targetTab.getBoundingClientRect();
+                const parentRect = targetTab.parentElement.getBoundingClientRect();
+                slider.style.width = `${tabRect.width}px`;
+                slider.style.left = `${tabRect.left - parentRect.left}px`;
+            }
+
+            function filterClickHandler(e) {
+                const btn = e.currentTarget;
+                const filter = btn.dataset.filter;
+                const activeTabContent = document.querySelector('.tab-content.active');
+                if (!activeTabContent) return;
+
+                const cards = activeTabContent.querySelectorAll('.establishment-card');
+                
+                // Deactivate buttons within the same container
+                btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                cards.forEach(card => {
+                    const cardCategory = (card.dataset.category || '').toLowerCase();
+                    if (filter === 'all' || cardCategory === filter) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+            
+            function attachFilterHandlers() {
+                document.querySelectorAll('.filter-buttons .filter-btn').forEach(btn => {
+                    btn.removeEventListener('click', filterClickHandler);
+                    btn.addEventListener('click', filterClickHandler);
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetContentId = tab.dataset.tab;
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    moveSlider(tab);
+
+                    document.querySelectorAll('.tab-content').forEach(c => {
+                        c.style.display = 'none';
+                        c.classList.remove('active');
+                    });
+                    
+                    const targetContent = document.getElementById(targetContentId);
+                    if (targetContent) {
+                        targetContent.style.display = 'block';
+                        targetContent.classList.add('active');
+
+                        // Show/hide filter buttons based on active tab
+                        filterButtonContainers.forEach(container => {
+                            if (container.dataset.for === targetContentId) {
+                                container.style.display = 'flex'; // Or 'block'
+                            } else {
+                                container.style.display = 'none';
+                            }
+                        });
+                        
+                        // Set the 'All' filter as active by default for the new tab
+                        const allButton = document.querySelector(`.filter-buttons[data-for="${targetContentId}"] .filter-btn[data-filter="all"]`);
+                        if(allButton) {
+                           filterClickHandler({currentTarget: allButton});
+                        }
+                    }
+                });
+            });
+
+            // Initial setup
+            const activeTab = document.querySelector('.plan-tab.active');
+            if (activeTab) {
+                moveSlider(activeTab);
+                attachFilterHandlers();
+                
+                // Set initial filter visibility and active state
+                const activeTabId = activeTab.dataset.tab;
+                filterButtonContainers.forEach(container => {
+                    if (container.dataset.for === activeTabId) {
+                        container.style.display = 'flex';
+                    } else {
+                        container.style.display = 'none';
+                    }
+                });
+
+                const allButton = document.querySelector(`.filter-buttons[data-for="${activeTabId}"] .filter-btn[data-filter="all"]`);
+                if(allButton) {
+                   filterClickHandler({currentTarget: allButton});
+                }
+            }
+        });
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

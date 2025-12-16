@@ -1,0 +1,3 @@
+- [x] Remove inline script and style from pages/header.html
+- [x] Add JavaScript to index.html to handle menu button click and toggle navigation visibility
+- [x] Add CSS to styles/main.css for navigation visibility in mobile view

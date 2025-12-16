@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Products - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/products.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="products-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Local Products</h1>
+                <p>Discover authentic handcrafted goods and delicacies that make Liliw famous</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Showcase: mini carousels per category -->
+    <section class="products-showcase">
+        <div class="section-container">
+            <h2>Products Showcase</h2>
+            <p class="section-subtitle">A quick look at a few items from each category</p>
+
+            <div class="showcase-grid">
+                {# DEBUG: show counts to diagnose empty carousels (remove in production) #}
+                {# Loop categories and render up to 2 images per category as a mini carousel #}
+                {# Build carousels only if one wasn't provided by the view (avoid overwriting server data) #}
+                {% if carousels is not defined %}
+                {% set categories = [
+                    {'key': 'footwear', 'title': 'Footwear & Leather Goods', 'items': footwear, 'icon': 'fa-shoe-prints'},
+                    {'key': 'food', 'title': 'Local Delicacies', 'items': food, 'icon': 'fa-cookie'},
+                    {'key': 'handicrafts', 'title': 'Handicrafts & Souvenirs', 'items': handicrafts, 'icon': 'fa-hammer'},
+                    {'key': 'others', 'title': 'Others', 'items': others, 'icon': 'fa-box-open'}
+                ] %}
+
+                {% set all_products = (footwear or []) + (bags or []) + (accessories or []) + (handicrafts or []) + (food or []) + (others or []) %}
+                {% set carousels = [] %}
+
+                {# Build carousels list from categories (server-side assembly so we can reliably check length) #}
+                {% for cat in categories %}
+                    {% set slides = [] %}
+                    {% for p in cat['items'][:2] %}
+                        {% if p.image_url %}
+                            {% set slide_url = p.image_url %}
+                        {% elif p.gallery and p.gallery|length > 0 %}
+                            {% set slide_url = p.gallery[0] %}
+                        {% else %}
+                            {% set slide_url = url_for('static', filename='assets/images/attractions/natural/hero.JPG') %}
+                        {% endif %}
+                        {% set slide_link = url_for('indiv_product', product=(p.slug if p.slug else p.name|lower|replace(' ', '-'))) %}
+                        {% set slides = slides + [{'url': slide_url, 'name': p.name, 'link': slide_link}] %}
+                    {% endfor %}
+                    {% if slides|length > 0 %}
+                        {% set carousels = carousels + [{'title': cat.title, 'icon': cat.icon, 'slides': slides}] %}
+                    {% endif %}
+                {% endfor %}
+
+                {# Fallback: use available products if no category carousels were built #}
+                {% if carousels|length == 0 and all_products|length > 0 %}
+                    {% set slides = [] %}
+                    {% for p in all_products[:2] %}
+                        {% if p.image_url %}
+                            {% set slide_url = p.image_url %}
+                        {% elif p.gallery and p.gallery|length > 0 %}
+                            {% set slide_url = p.gallery[0] %}
+                        {% else %}
+                            {% set slide_url = url_for('static', filename='assets/images/attractions/natural/hero.JPG') %}
+                        {% endif %}
+                        {% set slide_link = url_for('indiv_product', product=(p.slug if p.slug else p.name|lower|replace(' ', '-'))) %}
+                        {% set slides = slides + [{'url': slide_url, 'name': p.name, 'link': slide_link}] %}
+                    {% endfor %}
+                    {% set carousels = carousels + [{'title': 'Featured', 'icon': 'fa-star', 'slides': slides}] %}
+                {% endif %}
+                {% endif %}
+
+                {# Render carousels from the assembled list #}
+                {% for c in carousels %}
+                    <div class="showcase-item">
+                        <h4 class="showcase-title"><i class="fas {{ c.icon }}"></i> {{ c.title }}</h4>
+                        <div class="mini-carousel" data-interval="4000">
+                            <div class="mini-slides">
+                                {% for s in c.slides %}
+                                <div class="mini-slide">
+                                    <a href="{{ s.link }}">
+                                        <img src="{{ s.url }}" alt="{{ s.name }}">
+                                        <div class="mini-caption">{{ s.name }}</div>
+                                    </a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button class="mini-prev" aria-label="Previous">‹</button>
+                            <button class="mini-next" aria-label="Next">›</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Grid -->
+    <section class="products-section">
+        <div class="section-container">
+            <h2>Browse Our Products</h2>
+            <p class="section-subtitle">From traditional crafts to delicious local delicacies</p>
+
+            <!-- Category: Footwear -->
+            <div class="category-container">
+            <div class="product-category">
+                <h3 class="category-title"><i class="fas fa-shoe-prints"></i> Footwear & Leather Goods</h3>
+                <div class="products-grid">
+                    {% for p in footwear %}
+                    <a href="{{ url_for('indiv_product', product=p.slug if p.slug else p.name|lower|replace(' ','-') ) }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ (p.image_url or (p.gallery[0] if p.gallery else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))) }}" alt="{{ p.name }}">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-card-content">
+                            <span class="product-name-label">Product</span>
+                            <h3>{{ p.name }}</h3>
+                            <span class="product-price-label">Description</span>
+                            <p class="product-description">{{ p.description or '' }}</p>
+                            <span class="product-price-label">Price</span>
+                            <span class="product-price">{{ p.price_range|format_price if p.price_range else (p.price|format_price if p.get('price') else '') }}</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="muted">No footwear products yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            </div>
+
+            <!-- Category: Food Products -->
+            <div class="category-container">
+            <div class="product-category">
+                <h3 class="category-title"><i class="fas fa-cookie"></i> Local Delicacies</h3>
+                <div class="products-grid">
+                    {% for p in food %}
+                    <a href="{{ url_for('indiv_product', product=p.slug if p.slug else p.name|lower|replace(' ','-') ) }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ (p.image_url or (p.gallery[0] if p.gallery else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))) }}" alt="{{ p.name }}">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-card-content">
+                            <span class="product-name-label">Product</span>
+                            <h3>{{ p.name }}</h3>
+                            <span class="product-price-label">Description</span>
+                            <p class="product-description">{{ p.description or '' }}</p>
+                            <span class="product-price-label">Price</span>
+                            <span class="product-price">{{ p.price_range|format_price if p.price_range else (p.price|format_price if p.get('price') else '') }}</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="muted">No food products yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            </div>
+
+            <!-- Category: Handicrafts -->
+            <div class="category-container">
+            <div class="product-category">
+                <h3 class="category-title"><i class="fas fa-hammer"></i> Handicrafts & Souvenirs</h3>
+                <div class="products-grid">
+                    {% for p in handicrafts %}
+                    <a href="{{ url_for('indiv_product', product=p.slug if p.slug else p.name|lower|replace(' ','-') ) }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ (p.image_url or (p.gallery[0] if p.gallery else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))) }}" alt="{{ p.name }}">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-card-content">
+                            <span class="product-name-label">Product</span>
+                            <h3>{{ p.name }}</h3>
+                            <span class="product-price-label">Description</span>
+                            <p class="product-description">{{ p.description or '' }}</p>
+                            <span class="product-price-label">Price</span>
+                            <span class="product-price">{{ p.price_range|format_price if p.price_range else (p.price|format_price if p.get('price') else '') }}</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="muted">No handicrafts yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            </div>
+
+            <!-- Category: Others -->
+            <div class="category-container">
+            <div class="product-category">
+                <h3 class="category-title"><i class="fas fa-box-open"></i> Others</h3>
+                <div class="products-grid">
+                    {% for p in others %}
+                    <a href="{{ url_for('indiv_product', product=p.slug if p.slug else p.name|lower|replace(' ','-') ) }}" class="product-card">
+                        <div class="product-image">
+                            <img src="{{ (p.image_url or (p.gallery[0] if p.gallery else url_for('static', filename='assets/images/attractions/natural/hero.JPG'))) }}" alt="{{ p.name }}">
+                            <div class="product-overlay"></div>
+                        </div>
+                        <div class="product-card-content">
+                            <span class="product-name-label">Product</span>
+                            <h3>{{ p.name }}</h3>
+                            <span class="product-price-label">Description</span>
+                            <p class="product-description">{{ p.description or '' }}</p>
+                            <span class="product-price-label">Price</span>
+                            <span class="product-price">{{ p.price_range|format_price if p.price_range else (p.price|format_price if p.get('price') else '') }}</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="muted">No other products yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Where to Buy -->
+    <section class="buy-section">
+        <div class="section-container">
+            <h2>Where to Buy</h2>
+            <p class="section-subtitle">Visit these locations to purchase authentic Liliw products</p>
+
+            <div class="buy-grid">
+                <div class="buy-card">
+                    <i class="fas fa-store"></i>
+                    <h3>Town Center Shops</h3>
+                    <p>Multiple stores along the main street and around the plaza selling various local products</p>
+                    <span class="buy-location"><i class="fas fa-map-marker-alt"></i> Liliw Town Center</span>
+                </div>
+
+                <div class="buy-card">
+                    <i class="fas fa-shopping-bag"></i>
+                    <h3>Gat Tayaw Tsinelas Vendor Center</h3>
+                    <p>The main hub for footwear with dozens of stalls offering wide selection and competitive prices</p>
+                    <span class="buy-location"><i class="fas fa-map-marker-alt"></i> Near Town Plaza</span>
+                </div>
+
+                <div class="buy-card">
+                    <i class="fas fa-calendar-week"></i>
+                    <h3>Sunday Market</h3>
+                    <p>Weekly market featuring fresh produce, local delicacies, and handicrafts from various vendors</p>
+                    <span class="buy-location"><i class="fas fa-map-marker-alt"></i> Town Plaza (Every Sunday)</span>
+                </div>
+
+                <div class="buy-card">
+                    <i class="fas fa-laptop"></i>
+                    <h3>Online Orders</h3>
+                    <p>Many local shops offer online ordering and shipping throughout the Philippines</p>
+                    <span class="buy-location"><i class="fas fa-phone"></i> Contact Tourism Office for Details</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+    // Rolling-film mini-carousel: continuous smooth scroll, seamless loop by duplicating slides
+    (function(){
+        function waitForImages(root){
+            const imgs = Array.from(root.querySelectorAll('img'));
+            if(imgs.length === 0) return Promise.resolve();
+            return Promise.all(imgs.map(img => new Promise(res => {
+                if(img.complete && img.naturalWidth !== 0) return res();
+                img.addEventListener('load', res);
+                img.addEventListener('error', res);
+                // safety: timeout in case load doesn't fire
+                setTimeout(res, 800);
+            })));
+        }
+
+        function initRolling(el){
+            const slidesWrap = el.querySelector('.mini-slides');
+            if(!slidesWrap) return;
+            let originalNodes = Array.from(slidesWrap.children);
+            if(originalNodes.length === 0) return;
+
+            // Basic layout enforcement
+            el.style.overflow = 'hidden';
+            slidesWrap.style.display = 'flex';
+            slidesWrap.style.flexWrap = 'nowrap';
+            slidesWrap.style.willChange = 'transform';
+            slidesWrap.style.transition = 'none';
+
+            // Duplicate until the track is wide enough to cover at least two viewport widths
+            let copies = 1;
+            // append at least one copy first
+            function appendCopy(){
+                for(const n of originalNodes){
+                    slidesWrap.appendChild(n.cloneNode(true));
+                }
+                copies++;
+            }
+            appendCopy(); // now copies >=2
+
+            // Wait for images to load, then ensure width
+            waitForImages(slidesWrap).then(()=>{
+                let attempts = 0;
+                while(slidesWrap.scrollWidth < el.clientWidth * 2 && attempts < 6){
+                    appendCopy();
+                    attempts++;
+                }
+
+                // width of a single original set
+                const originalWidth = Math.round(slidesWrap.scrollWidth / copies);
+                let totalWidth = originalWidth;
+                let offset = 0;
+                const speed = parseFloat(el.dataset.speed) || 80; // pixels per second
+                let running = true;
+                let lastTs = null;
+
+                function step(ts){
+                    if(lastTs === null) lastTs = ts;
+                    const dt = (ts - lastTs) / 1000;
+                    lastTs = ts;
+                    if(running){
+                        offset -= speed * dt;
+                        if(Math.abs(offset) >= totalWidth){
+                            offset += totalWidth;
+                        }
+                        slidesWrap.style.transform = `translateX(${offset}px)`;
+                    }
+                    requestAnimationFrame(step);
+                }
+
+                // Pause on hover
+                el.addEventListener('mouseenter', ()=> { running = false; });
+                el.addEventListener('mouseleave', ()=> { running = true; lastTs = null; });
+
+                // Prev/Next small nudge
+                const prev = el.querySelector('.mini-prev');
+                const next = el.querySelector('.mini-next');
+                const nudge = Math.max(120, Math.floor(originalWidth / Math.max(1, originalNodes.length)) );
+                prev && prev.addEventListener('click', (e)=>{ e.preventDefault(); offset = Math.min(offset + nudge, 0); });
+                next && next.addEventListener('click', (e)=>{ e.preventDefault(); offset -= nudge; });
+
+                // Recalculate on resize
+                let resizeTimer = null;
+                window.addEventListener('resize', ()=>{
+                    if(resizeTimer) clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(()=>{
+                        // ensure track still covers two viewports; append copies if needed
+                        let attempts = 0;
+                        while(slidesWrap.scrollWidth < el.clientWidth * 2 && attempts < 6){ appendCopy(); attempts++; }
+                    }, 150);
+                });
+
+                // Start
+                requestAnimationFrame(step);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', ()=>{
+            document.querySelectorAll('.mini-carousel').forEach(initRolling);
+        });
+    })();
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

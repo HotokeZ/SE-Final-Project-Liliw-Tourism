@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archived Blogs - Admin | Liliw Tourism</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        {% include 'admin/sidebar.html' %}
+        
+        <main class="admin-main">
+            <header class="admin-header">
+                <h1><i class="fas fa-archive"></i> Archived Blogs</h1>
+                <p>Previously approved blogs that have been removed from public view</p>
+            </header>
+            
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="nav-tabs">
+                        <a href="{{ url_for('admin_blogs') }}" class="tab">
+                            <i class="fas fa-blog"></i> Active Blogs
+                        </a>
+                        <a href="{{ url_for('admin_blogs_archive') }}" class="tab active">
+                            <i class="fas fa-archive"></i> Archive
+                        </a>
+                        <a href="{{ url_for('admin_blogs_bin') }}" class="tab">
+                            <i class="fas fa-trash"></i> Bin
+                        </a>
+                    </div>
+                </div>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="flash-message {{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <div class="info-banner">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Archived blogs were previously approved and published. They are preserved here indefinitely and can be restored at any time.</p>
+                </div>
+                
+                {% if blogs %}
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Category</th>
+                                <th>Approved</th>
+                                <th>Archived</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for blog in blogs %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ blog.title }}</strong>
+                                    </td>
+                                    <td>{{ blog.author }}</td>
+                                    <td>
+                                        <span class="category-badge">{{ blog.category }}</span>
+                                    </td>
+                                    <td>{{ blog.approved_at[:10] if blog.approved_at else 'N/A' }}</td>
+                                    <td>{{ blog.deleted_at[:10] if blog.deleted_at else 'N/A' }}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ url_for('admin_blog_restore', blog_id=blog.id) }}" 
+                                               class="btn-action btn-approve" title="Restore">
+                                                <i class="fas fa-undo"></i> Restore
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-archive"></i>
+                        <h3>Archive is Empty</h3>
+                        <p>No archived blogs. Approved blogs that are deleted will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="dashboard-section" style="margin-top:2rem;">
+                <h3>Report History for Archived Blogs</h3>
+                <p style="color:#666;">Report history for archived blogs will be shown here. (Backend implementation required)</p>
+            </div>
+            </div>
+        </main>
+    </div>
+    
+    <style>
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.25rem;
+            background: #f0f0f0;
+            color: #666;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #e0e0e0;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #1a5f2a, #2d8f4a);
+            color: white;
+        }
+        
+        .info-banner {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: #e3f2fd;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-banner i {
+            font-size: 1.5rem;
+            color: #1565c0;
+        }
+        
+        .info-banner p {
+            margin: 0;
+            color: #1565c0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            color: #999;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #e8f5e9;
+            color: #1a5f2a;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+    </style>
+</body>
+</html>

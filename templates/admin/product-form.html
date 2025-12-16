@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if product else 'Add' }} Product - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <!-- Leaflet for map picker (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{{ 'Edit' if product else 'Add New' }} Product</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-section">
+            <form class="form-container" method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Product Name *</label>
+                        <input type="text" id="name" name="name" value="{{ product.name if product else '' }}" required>
+                    </div>
+                        <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="Footwear" {{ 'selected' if product and product.category == 'Footwear' else '' }}>Footwear &amp; Leather Goods</option>
+                            <option value="Handicrafts" {{ 'selected' if product and product.category == 'Handicrafts' else '' }}>Handicrafts &amp; Souvenirs</option>
+                            <option value="Food" {{ 'selected' if product and product.category == 'Food' else '' }}>Local Delicacies</option>
+                            <option value="Other" {% if product and (product.category not in ['Footwear','Handicrafts','Food']) %}selected{% endif %}>Others</option>
+                        </select>
+                        {# Display labels adjusted to match the public-facing categories. Values remain compatible with existing backend categories. #}
+                    </div>
+                </div>
+
+                {# Parse price_range and strip currency symbols so number inputs show correctly #}
+                {% set _pr = product.price_range if product and product.price_range else '' %}
+                {% set _pmin = '' %}
+                {% set _pmax = '' %}
+                {% if _pr %}
+                    {% set _parts = _pr.split('-') %}
+                    {% set _pmin = _parts[0].strip() %}
+                    {% if _parts|length > 1 %}
+                        {% set _pmax = _parts[1].strip() %}
+                    {% endif %}
+                {% endif %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price_min">Price (min)</label>
+                        <input type="number" id="price_min" name="price_min" step="0.01" min="0" value="{{ (_pmin | replace('₱','') | replace(',','') | replace(' ','') ) if _pmin else '' }}" placeholder="e.g., 150">
+                    </div>
+                        <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <label for="price_max">Price (max)</label>
+                        <input type="number" id="price_max" name="price_max" step="0.01" min="0" value="{{ (_pmax | replace('₱','') | replace(',','') | replace(' ','') ) if _pmax else '' }}" placeholder="e.g., 500">
+                    </div>
+                </div>
+                <input type="hidden" id="price_range" name="price_range" value="{{ product.price_range if product else '' }}">
+
+                <div class="form-group">
+                    <label for="description">Shop Name</label>
+                    <textarea id="description" name="description" rows="3">{{ product.description if product else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_description">Full Description</label>
+                    <textarea id="full_description" name="full_description" rows="5">{{ product.full_description if product else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="making_process">Making Process</label>
+                    <textarea id="making_process" name="making_process" rows="4" placeholder="Describe how this product is made...">{{ product.making_process if product else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Where to Buy</label>
+                    <div id="buyLocationsContainer" class="repeat-list">
+                        {# Existing buy locations (if editing) will be populated by JS from product.buy_locations #}
+                    </div>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <button type="button" id="addBuyLocationBtn" class="btn btn-secondary">Add Location</button>
+                        <span class="hint">Add shop names, address and optional coordinates. Use the map to pick location.</span>
+                    </div>
+                    <input type="hidden" id="buy_locations_json" name="buy_locations_json" value='{{ (product.buy_locations | tojson) if product and product.buy_locations else "[]" }}'>
+                </div>
+
+                <div class="form-group">
+                    <label>Inquire Links</label>
+                    <div id="inquireLinksContainer" class="repeat-list">
+                        {# Existing inquire links will be populated by JS from product.inquire_links if present #}
+                    </div>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <button type="button" id="addInquireLinkBtn" class="btn btn-secondary">Add Link</button>
+                        <span class="hint">Add Facebook pages, websites or contact emails for enquiries.</span>
+                    </div>
+                    <input type="hidden" id="inquire_links_json" name="inquire_links_json" value='{{ (product.inquire_links | tojson) if product and product.inquire_links else "[]" }}'>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ 'Change' if product else 'Upload' }} Images</label>
+                    <div id="imageUploader" class="image-uploader">
+                        <input type="file" id="featuredInput" name="image" accept="image/*" style="display:none">
+                        <input type="file" id="galleryInput" name="gallery_images" accept="image/*" multiple style="display:none">
+                        <div class="uploader-controls">
+                            <button type="button" id="addImagesBtn" class="btn btn-secondary">Add Images</button>
+                            <span class="hint">Select a featured image by clicking the star on a preview.</span>
+                        </div>
+                        <div id="imageGrid" class="image-grid">
+                            {% if product %}
+                                {% set existing_images = [] %}
+                                {% if product.gallery %}
+                                    {% set existing_images = product.gallery %}
+                                {% elif product.image_url %}
+                                    {% set existing_images = [product.image_url] %}
+                                {% endif %}
+                                {% for url in existing_images %}
+                                <div class="image-item{% if product.image_url and product.image_url == url %} featured{% endif %}" data-src="{{ url }}">
+                                    <button type="button" class="feature-btn" title="Set as featured">★</button>
+                                    <img src="{{ url }}" alt="current">
+                                    <button type="button" class="remove-btn" title="Remove">✕</button>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if product %}
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_active" {{ 'checked' if product.is_active else '' }}> Active (visible on website)
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Save Changes' if product else 'Add Product' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+    <script>
+        // Map picker implementation: wait for Leaflet to be available before init
+        (function(){
+            function startMapCode(){
+                var modal = document.getElementById('mapPickerModal');
+                var mapEl = document.getElementById('mapPicker');
+                var btnSave = document.getElementById('mapPickerSave');
+                var btnCancel = document.getElementById('mapPickerCancel');
+                var mapInstance = null;
+                var marker = null;
+                var resolvePicker = null;
+
+                function showModal(){ modal.style.display = 'flex'; }
+                function hideModal(){ modal.style.display = 'none'; }
+
+                function initMapIfNeeded(){
+                    if(mapInstance) return;
+                    mapInstance = L.map(mapEl).setView([14.1516,121.3300], 13); // center near Liliw (approx)
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(mapInstance);
+                    mapInstance.on('click', function(e){
+                        var lat = e.latlng.lat, lng = e.latlng.lng;
+                        if(marker){ marker.setLatLng(e.latlng); }
+                        else { marker = L.marker(e.latlng, {draggable:true}).addTo(mapInstance); marker.on('dragend', function(ev){ /* marker dragged */ }); }
+                    });
+                }
+
+                // Search UI elements
+                var searchInput = document.getElementById('mapSearchInput');
+                var searchBtn = document.getElementById('mapSearchBtn');
+                var clearBtn = document.getElementById('mapClearBtn');
+                var resultsEl = document.getElementById('mapSearchResults');
+
+                function renderSearchResults(list){
+                    resultsEl.innerHTML = '';
+                    list.forEach(function(r){
+                        var item = document.createElement('div');
+                        item.className = 'search-result';
+                        item.style.padding = '8px';
+                        item.style.borderBottom = '1px solid #eee';
+                        item.style.cursor = 'pointer';
+                        item.textContent = r.display_name;
+                        item.addEventListener('click', function(){
+                            var lat = parseFloat(r.lat), lon = parseFloat(r.lon);
+                            if(marker){ marker.setLatLng([lat, lon]); }
+                            else { marker = L.marker([lat, lon], {draggable:true}).addTo(mapInstance); marker.on('dragend', function(ev){ /* marker dragged */ }); }
+                            try{ mapInstance.setView([lat, lon], 16); }catch(e){}
+                            resultsEl.innerHTML = '';
+                        });
+                        resultsEl.appendChild(item);
+                    });
+                }
+
+                function performSearch(q){
+                    if(!q || !q.trim()){ resultsEl.innerHTML = '<div style="padding:8px;color:#666">Enter a search term</div>'; return; }
+                    resultsEl.innerHTML = '<div style="padding:8px;color:#666">Searching…</div>';
+                    // Use Nominatim (OpenStreetMap) for geocoding
+                    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&q=' + encodeURIComponent(q);
+                    fetch(url, { headers: { 'Accept': 'application/json' } }).then(function(resp){ return resp.json(); }).then(function(data){
+                        if(!data || !data.length){ resultsEl.innerHTML = '<div style="padding:8px;color:#666">No results</div>'; return; }
+                        renderSearchResults(data);
+                    }).catch(function(){ resultsEl.innerHTML = '<div style="padding:8px;color:#c00">Search failed</div>'; });
+                }
+
+                if(searchBtn){ searchBtn.addEventListener('click', function(){ performSearch(searchInput.value); }); }
+                if(searchInput){ searchInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); performSearch(searchInput.value); } }); }
+                if(clearBtn){ clearBtn.addEventListener('click', function(){ searchInput.value=''; resultsEl.innerHTML=''; }); }
+
+                window.openMapPicker = function(initial){
+                    return new Promise(function(resolve, reject){
+                        try{
+                            initMapIfNeeded();
+                            // set initial position
+                            if(initial && initial.lat && initial.lng){
+                                var latlng = [initial.lat, initial.lng];
+                                mapInstance.setView(latlng, 16);
+                                if(marker) marker.setLatLng(latlng); else { marker = L.marker(latlng, {draggable:true}).addTo(mapInstance); }
+                            } else {
+                                // try geolocation silently
+                                if(navigator.geolocation){
+                                    navigator.geolocation.getCurrentPosition(function(pos){
+                                        try{ mapInstance.setView([pos.coords.latitude, pos.coords.longitude], 14); }catch(e){}
+                                    }, function(){ /* ignore */ });
+                                }
+                            }
+                            showModal();
+                            // Leaflet needs invalidateSize when its container becomes visible; use a slightly longer delay
+                            setTimeout(function(){ try{ mapInstance.invalidateSize(); if(marker){ mapInstance.setView(marker.getLatLng(), mapInstance.getZoom()); } }catch(e){} }, 300);
+                            resolvePicker = resolve;
+                        }catch(e){ reject(e); }
+                    });
+                };
+
+                btnCancel.addEventListener('click', function(){
+                    hideModal();
+                    if(resolvePicker){ resolvePicker(null); resolvePicker = null; }
+                });
+
+                btnSave.addEventListener('click', function(){
+                    if(!marker){ alert('Please click on the map to place a marker.'); return; }
+                    var p = marker.getLatLng();
+                    hideModal();
+                    if(resolvePicker){ resolvePicker({lat: p.lat, lng: p.lng}); resolvePicker = null; }
+                });
+            }
+
+            if(typeof L !== 'undefined') startMapCode(); else {
+                var intv = setInterval(function(){ if(typeof L !== 'undefined'){ clearInterval(intv); startMapCode(); } }, 100);
+            }
+        })();
+    </script>
+    <!-- Map picker modal (Leaflet) -->
+    <div id="mapPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center;">
+        <div style="width:90%; max-width:900px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #eee;">
+                <strong>Pick Location on Map</strong>
+                <div>
+                    <button id="mapPickerCancel" type="button" class="btn btn-secondary">Cancel</button>
+                    <button id="mapPickerSave" type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+            <div style="padding:8px; border-bottom:1px solid #f1f1f1;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <input id="mapSearchInput" type="search" placeholder="Search for a place or address" style="flex:1; padding:8px; border:1px solid #dcdcdc; border-radius:4px;" />
+                    <button id="mapSearchBtn" type="button" class="btn btn-secondary">Search</button>
+                    <button id="mapClearBtn" type="button" class="btn btn-secondary">Clear</button>
+                </div>
+                <div id="mapSearchResults" style="max-height:160px; overflow:auto; margin-top:8px;"></div>
+            </div>
+            <div id="mapPicker" style="width:100%; height:520px;"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        /* Small styles for product image uploader preview */
+        .image-uploader .uploader-controls { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+        .image-grid { display:flex; gap:10px; flex-wrap:wrap; }
+        .image-item { position:relative; width:140px; height:100px; border-radius:8px; overflow:hidden; background:#f6f7fb; display:flex; align-items:center; justify-content:center; }
+        .image-item img{ width:100%; height:100%; object-fit:cover; display:block }
+        .image-item .feature-btn{ position:absolute; left:6px; top:6px; background:rgba(255,255,255,0.9); border:0; padding:4px 6px; border-radius:6px; cursor:pointer }
+        .image-item.featured { box-shadow:0 0 0 3px rgba(11,102,195,0.12); }
+        .image-item .remove-btn{ position:absolute; right:6px; top:6px; background:rgba(0,0,0,0.5); color:#fff; border:0; padding:4px 6px; border-radius:6px; cursor:pointer }
+        .image-uploader .hint{ color:#666; font-size:0.9rem }
+    </style>
+
+    <style>
+        /* Small styles for repeatable lists */
+        .repeat-list { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+        .repeat-item { background:#fff; border:1px solid #e6e9ef; padding:10px; border-radius:6px; display:flex; gap:8px; align-items:flex-start; }
+        .repeat-item .col { flex:1; display:flex; flex-direction:column; gap:6px; }
+        .repeat-item input, .repeat-item select { padding:8px; border:1px solid #dcdcdc; border-radius:4px; }
+        .repeat-actions { display:flex; gap:8px; align-items:center; }
+        .hint { color:#666; font-size:0.9rem; }
+    </style>
+
+    <script>
+        (function(){
+            var addBtn = document.getElementById('addImagesBtn');
+            var featuredInput = document.getElementById('featuredInput');
+            var galleryInput = document.getElementById('galleryInput');
+            var imageGrid = document.getElementById('imageGrid');
+            // Helper to create preview node
+            function makePreview(fileOrUrl, isExisting){
+                var container = document.createElement('div'); container.className='image-item';
+                var feat = document.createElement('button'); feat.type='button'; feat.className='feature-btn'; feat.textContent='★';
+                var img = document.createElement('img');
+                if(typeof fileOrUrl === 'string') { img.src = fileOrUrl; }
+                else { img.src = URL.createObjectURL(fileOrUrl); img.dataset.fileName = fileOrUrl.name; }
+                var rem = document.createElement('button'); rem.type='button'; rem.className='remove-btn'; rem.textContent='✕';
+                container.appendChild(feat); container.appendChild(img); container.appendChild(rem);
+                // feature toggle
+                feat.addEventListener('click', function(){
+                    Array.from(imageGrid.querySelectorAll('.image-item')).forEach(function(it){ it.classList.remove('featured'); });
+                    container.classList.add('featured');
+                });
+                rem.addEventListener('click', function(){ container.remove(); });
+                return container;
+            }
+            addBtn.addEventListener('click', function(){
+                // open file selector for multiple
+                galleryInput.click();
+            });
+            galleryInput.addEventListener('change', function(e){
+                Array.from(e.target.files).forEach(function(f){ imageGrid.appendChild(makePreview(f)); });
+            });
+
+            // On form submit, pack files into inputs and set price_range
+            var form = document.querySelector('form.form-container');
+            if(form){
+                form.addEventListener('submit', function(evt){
+                    // pack price
+                    var min = document.getElementById('price_min').value || '';
+                    var max = document.getElementById('price_max').value || '';
+                    var hidden = document.getElementById('price_range');
+                    if(min && max && parseFloat(min) > parseFloat(max)){
+                        evt.preventDefault(); alert('Price min cannot be greater than max.'); return;
+                    }
+                    hidden.value = (min || '') + (min || max ? '-' : '') + (max || '');
+
+                    // collect files from previews and construct DataTransfer
+                    var dtFeatured = new DataTransfer();
+                    var dtGallery = new DataTransfer();
+                    var items = imageGrid.querySelectorAll('.image-item');
+                    if(items.length){
+                        // if an item is marked featured, make that the featured file (if it has an associated File)
+                        var featuredNode = imageGrid.querySelector('.image-item.featured') || items[0];
+                        Array.from(items).forEach(function(it){
+                            var img = it.querySelector('img');
+                            if(img && img.dataset && img.dataset.fileName){
+                                // find file in galleryInput.files by name
+                                var name = img.dataset.fileName;
+                                var f = Array.from(galleryInput.files).find(function(x){ return x.name === name; });
+                                if(f){
+                                    // add to gallery
+                                    dtGallery.items.add(f);
+                                    if(it === featuredNode){ dtFeatured.items.add(f); }
+                                }
+                            }
+                        });
+                    }
+                    // assign to inputs
+                    // Note: Featured input expects a FileList; if none selected, leave as-is so server can keep existing image
+                    if(dtFeatured.files.length) featuredInput.files = dtFeatured.files;
+                    if(dtGallery.files.length) galleryInput.files = dtGallery.files;
+                });
+            }
+            // No extra fields required when selecting "Other" — the option is saved as-is.
+        })();
+    </script>
+    <script>
+        // Repeatable buy locations and inquire links handling
+        (function(){
+            function createBuyItem(data){
+                data = data || {name:'', address:'', lat:'', lng:'', hours:'', contact:''};
+                // support existing hours formats: either 'HH:MM-HH:MM' or object {open,close}
+                var openVal = '';
+                var closeVal = '';
+                if(data.hours){
+                    if(typeof data.hours === 'string'){
+                        var parts = data.hours.split('-');
+                        openVal = parts[0] ? parts[0].trim() : '';
+                        closeVal = parts[1] ? parts[1].trim() : '';
+                    } else if(typeof data.hours === 'object'){
+                        openVal = data.hours.open || '';
+                        closeVal = data.hours.close || '';
+                    }
+                }
+                var wrapper = document.createElement('div'); wrapper.className='repeat-item';
+                var col = document.createElement('div'); col.className='col';
+                col.innerHTML = '<label>Shop name<input type="text" class="buy-name" value="'+(data.name||'')+'"></label>'+
+                                '<label>Address<input type="text" class="buy-address" value="'+(data.address||'')+'"></label>'+
+                                '<div style="display:flex; gap:8px; align-items:center;">'
+                                + '<label style="flex:1">Open<input type="time" class="buy-hours-open" value="'+(openVal||'')+'"></label>'
+                                + '<label style="flex:1">Close<input type="time" class="buy-hours-close" value="'+(closeVal||'')+'"></label>'
+                                + '</div>';
+                var col2 = document.createElement('div'); col2.className='col';
+                // contact + hidden lat/lng + visible coords display
+                col2.innerHTML = '<label>Contact<input type="tel" inputmode="numeric" pattern="[0-9+]*" class="buy-contact" value="'+(data.contact||'')+'" oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></label>'+
+                                 '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">'
+                                 + '<span class="coords-label">Location:</span>'
+                                 + '<span class="buy-coords">'+((data.lat && data.lng) ? (data.lat+", "+data.lng) : 'No location')+'</span>'
+                                 + '</div>'
+                                 + '<input type="hidden" class="buy-lat" value="'+(data.lat||'')+'">'
+                                 + '<input type="hidden" class="buy-lng" value="'+(data.lng||'')+'">';
+                var actions = document.createElement('div'); actions.className='repeat-actions';
+                var mapBtn = document.createElement('button'); mapBtn.type='button'; mapBtn.className='btn btn-secondary'; mapBtn.textContent='Pick on Map';
+                var rem = document.createElement('button'); rem.type='button'; rem.className='btn btn-danger'; rem.textContent='Remove';
+                actions.appendChild(mapBtn); actions.appendChild(rem);
+                wrapper.appendChild(col); wrapper.appendChild(col2); wrapper.appendChild(actions);
+                rem.addEventListener('click', function(){ wrapper.remove(); serializeBuy(); });
+                mapBtn.addEventListener('click', function(){
+                    var latIn = wrapper.querySelector('.buy-lat').value || '';
+                    var lngIn = wrapper.querySelector('.buy-lng').value || '';
+                    var initial = {};
+                    if(latIn && lngIn){ initial.lat = parseFloat(latIn); initial.lng = parseFloat(lngIn); }
+                    window.openMapPicker(initial).then(function(coord){
+                        if(coord){
+                            wrapper.querySelector('.buy-lat').value = coord.lat.toFixed(6);
+                            wrapper.querySelector('.buy-lng').value = coord.lng.toFixed(6);
+                            var coordsSpan = wrapper.querySelector('.buy-coords');
+                            if(coordsSpan) coordsSpan.textContent = coord.lat.toFixed(6) + ', ' + coord.lng.toFixed(6);
+                            serializeBuy();
+                        }
+                    }).catch(function(){ /* ignore */ });
+                });
+                return wrapper;
+            }
+
+            function createLinkItem(data){
+                data = data || {type:'website', value:''};
+                var wrapper = document.createElement('div'); wrapper.className='repeat-item';
+                var col = document.createElement('div'); col.className='col';
+                var typeSel = document.createElement('select'); typeSel.className='link-type';
+                ['website','facebook','email','phone'].forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t.charAt(0).toUpperCase()+t.slice(1); if(t===data.type) o.selected=true; typeSel.appendChild(o); });
+                var valInput = document.createElement('input'); valInput.type='text'; valInput.className='link-value'; valInput.value = data.value || '';
+                col.appendChild(document.createElement('label')).textContent='Type';
+                col.querySelector('label').appendChild(typeSel);
+                col.appendChild(document.createElement('label')).textContent='Value';
+                col.querySelectorAll('label')[1].appendChild(valInput);
+                var actions = document.createElement('div'); actions.className='repeat-actions';
+                var rem = document.createElement('button'); rem.type='button'; rem.className='btn btn-danger'; rem.textContent='Remove';
+                actions.appendChild(rem);
+                rem.addEventListener('click', function(){ wrapper.remove(); serializeInquire(); });
+                wrapper.appendChild(col); wrapper.appendChild(actions);
+                return wrapper;
+            }
+
+            var buyContainer = document.getElementById('buyLocationsContainer');
+            var addBuyBtn = document.getElementById('addBuyLocationBtn');
+            var hiddenBuy = document.getElementById('buy_locations_json');
+            var inquireContainer = document.getElementById('inquireLinksContainer');
+            var addInquireBtn = document.getElementById('addInquireLinkBtn');
+            var hiddenInquire = document.getElementById('inquire_links_json');
+
+            function serializeBuy(){
+                var out = [];
+                buyContainer.querySelectorAll('.repeat-item').forEach(function(it){
+                    var contactVal = (it.querySelector('.buy-contact').value || '').replace(/[^0-9+]/g,'');
+                    var openVal = it.querySelector('.buy-hours-open') ? (it.querySelector('.buy-hours-open').value || '') : '';
+                    var closeVal = it.querySelector('.buy-hours-close') ? (it.querySelector('.buy-hours-close').value || '') : '';
+                    var hoursVal = openVal + (closeVal ? ('-' + closeVal) : '');
+                    out.push({
+                            name: it.querySelector('.buy-name').value || '',
+                            address: it.querySelector('.buy-address').value || '',
+                            hours: hoursVal,
+                            contact: contactVal,
+                            lat: it.querySelector('.buy-lat').value || '',
+                            lng: it.querySelector('.buy-lng').value || ''
+                        });
+                });
+                hiddenBuy.value = JSON.stringify(out);
+            }
+
+            function serializeInquire(){
+                var out = [];
+                inquireContainer.querySelectorAll('.repeat-item').forEach(function(it){
+                    out.push({ type: it.querySelector('.link-type').value || 'website', value: it.querySelector('.link-value').value || '' });
+                });
+                hiddenInquire.value = JSON.stringify(out);
+            }
+
+            addBuyBtn.addEventListener('click', function(){ buyContainer.appendChild(createBuyItem()); serializeBuy(); });
+            addInquireBtn.addEventListener('click', function(){ inquireContainer.appendChild(createLinkItem()); serializeInquire(); });
+
+            // load existing data if present
+            try{
+                var existingBuy = JSON.parse(hiddenBuy.value || '[]');
+                existingBuy.forEach(function(b){ buyContainer.appendChild(createBuyItem(b)); });
+            }catch(e){}
+            try{
+                var existingInq = JSON.parse(hiddenInquire.value || '[]');
+                existingInq.forEach(function(l){ inquireContainer.appendChild(createLinkItem(l)); });
+            }catch(e){}
+
+            // reserialize before submit
+            var form = document.querySelector('form.form-container');
+            if(form){ form.addEventListener('submit', function(){ serializeBuy(); serializeInquire(); }); }
+        })();
+    </script>
+</body>
+</html>

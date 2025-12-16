@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Blog Post - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/blog.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .author-display {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #1a5f2a;
+        }
+        .author-display strong {
+            display: block;
+            color: #1a5f2a;
+            font-size: 1.1rem;
+        }
+        .author-display span {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="create-hero">
+        <div class="hero-content">
+            <h1>Share Your Story</h1>
+            <p>Write about your Liliw experience and inspire other travelers</p>
+        </div>
+    </section>
+
+    <!-- Create Form -->
+    <section class="create-section">
+        <div class="form-container">
+            <form action="{{ url_for('submit_blog') }}" method="POST" enctype="multipart/form-data" class="blog-form">
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="title"><i class="fas fa-heading"></i> Blog Title</label>
+                    <input type="text" id="title" name="title" placeholder="Enter an engaging title for your blog post" required>
+                </div>
+
+                <!-- Category -->
+                <div class="form-group">
+                    <label for="category"><i class="fas fa-folder"></i> Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        <option value="attractions">Attractions</option>
+                        <option value="food">Food & Dining</option>
+                        <option value="culture">Culture & Festivals</option>
+                        <option value="adventure">Adventure</option>
+                        <option value="tips">Travel Tips</option>
+                        <option value="experiences">Local Experiences</option>
+                    </select>
+                </div>
+                
+                <!-- Author Info (from session) -->
+                <div class="form-group author-info">
+                    <label><i class="fas fa-user"></i> Posting as</label>
+                    <div class="author-display">
+                        <strong>{{ session.get('user_name', 'Unknown') }}</strong>
+                        <span>{{ session.get('user_email', '') }}</span>
+                    </div>
+                </div>
+
+                <!-- Featured Image -->
+                <div class="form-group">
+                    <label for="featured-image"><i class="fas fa-image"></i> Featured Image</label>
+                    <div class="file-upload" aria-live="polite">
+                        <input type="file" id="featured-image" name="featured_image" accept="image/*" multiple>
+                        <!-- Hidden input to submit gallery images (all except the chosen thumbnail) -->
+                        <input type="file" id="gallery-images" name="gallery_images" accept="image/*" multiple style="display:none">
+                        <div class="file-upload-label" role="button" tabindex="0" aria-controls="imagePreview" aria-label="Upload featured images">
+                            <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                            <span>Click to upload or drag and drop</span>
+                            <small>JPG, PNG or WEBP (MAX. 5MB)</small>
+                        </div>
+                        <div class="image-preview" id="imagePreview" style="display:none">
+                            <div class="image-grid-container">
+                                <div class="image-grid" id="imageGrid" aria-label="Selected images"></div>
+                                <div class="carousel-controls" id="carouselControls" style="display:none">
+                                    <button type="button" class="carousel-btn prev" aria-label="Previous images">&#10094;</button>
+                                    <button type="button" class="carousel-btn next" aria-label="Next images">&#10095;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="form-group">
+                    <label for="content"><i class="fas fa-align-left"></i> Blog Content</label>
+                    <textarea id="content" name="content" rows="15" placeholder="Share your story, experiences, and tips..." required></textarea>
+                    <small>Minimum 200 words. Be descriptive and share useful information for other travelers.</small>
+                </div>
+
+                <!-- Guidelines -->
+                <div class="guidelines">
+                    <h3><i class="fas fa-info-circle"></i> Writing Guidelines</h3>
+                    <ul>
+                        <li>Be respectful and honest in your review</li>
+                        <li>Share practical information and helpful tips</li>
+                        <li>Use clear and engaging language</li>
+                        <li>Include specific details about locations and experiences</li>
+                        <li>Upload high-quality, relevant photos</li>
+                        <li>All submissions are subject to moderation before publishing</li>
+                    </ul>
+                </div>
+
+                <!-- Terms -->
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">I agree that my content may be published on Liliw Tourism website and social media, and I have the rights to all uploaded images</label>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="window.location.href='{{ url_for('blog') }}'">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit Blog Post
+                    </button>
+                </div>
+            </form>
+
+            <!-- Sidebar Tips -->
+            <aside class="create-sidebar">
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-lightbulb"></i> Writing Tips</h3>
+                    <ul>
+                        <li><strong>Start with a hook:</strong> Grab readers' attention with an interesting opening</li>
+                        <li><strong>Be specific:</strong> Include names, locations, prices, and practical details</li>
+                        <li><strong>Use storytelling:</strong> Share personal anecdotes and experiences</li>
+                        <li><strong>Add value:</strong> Provide tips that help other travelers</li>
+                        <li><strong>Proofread:</strong> Check for spelling and grammar errors</li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-camera"></i> Photo Guidelines</h3>
+                    <ul>
+                        <li>Use horizontal (landscape) orientation</li>
+                        <li>Minimum resolution: 1200x800px</li>
+                        <li>Good lighting and clear focus</li>
+                        <li>Showcase the subject prominently</li>
+                        <li>Avoid watermarks or logos</li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-card help-card">
+                    <i class="fas fa-question-circle"></i>
+                    <h3>Need Help?</h3>
+                    <p>Contact our tourism office if you have questions about submitting your blog post.</p>
+                    <a href="{{ url_for('contact') }}" class="help-btn">
+                        <i class="fas fa-envelope"></i> Contact Us
+                    </a>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        // Enhanced image selection and preview grid/carousel with draft autosave & thumbnail selection
+        const imageInput = document.getElementById('featured-image');
+        const imagePreview = document.getElementById('imagePreview');
+        const imageGrid = document.getElementById('imageGrid');
+        const carouselControls = document.getElementById('carouselControls');
+        const uploadLabel = document.querySelector('.file-upload-label');
+        const fileUpload = document.querySelector('.file-upload');
+        const formEl = document.querySelector('form.blog-form');
+        const titleEl = document.getElementById('title');
+        const categoryEl = document.getElementById('category');
+        const contentEl = document.getElementById('content');
+        const termsEl = document.getElementById('terms');
+        const DRAFT_KEY = 'createBlogDraft:v1';
+
+        // Internal state of selected images ({file: File, id?: number})
+        const selectedImages = [];
+        let selectedThumbnailIndex = 0; // default first
+
+        // --- IndexedDB helpers for image persistence ---
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('liliwBlogDraft', 1);
+                req.onupgradeneeded = () => {
+                    const db = req.result;
+                    if (!db.objectStoreNames.contains('images')) {
+                        db.createObjectStore('images', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        function idbAddImage(blob, meta) {
+            return openDB().then(db => new Promise((resolve, reject) => {
+                const tx = db.transaction('images', 'readwrite');
+                const store = tx.objectStore('images');
+                const req = store.add({ blob, meta, ts: Date.now() });
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            }));
+        }
+        function idbGetImage(id) {
+            return openDB().then(db => new Promise((resolve, reject) => {
+                const tx = db.transaction('images', 'readonly');
+                const store = tx.objectStore('images');
+                const req = store.get(id);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            }));
+        }
+        function idbDeleteMany(ids) {
+            return openDB().then(db => Promise.all(ids.map(id => new Promise((resolve) => {
+                const tx = db.transaction('images', 'readwrite');
+                const store = tx.objectStore('images');
+                const req = store.delete(id);
+                req.onsuccess = req.onerror = () => resolve();
+            }))));
+        }
+
+        // --- Draft save/restore ---
+        function saveDraft() {
+            try {
+                const draft = {
+                    title: titleEl.value || '',
+                    category: categoryEl.value || '',
+                    content: contentEl.value || '',
+                    terms: !!termsEl.checked,
+                    imageIds: selectedImages.map(si => si.id).filter(Boolean),
+                    thumbnailIndex: selectedThumbnailIndex
+                };
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+            } catch (e) {
+                // ignore quota errors
+            }
+        }
+        async function loadDraft() {
+            const raw = localStorage.getItem(DRAFT_KEY);
+            if (!raw) return;
+            try {
+                const draft = JSON.parse(raw);
+                if (draft.title) titleEl.value = draft.title;
+                if (draft.category) categoryEl.value = draft.category;
+                if (draft.content) contentEl.value = draft.content;
+                if (typeof draft.terms === 'boolean') termsEl.checked = draft.terms;
+                if (Number.isInteger(draft.thumbnailIndex)) selectedThumbnailIndex = Math.max(0, draft.thumbnailIndex);
+
+                if (Array.isArray(draft.imageIds) && draft.imageIds.length) {
+                    for (const id of draft.imageIds) {
+                        const rec = await idbGetImage(id);
+                        if (rec && rec.blob) {
+                            const file = new File([rec.blob], rec.meta?.name || `image-${id}.jpg`, { type: rec.meta?.type || rec.blob.type });
+                            selectedImages.push({ file, id });
+                        }
+                    }
+                    renderGrid();
+                }
+            } catch (e) {
+                // ignore parse errors
+            }
+        }
+
+        // Make label clickable and keyboard accessible
+        uploadLabel.addEventListener('click', () => imageInput.click());
+        uploadLabel.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                imageInput.click();
+            }
+        });
+
+        // Handle file input selection
+        imageInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files || []);
+            addFiles(files);
+            // Keep the input cleared so user can add the same file again if they wish
+            imageInput.value = '';
+        });
+
+        // Drag and drop support
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, preventDefaults, false);
+        });
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, () => fileUpload.classList.add('drag-over'), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, () => fileUpload.classList.remove('drag-over'), false);
+        });
+        fileUpload.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = Array.from(dt.files || []);
+            addFiles(files);
+        });
+
+        // Add files to state with basic validation
+        async function addFiles(files) {
+            const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+            const valid = files.filter(f => f.type.startsWith('image/') && f.size <= MAX_SIZE);
+            for (const f of valid) {
+                const dup = selectedImages.some(x => x.file?.name === f.name && x.file?.size === f.size);
+                if (dup) continue;
+                try {
+                    const id = await idbAddImage(f, { name: f.name, type: f.type, size: f.size });
+                    selectedImages.push({ file: f, id });
+                } catch (_) {
+                    // If IDB fails, still keep in memory (no persistence)
+                    selectedImages.push({ file: f });
+                }
+            }
+            // If this is the first time we add images, ensure thumbnail defaults to 0
+            if (selectedImages.length && (selectedThumbnailIndex < 0 || selectedThumbnailIndex >= selectedImages.length)) {
+                selectedThumbnailIndex = 0;
+            }
+            renderGrid();
+            saveDraft();
+        }
+
+        // Render thumbnail grid and setup carousel controls visibility
+        function renderGrid() {
+            imageGrid.innerHTML = '';
+
+            if (selectedImages.length === 0) {
+                imagePreview.style.display = 'none';
+                return;
+            }
+
+            imagePreview.style.display = 'block';
+
+            selectedImages.forEach((obj, index) => {
+                const file = obj.file;
+                const url = URL.createObjectURL(file);
+                const item = document.createElement('div');
+                item.className = 'image-item';
+                item.innerHTML = `
+                    <img src="${url}" alt="Selected image ${index + 1}">
+                    <button type="button" class="remove-image" aria-label="Remove image ${index + 1}">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="thumb-toggle" aria-pressed="${index === selectedThumbnailIndex}" aria-label="Set as thumbnail">
+                        <i class="fas ${index === selectedThumbnailIndex ? 'fa-star' : 'fa-star-half-alt'}" aria-hidden="true"></i>
+                    </button>
+                    <span class="thumb-badge" ${index === selectedThumbnailIndex ? '' : 'style="display:none"'}>Thumbnail</span>
+                `;
+                item.querySelector('.remove-image').addEventListener('click', () => removeImageAt(index));
+                item.querySelector('.thumb-toggle').addEventListener('click', () => setThumbnail(index));
+                imageGrid.appendChild(item);
+            });
+
+            // Show controls only when more than 3 images
+            if (selectedImages.length > 3) {
+                carouselControls.style.display = 'flex';
+            } else {
+                carouselControls.style.display = 'none';
+            }
+        }
+
+        function removeImageAt(index) {
+            const removed = selectedImages.splice(index, 1)[0];
+            // Update thumbnail index if needed
+            if (selectedThumbnailIndex === index) {
+                selectedThumbnailIndex = 0;
+            } else if (selectedThumbnailIndex > index) {
+                selectedThumbnailIndex -= 1;
+            }
+            // Remove from IDB if has id
+            if (removed && removed.id) {
+                idbDeleteMany([removed.id]).then(() => {}).catch(() => {});
+            }
+            renderGrid();
+            saveDraft();
+        }
+
+        function setThumbnail(index) {
+            selectedThumbnailIndex = index;
+            // update UI
+            Array.from(imageGrid.children).forEach((el, i) => {
+                const btn = el.querySelector('.thumb-toggle i');
+                const badge = el.querySelector('.thumb-badge');
+                if (i === selectedThumbnailIndex) {
+                    if (btn) btn.className = 'fas fa-star';
+                    if (badge) badge.style.display = '';
+                } else {
+                    if (btn) btn.className = 'fas fa-star-half-alt';
+                    if (badge) badge.style.display = 'none';
+                }
+            });
+            saveDraft();
+        }
+
+        // Carousel buttons scroll the grid by one viewport width
+        carouselControls?.querySelector('.prev')?.addEventListener('click', () => {
+            imageGrid.parentElement.scrollBy({ left: -imageGrid.parentElement.clientWidth, behavior: 'smooth' });
+        });
+        carouselControls?.querySelector('.next')?.addEventListener('click', () => {
+            imageGrid.parentElement.scrollBy({ left: imageGrid.parentElement.clientWidth, behavior: 'smooth' });
+        });
+
+        // On submit, ensure the chosen thumbnail (or first) is sent as the featured_image
+        formEl.addEventListener('submit', (e) => {
+            if (selectedImages.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one image for your blog thumbnail.');
+                uploadLabel.focus();
+                return;
+            }
+            // Build featured (thumbnail) file list (single file)
+            const dtFeatured = new DataTransfer();
+            const idx = Math.min(Math.max(0, selectedThumbnailIndex), selectedImages.length - 1);
+            dtFeatured.items.add(selectedImages[idx].file);
+            imageInput.files = dtFeatured.files;
+
+            // Build gallery files (all except the selected thumbnail)
+            const dtGallery = new DataTransfer();
+            selectedImages.forEach((obj, i) => { if (i !== idx) dtGallery.items.add(obj.file); });
+            const galleryInput = document.getElementById('gallery-images');
+            galleryInput.files = dtGallery.files;
+
+            // Persist latest draft state
+            saveDraft();
+        });
+
+        // Save drafts on text inputs
+        [titleEl, categoryEl, contentEl, termsEl].forEach(el => {
+            el.addEventListener('input', saveDraft);
+            el.addEventListener('change', saveDraft);
+        });
+
+        // Restore draft on load
+        loadDraft();
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

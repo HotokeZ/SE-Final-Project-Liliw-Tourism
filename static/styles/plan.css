@@ -1,0 +1,50 @@
+/* static/styles/plan.css */
+
+.plan-tabs-container {
+    position: relative;
+    background-color: #f0f4ff;
+    border-radius: 50px;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.plan-tabs {
+    position: relative;
+    display: flex;
+    background-color: #e0e9ff;
+    border-radius: 50px;
+    padding: 5px;
+}
+
+.plan-tab {
+    padding: 10px 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    z-index: 2;
+    position: relative;
+}
+
+.plan-tab.active {
+    color: #fff;
+}
+
+.tab-slider {
+    position: absolute;
+    top: 5px;
+    left: 5px; /* Will be updated by JS */
+    height: calc(100% - 10px);
+    width: 0; /* Will be updated by JS */
+    background: linear-gradient(135deg, #0229bf, #0052cc);
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(2, 41, 191, 0.3);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    z-index: 1;
+}

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events Calendar - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/festival.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="festival-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Events Calendar</h1>
+                <p>Stay updated with upcoming festivals, celebrations, and special events in Liliw</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calendar View Toggle -->
+    <section class="calendar-controls">
+        <div class="section-container">
+            <div class="controls-header">
+                <h2>Upcoming Events</h2>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" data-view="list">
+                        <i class="fas fa-list"></i> List View
+                    </button>
+                    <button class="toggle-btn" data-view="grid">
+                        <i class="fas fa-th"></i> Grid View
+                    </button>
+                </div>
+            </div>
+
+            <!-- Month Filter (compact dropdown) -->
+            <div class="month-filter">
+                <label for="month-select" class="sr-only">Filter events by month</label>
+                <select id="month-select" class="month-select" aria-label="Filter events by month">
+                    <option value="all">All Months</option>
+                    <option value="january">January</option>
+                    <option value="february">February</option>
+                    <option value="march">March</option>
+                    <option value="april">April</option>
+                    <option value="may">May</option>
+                    <option value="june">June</option>
+                    <option value="july">July</option>
+                    <option value="august">August</option>
+                    <option value="september">September</option>
+                    <option value="october">October</option>
+                    <option value="november">November</option>
+                    <option value="december">December</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events List -->
+    <section class="events-section">
+        <div class="section-container">
+            <div class="events-list active" id="list-view">
+                {% for ev in events %}
+                <div class="event-item" data-month="{{ ev.month or '' }}" data-start="{{ ev.start_date or '' }}">
+                    <div class="event-image">
+                        <img src="{{ ev.image }}" alt="{{ ev.title }}">
+                        {% if ev.featured %}
+                        <span class="event-badge featured">Featured</span>
+                        {% endif %}
+                    </div>
+                    <div class="event-details">
+                        <h3 class="event-title">{{ ev.title }}</h3>
+                        <p class="event-description">{{ ev.description }}</p>
+                        <div class="event-meta">
+                            <span class="event-date-inline meta-item">
+                                <i class="far fa-calendar-alt"></i> {{ ev.display_date }}
+                            </span>
+                            <span class="event-location">
+                                <i class="fas fa-map-marker-alt"></i> {{ ev.location }}
+                            </span>
+                            <span class="event-time">
+                                <i class="fas fa-clock"></i> {{ ev.display_time }}</span>
+                            <span class="event-type">
+                                <i class="fas fa-tag"></i> {{ ev.category }}</span>
+                        </div>
+                        {% if ev.cta_url %}
+                        <a href="{{ ev.cta_url }}" class="event-btn">{{ ev.cta_text or 'Learn More' }}</a>
+                        {% else %}
+                        <a href="{{ url_for('festivals') }}" class="event-btn">Learn More</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Grid View (Initially Hidden) -->
+            <div class="events-grid" id="grid-view" style="display: none;">
+                <!-- Grid items will be populated via JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        // View Toggle: list <-> grid. Grid is rendered from visible list items.
+        (function() {
+            const listBtn = document.querySelector('.toggle-btn[data-view="list"]');
+            const gridBtn = document.querySelector('.toggle-btn[data-view="grid"]');
+            const listView = document.getElementById('list-view');
+            const gridView = document.getElementById('grid-view');
+
+            function renderGrid() {
+                // clear previous
+                gridView.innerHTML = '';
+                // ensure grid display
+                gridView.style.display = 'grid';
+
+                const visibleItems = Array.from(document.querySelectorAll('.event-item'))
+                    .filter(i => i.style.display !== 'none');
+
+                visibleItems.forEach(item => {
+                    const imgEl = item.querySelector('.event-image img');
+                    const imgSrc = imgEl ? imgEl.getAttribute('src') : '';
+                    const title = item.querySelector('.event-title') ? item.querySelector('.event-title').textContent.trim() : '';
+                    const desc = item.querySelector('.event-description') ? item.querySelector('.event-description').textContent.trim() : '';
+                    const metaHTML = item.querySelector('.event-meta') ? item.querySelector('.event-meta').innerHTML : '';
+                    const link = item.querySelector('.event-btn') ? item.querySelector('.event-btn').getAttribute('href') : '#';
+
+                    const card = document.createElement('div');
+                    card.className = 'festival-card';
+                    card.innerHTML = `
+                        <div class="festival-card-image"><img src="${imgSrc}" alt="${title}"></div>
+                        <div class="festival-card-content">
+                            <h3>${title}</h3>
+                            <p>${desc}</p>
+                            <div class="festival-card-meta">${metaHTML}</div>
+                            <a href="${link}" class="cta-button">Learn More</a>
+                        </div>`;
+
+                    gridView.appendChild(card);
+                });
+            }
+
+            // initial handlers
+            if (listBtn && gridBtn) {
+                listBtn.addEventListener('click', function() {
+                    listBtn.classList.add('active');
+                    gridBtn.classList.remove('active');
+                    // show list, hide grid
+                    listView.style.display = 'flex';
+                    gridView.style.display = 'none';
+                });
+
+                gridBtn.addEventListener('click', function() {
+                    gridBtn.classList.add('active');
+                    listBtn.classList.remove('active');
+                    // hide list, render and show grid
+                    listView.style.display = 'none';
+                    renderGrid();
+                });
+
+                // default to grid view on page load
+                setTimeout(() => {
+                    gridBtn.click();
+                }, 50);
+            }
+        })();
+
+        // Month Filter (dropdown) — robust parser for numeric/ISO/text months
+        (function() {
+            const monthSelect = document.querySelector('.month-select');
+            if (!monthSelect) return;
+
+            const monthNameToNum = {
+                'january': 1,'february':2,'march':3,'april':4,'may':5,'june':6,
+                'july':7,'august':8,'september':9,'october':10,'november':11,'december':12
+            };
+
+            function parseMonthValue(val) {
+                if (!val) return null;
+                const s = val.toString().trim();
+                // numeric
+                if (/^0*\d{1,2}$/.test(s)) return parseInt(s,10);
+                // ISO-like date
+                const d = new Date(s);
+                if (!isNaN(d.getTime())) return d.getMonth() + 1;
+                // month name
+                const lower = s.toLowerCase();
+                if (monthNameToNum[lower]) return monthNameToNum[lower];
+                // patterns like YYYY-MM-DD or DD-MM-YYYY, extract middle number
+                const m = s.match(/^(?:\d{1,4})[-\/](\d{1,2})[-\/](?:\d{1,4})$/);
+                if (m && m[1]) {
+                    const n = parseInt(m[1],10);
+                    if (!isNaN(n) && n>=1 && n<=12) return n;
+                }
+                return null;
+            }
+
+                    monthSelect.addEventListener('change', function() {
+                const sel = this.value;
+                let selNum = null;
+                if (sel !== 'all') selNum = parseMonthValue(sel) || null;
+
+                document.querySelectorAll('.event-item').forEach(item => {
+                    // prefer explicit month, otherwise fallback to start date
+                    const raw = (item.dataset.month && item.dataset.month.toString().trim() !== '') ? item.dataset.month : (item.dataset.start || '');
+                    if (sel === 'all') { item.style.display = 'flex'; return; }
+
+                    const itemNum = parseMonthValue(raw);
+                    let matched = false;
+                    if (itemNum && selNum) matched = (itemNum === selNum);
+                    else if ((raw || '').toString().toLowerCase() === sel.toString().toLowerCase()) matched = true;
+
+                    item.style.display = matched ? 'flex' : 'none';
+                });
+
+                // if grid is visible, re-render
+                const gridView = document.getElementById('grid-view');
+                const gridBtn = document.querySelector('.toggle-btn[data-view="grid"]');
+                if (gridView && gridView.style.display !== 'none' && gridBtn) gridBtn.click();
+            });
+        })();
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attractions - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/attractions.css') }}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section with Gradient Animation -->
+    <section class="attractions-hero gradient-animate">
+        <div class="hero-overlay">
+            <div class="hero-content fade-in-up">
+                <h1 class="text-gradient">Discover Liliw</h1>
+                <p>Explore the natural wonders and cultural heritage that make Liliw a unique destination</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Navigation -->
+    <section class="category-nav">
+        <div class="category-container">
+            <div class="category-tabs">
+                <a href="{{ url_for('natural') }}" class="category-btn active hover-scale">
+                    <i class="fas fa-mountain"></i>
+                    <span>Natural Attractions</span>
+                </a>
+                <a href="{{ url_for('heritage') }}" class="category-btn hover-scale">
+                    <i class="fas fa-landmark"></i>
+                    <span>Heritage Sites</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Attractions Grid -->
+    <section class="attractions-section">
+        <div class="section-container reveal">
+            <div class="section-header">
+                <h2>All Attractions</h2>
+                <p class="section-subtitle">Immerse yourself in the beauty and culture of Liliw</p>
+            </div>
+
+            <!-- Natural Attractions -->
+            <div class="attractions-category" id="natural">
+                <h3 class="category-title fade-in-left">Natural Wonders</h3>
+                <div class="attractions-grid">
+                    {% if natural and natural|length > 0 %}
+                        {% for a in natural %}
+                        <a href="{{ url_for('indiv_attractions', attraction=a.get('slug') or a.get('name')|replace(' ', '-')|lower) }}" class="attraction-card">
+                            <div class="card-image" style="background:#f6f7fb;">
+                                <img class="color-fill-img" src="{{ a.get('image_url') or url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ a.get('name') }}">
+                                <div class="card-overlay"></div>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-tag">{{ (a.get('category') or 'Attraction')|title }}</span>
+                                <h3>{{ a.get('name') }}</h3>
+                                <p>{{ a.get('description') or '' }}</p>
+                                <div class="card-footer">
+                                    <span class="card-link">Explore <i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <p>No natural attractions found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Heritage Sites -->
+            <div class="attractions-category" id="heritage">
+                <h3 class="category-title">Cultural Heritage</h3>
+                <div class="attractions-grid">
+                    {% if heritage and heritage|length > 0 %}
+                        {% for a in heritage %}
+                        <a href="{{ url_for('indiv_attractions', attraction=a.get('slug') or a.get('name')|replace(' ', '-')|lower) }}" class="attraction-card">
+                            <div class="card-image" style="background:#f6f7fb;">
+                                <img class="color-fill-img" src="{{ a.get('image_url') or url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ a.get('name') }}">
+                                <div class="card-overlay"></div>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-tag">{{ (a.get('category') or 'Attraction')|title }}</span>
+                                <h3>{{ a.get('name') }}</h3>
+                                <p>{{ a.get('description') or '' }}</p>
+                                <div class="card-footer">
+                                    <span class="card-link">Explore <i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <p>No heritage attractions found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        // Simple color-fill: compute average color and set parent background
+        (function(){
+            function toHex(r,g,b){return '#'+[r,g,b].map(function(x){var s=x.toString(16);return s.length==1?'0'+s:s}).join('')}
+            function avgColorFromImage(img, cb){
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext && canvas.getContext('2d');
+                if(!ctx){ cb(null); return; }
+                var w = 40, h = 40; canvas.width = w; canvas.height = h;
+                try{
+                    ctx.drawImage(img, 0, 0, w, h);
+                    var data = ctx.getImageData(0,0,w,h).data;
+                    var r=0,g=0,b=0,count=0;
+                    for(var i=0;i<data.length;i+=4){ r+=data[i]; g+=data[i+1]; b+=data[i+2]; count++; }
+                    r=Math.round(r/count); g=Math.round(g/count); b=Math.round(b/count);
+                    cb(toHex(r,g,b));
+                }catch(e){ cb(null); }
+            }
+            function applyFill(img){
+                if(!img || img.dataset.colorApplied) return; img.dataset.colorApplied = '1';
+                img.style.objectFit = 'contain'; img.style.width='100%'; img.style.height='100%'; img.style.display='block';
+                img.crossOrigin = 'anonymous';
+                if(img.complete){ avgColorFromImage(img, function(color){ if(color){ img.parentNode.style.background = color; } }); }
+                else { img.addEventListener('load', function(){ avgColorFromImage(img, function(color){ if(color){ img.parentNode.style.background = color; } }); });
+                    img.addEventListener('error', function(){ /* ignore */ }); }
+            }
+            document.addEventListener('DOMContentLoaded', function(){
+                document.querySelectorAll('.color-fill-img').forEach(applyFill);
+            });
+        })();
+    </script>
+    <script>
+        // Hide category navigation on scroll down
+        let lastScroll = 0;
+        const categoryNav = document.querySelector('.category-nav');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll <= 0) {
+                categoryNav.classList.remove('hide');
+                return;
+            }
+
+            if (currentScroll > lastScroll && currentScroll > 100) {
+                // Scrolling down
+                categoryNav.classList.add('hide');
+            } else {
+                // Scrolling up
+                categoryNav.classList.remove('hide');
+            }
+
+            lastScroll = currentScroll;
+        });
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

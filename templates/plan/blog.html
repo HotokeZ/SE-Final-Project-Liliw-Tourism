@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Blog - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/blog.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1 class="hero-title">Travel Blog</h1>
+        <p class="hero-subtitle">Stories, tips, and experiences from travelers exploring Liliw</p>
+        <a href="{{ url_for('create_blog') }}" class="btn-hero">
+            <i class="fas fa-pen"></i> <span>Write a Blog Post</span>
+        </a>
+    </div>
+</section>
+
+<!-- Blog Section -->
+<section class="blog-section">
+    <div class="container">
+        <div class="blog-layout">
+            <!-- Main Content -->
+            <div class="blog-main">
+                <div class="blog-grid">
+                    <!-- Hard-coded sample blog cards commented out for now -->
+                    <!--
+                    [Sample posts 1-6 removed]
+                    -->
+
+                    <!-- Dynamic Blog Posts from Database -->
+                    {% if blogs %}
+                    {% for blog in blogs %}
+                    <article class="blog-card">
+                        <div class="blog-image">
+                            {% if blog.image_url %}
+                            {# Extract first URL from comma-separated list #}
+                            {% set first_image = blog.image_url.split(',')[0] %}
+                            <img src="{{ first_image }}" alt="{{ blog.title }}">
+                            {% else %}
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ blog.title }}">
+                            {% endif %}
+                            <span class="category-badge badge-travel">{{ blog.category }}</span>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-meta">
+                                <span class="blog-date">
+                                    <i class="far fa-calendar"></i> {{ blog.created_at[:10] if blog.created_at else 'Unknown date' }}
+                                </span>
+                            </div>
+                            <h2 class="blog-title">
+                                <a href="{{ url_for('view_blog', blog_id=blog.id) }}">{{ blog.title }}</a>
+                            </h2>
+                            <p class="blog-excerpt">
+                                <span class="excerpt-text">{{ blog.content[:200] }}{% if blog.content|length > 200 %}...{% endif %}</span>
+                                <a href="{{ url_for('view_blog', blog_id=blog.id) }}" class="see-more-btn">Read More</a>
+                            </p>
+                            <div class="blog-footer">
+                                <div class="author-info">
+                                    <div class="author-details">
+                                        <span class="author-name">{{ blog.author }}</span>
+                                        <span class="author-role">Community Writer</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Pagination -->
+                {% if total_pages and total_pages > 1 %}
+                <nav class="pagination" aria-label="Blog pagination">
+                    {# Previous button #}
+                    {% set prev_page = current_page - 1 %}
+                    <a href="{{ url_for('blog', page=prev_page, per_page=per_page) }}"
+                       class="pagination-btn pagination-prev {% if current_page <= 1 %}disabled{% endif %}"
+                       aria-label="Previous page"
+                       {% if current_page <= 1 %}aria-disabled="true" tabindex="-1"{% endif %}>
+                        <i class="fas fa-chevron-left"></i>
+                        <span>Previous</span>
+                    </a>
+
+                    <div class="pagination-numbers">
+                        {% if total_pages <= 8 %}
+                            {% for p in range(1, total_pages + 1) %}
+                                <a href="{{ url_for('blog', page=p, per_page=per_page) }}" class="pagination-btn {% if p == current_page %}active{% endif %}" {% if p == current_page %}aria-current="page"{% endif %}>{{ p }}</a>
+                            {% endfor %}
+                        {% else %}
+                            <a href="{{ url_for('blog', page=1, per_page=per_page) }}" class="pagination-btn {% if current_page == 1 %}active{% endif %}" {% if current_page == 1 %}aria-current="page"{% endif %}>1</a>
+                            <a href="{{ url_for('blog', page=2, per_page=per_page) }}" class="pagination-btn {% if current_page == 2 %}active{% endif %}" {% if current_page == 2 %}aria-current="page"{% endif %}>2</a>
+                            {% if current_page > 4 %}
+                                <span class="pagination-ellipsis">•••</span>
+                            {% endif %}
+                            {% for p in [current_page-1, current_page, current_page+1] %}
+                                {% if p > 2 and p < total_pages - 1 %}
+                                    <a href="{{ url_for('blog', page=p, per_page=per_page) }}" class="pagination-btn {% if p == current_page %}active{% endif %}" {% if p == current_page %}aria-current="page"{% endif %}>{{ p }}</a>
+                                {% endif %}
+                            {% endfor %}
+                            {% if current_page < total_pages - 3 %}
+                                <span class="pagination-ellipsis">•••</span>
+                            {% endif %}
+                            <a href="{{ url_for('blog', page=total_pages-1, per_page=per_page) }}" class="pagination-btn {% if current_page == total_pages-1 %}active{% endif %}" {% if current_page == total_pages-1 %}aria-current="page"{% endif %}>{{ total_pages-1 }}</a>
+                            <a href="{{ url_for('blog', page=total_pages, per_page=per_page) }}" class="pagination-btn {% if current_page == total_pages %}active{% endif %}" {% if current_page == total_pages %}aria-current="page"{% endif %}>{{ total_pages }}</a>
+                        {% endif %}
+                    </div>
+
+                    {# Next button #}
+                    {% set next_page = current_page + 1 %}
+                    <a href="{{ url_for('blog', page=next_page, per_page=per_page) }}"
+                       class="pagination-btn pagination-next {% if current_page >= total_pages %}disabled{% endif %}"
+                       aria-label="Next page"
+                       {% if current_page >= total_pages %}aria-disabled="true" tabindex="-1"{% endif %}>
+                        <span>Next</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </nav>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="blog-sidebar">
+                <!-- Search Box -->
+                <div class="sidebar-widget search-widget">
+                    <h3 class="widget-title">Search Blog</h3>
+                    <form class="search-form">
+                        <input type="text" placeholder="Search articles..." class="search-input">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Categories -->
+                <div class="sidebar-widget categories-widget">
+                    <h3 class="widget-title">Categories</h3>
+                    <ul class="categories-list">
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <span>Travel Guide</span>
+                                <span class="count">(23)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-shopping-bag"></i>
+                                <span>Shopping</span>
+                                <span class="count">(15)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-tree"></i>
+                                <span>Nature</span>
+                                <span class="count">(18)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-utensils"></i>
+                                <span>Food</span>
+                                <span class="count">(21)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-landmark"></i>
+                                <span>Heritage</span>
+                                <span class="count">(12)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-theater-masks"></i>
+                                <span>Culture</span>
+                                <span class="count">(9)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Recent Posts -->
+                <div class="sidebar-widget recent-posts-widget">
+                    <h3 class="widget-title">Recent Posts</h3>
+                    <div class="recent-posts-list">
+                        <div class="recent-post-item">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Recent post" class="recent-post-thumb">
+                            <div class="recent-post-content">
+                                <h4><a href="#">Top 10 Instagram Spots in Liliw</a></h4>
+                                <span class="recent-post-date">
+                                    <i class="far fa-calendar"></i> Nov 20, 2025
+                                </span>
+                            </div>
+                        </div>
+                        <div class="recent-post-item">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Recent post" class="recent-post-thumb">
+                            <div class="recent-post-content">
+                                <h4><a href="#">Budget Travel: Liliw for Under ₱1000</a></h4>
+                                <span class="recent-post-date">
+                                    <i class="far fa-calendar"></i> Nov 18, 2025
+                                </span>
+                            </div>
+                        </div>
+                        <div class="recent-post-item">
+                            <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Recent post" class="recent-post-thumb">
+                            <div class="recent-post-content">
+                                <h4><a href="#">Family-Friendly Activities in Liliw</a></h4>
+                                <span class="recent-post-date">
+                                    <i class="far fa-calendar"></i> Nov 12, 2025
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tags Cloud -->
+                <div class="sidebar-widget tags-widget">
+                    <h3 class="widget-title">Popular Tags</h3>
+                    <div class="tags-cloud">
+                        <a href="#" class="tag">Travel</a>
+                        <a href="#" class="tag">Shoes</a>
+                        <a href="#" class="tag">Heritage</a>
+                        <a href="#" class="tag">Food</a>
+                        <a href="#" class="tag">Nature</a>
+                        <a href="#" class="tag">Festival</a>
+                        <a href="#" class="tag">Photography</a>
+                        <a href="#" class="tag">Adventure</a>
+                        <a href="#" class="tag">Culture</a>
+                        <a href="#" class="tag">Weekend</a>
+                        <a href="#" class="tag">Budget Travel</a>
+                        <a href="#" class="tag">Local Guide</a>
+                    </div>
+                </div>
+
+                <!-- CTA Widget -->
+                <div class="sidebar-widget cta-widget">
+                    <div class="cta-content">
+                        <i class="fas fa-pen-fancy"></i>
+                        <h3>Share Your Story</h3>
+                        <p>Have you visited Liliw? Share your experiences with fellow travelers!</p>
+                        <a href="{{ url_for('create_blog') }}" class="btn-cta">Write a Blog Post</a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+{% include 'footer.html' %}
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

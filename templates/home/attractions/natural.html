@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natural Attractions - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/natural.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="natural-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Natural Wonders</h1>
+                <p>Discover the pristine waterfalls, mountains, and landscapes of Liliw</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Navigation -->
+    <section class="category-nav">
+        <div class="category-container">
+            <div class="category-tabs">
+                <a href="{{ url_for('natural') }}" class="category-btn active">
+                    <i class="fas fa-mountain"></i>
+                    <span>Natural Attractions</span>
+                </a>
+                <a href="{{ url_for('heritage') }}" class="category-btn">
+                    <i class="fas fa-landmark"></i>
+                    <span>Heritage Sites</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Natural Attractions -->
+    <section class="attractions-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Explore Nature</h2>
+                <p class="section-subtitle">Experience the natural beauty and outdoor adventures Liliw has to offer</p>
+            </div>
+
+            <div class="attractions-grid">
+                <a href="{{ url_for('indiv_attractions', attraction='buruwisan-falls') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Buruwisan Falls">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Waterfalls</span>
+                        <h3>Buruwisan Falls</h3>
+                        <p>A stunning multi-tiered waterfall surrounded by lush tropical forest. Perfect for nature lovers and adventure seekers.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Barangay Bongkol</span>
+                            <span><i class="fas fa-clock"></i> 30 min trek</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='hulugan-falls') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Hulugan Falls">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Waterfalls</span>
+                        <h3>Hulugan Falls</h3>
+                        <p>Known for its refreshing crystal-clear waters and natural rock formations ideal for swimming and picnics.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Barangay Luquin</span>
+                            <span><i class="fas fa-clock"></i> 45 min trek</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='taytay-falls') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Taytay Falls">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Waterfalls</span>
+                        <h3>Taytay Falls</h3>
+                        <p>A hidden gem with pristine waters perfect for swimming, cliff diving, and nature photography enthusiasts.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Barangay Dagatan</span>
+                            <span><i class="fas fa-clock"></i> 20 min trek</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='mt-cristobal') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Mt. Cristobal">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Mountains</span>
+                        <h3>Mt. Cristobal</h3>
+                        <p>Challenge yourself with this scenic mountain trail offering breathtaking views and diverse flora and fauna.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> San Pablo Boundary</span>
+                            <span><i class="fas fa-clock"></i> 3-4 hr hike</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='nagcarlan-underground') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Underground River">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">River</span>
+                        <h3>Underground River</h3>
+                        <p>Explore this mysterious underground river system with unique rock formations and cool cavern atmosphere.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Nagcarlan Border</span>
+                            <span><i class="fas fa-clock"></i> 1 hr tour</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('indiv_attractions', attraction='farm-resorts') }}" class="attraction-card">
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Farm Resorts">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">Nature</span>
+                        <h3>Farm Resorts</h3>
+                        <p>Experience agritourism at its finest with organic farms, fruit picking, and farm-to-table dining experiences.</p>
+                        <div class="card-info">
+                            <span><i class="fas fa-map-marker-alt"></i> Various Locations</span>
+                            <span><i class="fas fa-clock"></i> Half-day tours</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-link">Learn More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Info Section -->
+    <section class="info-section">
+        <div class="section-container">
+            <div class="info-grid">
+                <div class="info-card">
+                    <i class="fas fa-hiking"></i>
+                    <h3>Best Time to Visit</h3>
+                    <p>November to May offers the best weather for outdoor activities. Waterfalls are most impressive during and after the rainy season (June-October).</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Safety Tips</h3>
+                    <p>Always bring a local guide, wear proper footwear, stay hydrated, and check weather conditions before your trek.</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-leaf"></i>
+                    <h3>Eco-Tourism</h3>
+                    <p>Help preserve Liliw's natural beauty by following Leave No Trace principles and supporting local conservation efforts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        // Hide category navigation on scroll down
+        let lastScroll = 0;
+        const categoryNav = document.querySelector('.category-nav');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll <= 0) {
+                categoryNav.classList.remove('hide');
+                return;
+            }
+
+            if (currentScroll > lastScroll && currentScroll > 100) {
+                // Scrolling down
+                categoryNav.classList.add('hide');
+            } else {
+                // Scrolling up
+                categoryNav.classList.remove('hide');
+            }
+
+            lastScroll = currentScroll;
+        });
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>

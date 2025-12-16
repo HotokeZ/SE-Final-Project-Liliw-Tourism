@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if event else 'Add' }} Event - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <!-- Leaflet for map picker (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    {% include 'admin/sidebar.html' %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{{ 'Edit' if event else 'Add New' }} Event</h1>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-section">
+            <form class="form-container" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Event Title *</label>
+                    <input type="text" id="title" name="title" value="{{ event.title if event else '' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="event_date">Start Date *</label>
+                        <input type="date" id="event_date" name="event_date" value="{{ event.event_date if event else '' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date">End Date (optional)</label>
+                        <input type="date" id="end_date" name="end_date" value="{{ event.end_date if event else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="start_time">Start Time</label>
+                        <input type="time" id="start_time" name="start_time" value="{{ event.start_time if event else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="end_time">End Time</label>
+                        <input type="time" id="end_time" name="end_time" value="{{ event.end_time if event else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" value="{{ event.location if event else '' }}" placeholder="e.g., Liliw Town Plaza">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="Festival" {{ 'selected' if event and event.category == 'Festival' else '' }}>Festival</option>
+                            <option value="Cultural" {{ 'selected' if event and event.category == 'Cultural' else '' }}>Cultural</option>
+                            <option value="Religious" {{ 'selected' if event and event.category == 'Religious' else '' }}>Religious</option>
+                            <option value="Community" {{ 'selected' if event and event.category == 'Community' else '' }}>Community</option>
+                            <option value="Other" {{ 'selected' if event and event.category == 'Other' else '' }}>Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Short Description</label>
+                    <textarea id="description" name="description" rows="3">{{ event.description if event else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_description">Full Description</label>
+                    <textarea id="full_description" name="full_description" rows="6">{{ event.full_description if event else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ 'Change' if event else 'Upload' }} Images</label>
+                    <div id="imageUploader" class="image-uploader">
+                        <input type="file" id="featuredInput" name="image" accept="image/*" style="display:none">
+                        <input type="file" id="galleryInput" name="gallery_images" accept="image/*" multiple style="display:none">
+                        <div class="uploader-controls">
+                            <button type="button" id="addImagesBtn" class="btn btn-secondary">Add Images</button>
+                            <span class="hint">Select a featured image by clicking the star on a preview.</span>
+                        </div>
+                        <div id="imageGrid" class="image-grid">
+                            {% if event and event.image_url %}
+                                <div class="image-item featured">
+                                    <button type="button" class="feature-btn">★</button>
+                                    <img src="{{ event.image_url }}" alt="Current image">
+                                    <button type="button" class="remove-btn">✕</button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_featured" {{ 'checked' if event and event.is_featured else '' }}> Featured Event (show on homepage)
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="cta_text">Call To Action Text (optional)</label>
+                    <input type="text" id="cta_text" name="cta_text" value="{{ event.cta_text if event else '' }}" placeholder="e.g., Learn More">
+                </div>
+                <div class="form-group">
+                    <label for="cta_url">Call To Action URL (optional)</label>
+                    <input type="url" id="cta_url" name="cta_url" value="{{ event.cta_url if event else '' }}" placeholder="https://example.com/event-details">
+                </div>
+
+                <div class="form-group">
+                    <label for="venue_address">Venue Address (optional)</label>
+                    <input type="text" id="venue_address" name="venue_address" value="{{ event.venue_address if event else '' }}" placeholder="Full venue address">
+                </div>
+
+                <div class="form-group">
+                    <label for="map_embed">Map Embed (iframe HTML) (optional)</label>
+                    <textarea id="map_embed" name="map_embed" rows="3">{{ event.map_embed if event else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Venue Coordinates</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button type="button" id="pickOnMapBtn" class="btn btn-secondary">Pick on Map</button>
+                        <span id="venueCoordsReadout">{{ (event.venue_lat ~ ', ' ~ event.venue_lng) if event and event.venue_lat and event.venue_lng else 'No location' }}</span>
+                    </div>
+                    <input type="hidden" id="venue_lat" name="venue_lat" value="{{ event.venue_lat if event else '' }}">
+                    <input type="hidden" id="venue_lng" name="venue_lng" value="{{ event.venue_lng if event else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="all_day" id="all_day" {{ 'checked' if event and event.all_day else '' }}> All day event (no specific times)
+                    </label>
+                </div>
+
+                {% if event %}
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_active" {{ 'checked' if event.is_active else '' }}> Active (visible on website)
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_events') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Save Changes' if event else 'Add Event' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+    <!-- Map picker modal (Leaflet) -->
+    <div id="mapPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center;">
+        <div style="width:90%; max-width:900px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-bottom:1px solid #eee;">
+                <strong>Pick Location on Map</strong>
+                <div>
+                    <button id="mapPickerCancel" type="button" class="btn btn-secondary">Cancel</button>
+                    <button id="mapPickerSave" type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+            <div style="padding:8px; border-bottom:1px solid #f1f1f1; display:flex; gap:8px; align-items:center;">
+                <input id="mapSearchInput" type="search" placeholder="Search for a place or address" style="flex:1; padding:8px; border:1px solid #dcdcdc; border-radius:4px;" />
+                <button id="mapSearchBtn" type="button" class="btn btn-secondary">Search</button>
+                <button id="mapClearBtn" type="button" class="btn btn-secondary">Clear</button>
+            </div>
+            <div id="mapPicker" style="width:100%; height:520px;"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Lightweight map picker API for this form
+        (function(){
+            var modal = document.getElementById('mapPickerModal');
+            var mapEl = document.getElementById('mapPicker');
+            var btnSave = document.getElementById('mapPickerSave');
+            var btnCancel = document.getElementById('mapPickerCancel');
+            var mapInstance = null; var marker = null; var resolvePicker = null;
+
+            function showModal(){ modal.style.display = 'flex'; setTimeout(function(){ if(mapInstance) mapInstance.invalidateSize(); }, 250); }
+            function hideModal(){ modal.style.display = 'none'; }
+
+            function initMapIfNeeded(){
+                if(mapInstance) return;
+                mapInstance = L.map(mapEl).setView([14.1516,121.3300], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution: '© OpenStreetMap contributors' }).addTo(mapInstance);
+                mapInstance.on('click', function(e){
+                    var lat = e.latlng.lat, lng = e.latlng.lng;
+                    if(marker){ marker.setLatLng(e.latlng); } else { marker = L.marker(e.latlng, {draggable:true}).addTo(mapInstance); marker.on('dragend', function(){}); }
+                });
+            }
+
+            document.getElementById('mapSearchBtn').addEventListener('click', function(){ var q = document.getElementById('mapSearchInput').value; if(!q) return; fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&q='+encodeURIComponent(q)).then(r=>r.json()).then(function(data){ if(!data||!data.length) return; var d=data[0]; initMapIfNeeded(); var lat=parseFloat(d.lat), lon=parseFloat(d.lon); if(marker) marker.setLatLng([lat,lon]); else { marker = L.marker([lat,lon], {draggable:true}).addTo(mapInstance); } mapInstance.setView([lat,lon],16); }); });
+            document.getElementById('mapClearBtn').addEventListener('click', function(){ document.getElementById('mapSearchInput').value=''; });
+
+            window.openMapPicker = function(initial){
+                return new Promise(function(resolve, reject){
+                    try{
+                        initMapIfNeeded();
+                        if(initial && initial.lat && initial.lng){ var ll=[initial.lat, initial.lng]; if(marker) marker.setLatLng(ll); else { marker = L.marker(ll, {draggable:true}).addTo(mapInstance); } try{ mapInstance.setView(ll,16); }catch(e){} }
+                        showModal(); resolvePicker = resolve;
+                    }catch(e){ reject(e); }
+                });
+            };
+
+            btnCancel.addEventListener('click', function(){ hideModal(); if(resolvePicker){ resolvePicker(null); resolvePicker=null; } });
+            btnSave.addEventListener('click', function(){ if(!marker){ alert('Please click on the map to place a marker.'); return; } var p = marker.getLatLng(); hideModal(); if(resolvePicker){ resolvePicker({lat:p.lat, lng:p.lng}); resolvePicker=null; } });
+
+            // Hook the form's Pick on Map button
+            var pickBtn = document.getElementById('pickOnMapBtn');
+            if(pickBtn){ pickBtn.addEventListener('click', function(){
+                var lat = parseFloat(document.getElementById('venue_lat').value) || null;
+                var lng = parseFloat(document.getElementById('venue_lng').value) || null;
+                var initial = (lat && lng) ? {lat:lat, lng:lng} : null;
+                window.openMapPicker(initial).then(function(coord){ if(coord){ document.getElementById('venue_lat').value = coord.lat; document.getElementById('venue_lng').value = coord.lng; document.getElementById('venueCoordsReadout').textContent = coord.lat.toFixed(6)+', '+coord.lng.toFixed(6); } }).catch(function(){});
+            }); }
+        })();
+    </script>
+    <style>
+        /* Small styles for product image uploader preview */
+        .image-uploader .uploader-controls { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+        .image-grid { display:flex; gap:10px; flex-wrap:wrap; }
+        .image-item { position:relative; width:140px; height:100px; border-radius:8px; overflow:hidden; background:#f6f7fb; display:flex; align-items:center; justify-content:center; }
+        .image-item img{ width:100%; height:100%; object-fit:cover; display:block }
+        .image-item .feature-btn{ position:absolute; left:6px; top:6px; background:rgba(255,255,255,0.9); border:0; padding:4px 6px; border-radius:6px; cursor:pointer }
+        .image-item.featured { box-shadow:0 0 0 3px rgba(11,102,195,0.12); }
+        .image-item .remove-btn{ position:absolute; right:6px; top:6px; background:rgba(0,0,0,0.5); color:#fff; border:0; padding:4px 6px; border-radius:6px; cursor:pointer }
+        .image-uploader .hint{ color:#666; font-size:0.9rem }
+    </style>
+
+    <script>
+        (function(){
+            var addBtn = document.getElementById('addImagesBtn');
+            var featuredInput = document.getElementById('featuredInput');
+            var galleryInput = document.getElementById('galleryInput');
+            var imageGrid = document.getElementById('imageGrid');
+            // Helper to create preview node
+            function makePreview(fileOrUrl, isExisting){
+                var container = document.createElement('div'); container.className='image-item';
+                var feat = document.createElement('button'); feat.type='button'; feat.className='feature-btn'; feat.textContent='★';
+                var img = document.createElement('img');
+                if(typeof fileOrUrl === 'string') { img.src = fileOrUrl; }
+                else { img.src = URL.createObjectURL(fileOrUrl); img.dataset.fileName = fileOrUrl.name; }
+                var rem = document.createElement('button'); rem.type='button'; rem.className='remove-btn'; rem.textContent='✕';
+                container.appendChild(feat); container.appendChild(img); container.appendChild(rem);
+                // feature toggle
+                feat.addEventListener('click', function(){
+                    Array.from(imageGrid.querySelectorAll('.image-item')).forEach(function(it){ it.classList.remove('featured'); });
+                    container.classList.add('featured');
+                });
+                rem.addEventListener('click', function(){ container.remove(); });
+                return container;
+            }
+            addBtn.addEventListener('click', function(){
+                // open file selector for multiple
+                galleryInput.click();
+            });
+            galleryInput.addEventListener('change', function(e){
+                Array.from(e.target.files).forEach(function(f){ imageGrid.appendChild(makePreview(f)); });
+            });
+
+            // On form submit, pack files into inputs and set price_range (if present on form)
+            var form = document.querySelector('form.form-container');
+            if(form){
+                form.addEventListener('submit', function(evt){
+                    // collect files from previews and construct DataTransfer
+                    var dtFeatured = new DataTransfer();
+                    var dtGallery = new DataTransfer();
+                    var items = imageGrid.querySelectorAll('.image-item');
+                    if(items.length){
+                        // if an item is marked featured, make that the featured file (if it has an associated File)
+                        var featuredNode = imageGrid.querySelector('.image-item.featured') || items[0];
+                        Array.from(items).forEach(function(it){
+                            var img = it.querySelector('img');
+                            if(img && img.dataset && img.dataset.fileName){
+                                // find File in galleryInput.files by name (best-effort)
+                                var name = img.dataset.fileName;
+                                var f = Array.from(galleryInput.files).find(function(ff){ return ff.name === name; });
+                                if(f){ dtGallery.items.add(f); if(it === featuredNode) dtFeatured.items.add(f); }
+                            }
+                        });
+                    }
+                    // assign to inputs
+                    if(dtFeatured.files.length) featuredInput.files = dtFeatured.files;
+                    if(dtGallery.files.length) galleryInput.files = dtGallery.files;
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

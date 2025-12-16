@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Events - Liliw Tourism</title>
+    {% include 'head-includes.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/festival.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-override.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="festival-hero">
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1>Festival Events</h1>
+                <p>Celebrate the vibrant culture and traditions of Liliw through colorful festivals and events</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <section class="festival-nav">
+        <div class="nav-container">
+            <div class="festival-tabs">
+                <button class="festival-tab active" data-tab="about">
+                    <i class="fas fa-info-circle"></i>
+                    <span>About</span>
+                </button>
+                <button class="festival-tab" data-tab="history">
+                    <i class="fas fa-history"></i>
+                    <span>History</span>
+                </button>
+                <button class="festival-tab" data-tab="events">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Past Events</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Tab -->
+    <section class="tab-content active" id="about">
+        <div class="section-container">
+            <div class="about-grid">
+                <div class="about-text">
+                    <h2>Liliw Festivals</h2>
+                    <p class="lead">Experience the heart and soul of Liliw through its vibrant festivals that showcase the town's rich cultural heritage and community spirit.</p>
+                    <p>Liliw celebrates various festivals throughout the year, each highlighting different aspects of the town's identity - from its famous footwear industry to its agricultural abundance and religious devotion. These celebrations bring together locals and visitors in a joyful display of music, dance, colorful costumes, and traditional cuisine.</p>
+                    <p>The festivals serve not only as entertainment but also as important cultural preservation efforts, passing down traditions from one generation to the next while adapting to modern times.</p>
+
+                    <div class="festival-highlights">
+                        <h3>Festival Highlights</h3>
+                        <ul>
+                            <li><i class="fas fa-music"></i> Traditional and contemporary performances</li>
+                            <li><i class="fas fa-utensils"></i> Street food bazaars featuring local delicacies</li>
+                            <li><i class="fas fa-paint-brush"></i> Arts and crafts exhibitions</li>
+                            <li><i class="fas fa-trophy"></i> Competitions and contests for all ages</li>
+                            <li><i class="fas fa-users"></i> Community parades and street dancing</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Liliw Festival">
+                </div>
+            </div>
+
+            <!-- Major Festivals -->
+            <div class="festivals-section">
+                <h2>Major Festivals</h2>
+                <div class="festivals-grid">
+                    <div class="festival-card">
+                        <div class="festival-icon">
+                            <i class="fas fa-shoe-prints"></i>
+                        </div>
+                        <h3>Tsinelas Festival</h3>
+                        <span class="festival-date">3rd week of April</span>
+                        <p>Celebrates Liliw's identity as the "Tsinelas Capital of the Philippines" with street dancing, footwear design competitions, and colorful parades featuring giant slipper floats.</p>
+                    </div>
+
+                    <div class="festival-card">
+                        <div class="festival-icon">
+                            <i class="fas fa-church"></i>
+                        </div>
+                        <h3>Feast of St. John the Baptist</h3>
+                        <span class="festival-date">June 24</span>
+                        <p>The town's patron saint fiesta featuring religious processions, traditional masses, cultural shows, and community gatherings that honor centuries-old Catholic traditions.</p>
+                    </div>
+
+                    <div class="festival-card">
+                        <div class="festival-icon">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <h3>Harvest Festival</h3>
+                        <span class="festival-date">October</span>
+                        <p>A thanksgiving celebration for bountiful harvests with agricultural exhibits, farm produce displays, cooking demonstrations, and traditional Filipino games.</p>
+                    </div>
+
+                    <div class="festival-card">
+                        <div class="festival-icon">
+                            <i class="fas fa-tree"></i>
+                        </div>
+                        <h3>Christmas Festival</h3>
+                        <span class="festival-date">December</span>
+                        <p>Month-long celebration featuring the "Giant Lantern Festival," caroling competitions, nativity scenes, night markets, and spectacular light displays throughout the town.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- History Tab -->
+    <section class="tab-content" id="history">
+        <div class="section-container">
+            <h2>Festival History</h2>
+            <p class="section-subtitle">The evolution of Liliw's cultural celebrations through the decades</p>
+
+            <div class="history-timeline">
+                <div class="history-item">
+                    <div class="history-year">1970s</div>
+                    <div class="history-content">
+                        <h3>Early Beginnings</h3>
+                        <p>The first organized town festivals emerged, primarily centered around religious celebrations and patron saint fiestas. These were simple gatherings that brought the community together for prayer, food, and fellowship.</p>
+                    </div>
+                </div>
+
+                <div class="history-item">
+                    <div class="history-year">1990s</div>
+                    <div class="history-content">
+                        <h3>Cultural Renaissance</h3>
+                        <p>Local government and cultural groups began incorporating traditional music, dance, and arts into festival celebrations. This period saw the revival of indigenous Filipino games and customs that had been fading.</p>
+                    </div>
+                </div>
+
+                <div class="history-item">
+                    <div class="history-year">2000s</div>
+                    <div class="history-content">
+                        <h3>Tsinelas Festival Birth</h3>
+                        <p>The iconic Tsinelas Festival was officially launched to celebrate Liliw's footwear industry. The festival quickly gained regional recognition and became a major tourist attraction, featuring elaborate street dancing and creative slipper-themed floats.</p>
+                    </div>
+                </div>
+
+                <div class="history-item">
+                    <div class="history-year">2010s-Present</div>
+                    <div class="history-content">
+                        <h3>Modern Evolution</h3>
+                        <p>Festivals expanded to include modern elements like concerts, competitions, and social media integration while maintaining traditional roots. Tourism became a major component, with visitors from across the country attending these celebrations.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Festival Impact -->
+            <div class="impact-section">
+                <h2>Cultural Impact</h2>
+                <div class="impact-grid">
+                    <div class="impact-card">
+                        <i class="fas fa-landmark"></i>
+                        <h3>Cultural Preservation</h3>
+                        <p>Festivals play a crucial role in keeping traditional arts, music, and customs alive for younger generations.</p>
+                    </div>
+                    <div class="impact-card">
+                        <i class="fas fa-dollar-sign"></i>
+                        <h3>Economic Growth</h3>
+                        <p>Festival tourism brings significant revenue to local businesses, artisans, and the hospitality industry.</p>
+                    </div>
+                    <div class="impact-card">
+                        <i class="fas fa-heart"></i>
+                        <h3>Community Unity</h3>
+                        <p>Annual celebrations strengthen social bonds and foster a shared sense of identity and pride among residents.</p>
+                    </div>
+                    <div class="impact-card">
+                        <i class="fas fa-globe"></i>
+                        <h3>Tourism Development</h3>
+                        <p>Festivals position Liliw on the regional tourism map, attracting visitors and media attention year-round.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Past Events Tab -->
+    <section class="tab-content" id="events">
+        <div class="section-container">
+            <h2>Past Festival Events</h2>
+            <p class="section-subtitle">Highlights and memories from recent celebrations</p>
+
+            <div class="events-grid">
+                <div class="event-card">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Tsinelas Festival 2024">
+                        <div class="event-overlay"></div>
+                        <span class="event-year">2024</span>
+                    </div>
+                    <div class="event-info">
+                        <h3>Tsinelas Festival 2024</h3>
+                        <span class="event-date"><i class="fas fa-calendar"></i> April 20-22, 2024</span>
+                        <p>Record-breaking attendance with over 50,000 visitors. Featured international footwear designers and spectacular street dancing competitions.</p>
+                        <div class="event-stats">
+                            <span><i class="fas fa-users"></i> 50K+ Visitors</span>
+                            <span><i class="fas fa-trophy"></i> 15 Competitions</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Christmas Festival 2023">
+                        <div class="event-overlay"></div>
+                        <span class="event-year">2023</span>
+                    </div>
+                    <div class="event-info">
+                        <h3>Christmas Festival 2023</h3>
+                        <span class="event-date"><i class="fas fa-calendar"></i> December 1-25, 2023</span>
+                        <p>Month-long celebration with stunning light installations, caroling contests, and the largest lantern display in Laguna province.</p>
+                        <div class="event-stats">
+                            <span><i class="fas fa-lightbulb"></i> 100K+ Lights</span>
+                            <span><i class="fas fa-music"></i> 30 Performances</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Harvest Festival 2023">
+                        <div class="event-overlay"></div>
+                        <span class="event-year">2023</span>
+                    </div>
+                    <div class="event-info">
+                        <h3>Harvest Festival 2023</h3>
+                        <span class="event-date"><i class="fas fa-calendar"></i> October 15-17, 2023</span>
+                        <p>Celebrated agricultural abundance with farm tours, organic produce markets, traditional cooking demonstrations, and livestock shows.</p>
+                        <div class="event-stats">
+                            <span><i class="fas fa-tractor"></i> 40 Farms</span>
+                            <span><i class="fas fa-utensils"></i> 25 Food Stalls</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-image">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="St. John Festival 2023">
+                        <div class="event-overlay"></div>
+                        <span class="event-year">2023</span>
+                    </div>
+                    <div class="event-info">
+                        <h3>St. John the Baptist Feast 2023</h3>
+                        <span class="event-date"><i class="fas fa-calendar"></i> June 24, 2023</span>
+                        <p>Grand religious procession with traditional "Basaan" water festival, cultural performances, and community feast for thousands.</p>
+                        <div class="event-stats">
+                            <span><i class="fas fa-pray"></i> 5K+ Devotees</span>
+                            <span><i class="fas fa-theater-masks"></i> 12 Shows</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-container">
+            <h2>Join the Celebration</h2>
+            <p>Be part of Liliw's vibrant festivals and create unforgettable memories</p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('contact') }}" class="cta-btn primary">Contact Tourism Office</a>
+                <a href="{{ url_for('gallery') }}" class="cta-btn secondary">View Photo Gallery</a>
+            </div>
+        </div>
+    </section>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+    <script>
+        // Tab switching functionality
+        const festivalTabs = document.querySelectorAll('.festival-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        festivalTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+
+                // Remove active class from all tabs and contents
+                festivalTabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+    </script>
+    {% include 'scripts-includes.html' %}
+</body>
+</html>
