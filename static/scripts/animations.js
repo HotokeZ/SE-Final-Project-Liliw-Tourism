@@ -78,8 +78,9 @@ function applyParallax() {
         element.style.transform = `translateY(${yPos}px)`;
     });
 
-    // Move hero sections slightly on scroll
-    const heroSections = document.querySelectorAll('.hero-section, .hero, .festival-hero, .products-hero, .gallery-hero');
+    // Move other themed hero elements slightly on scroll but never touch
+    // the main `.hero-section` (it should remain fixed/stationary).
+    const heroSections = document.querySelectorAll('.hero, .festival-hero, .products-hero, .gallery-hero');
     heroSections.forEach(hero => {
         const yPos = scrolled * 0.5;
         hero.style.transform = `translateY(${yPos}px)`;

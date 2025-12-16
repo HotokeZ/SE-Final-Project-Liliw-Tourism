@@ -798,6 +798,90 @@ def indiv_hotel(hotel):
             'map_embed': ''
         }
 
+        # Normalize gallery fields so template can reliably use `hotel.gallery`
+        try:
+            raw_gallery = hotel_data.get('gallery') or hotel_data.get('gallery_urls') or hotel_data.get('image_gallery') or hotel_data.get('images') or hotel_data.get('image_url')
+            gallery = []
+            if isinstance(raw_gallery, str):
+                try:
+                    parsed = json.loads(raw_gallery)
+                    if isinstance(parsed, list):
+                        gallery = parsed
+                    else:
+                        # if it's a single string, wrap it
+                        gallery = [parsed]
+                except Exception:
+                    # comma-separated fallback
+                    gallery = [i.strip() for i in raw_gallery.split(',') if i.strip()]
+            elif isinstance(raw_gallery, list):
+                gallery = raw_gallery
+            elif raw_gallery:
+                gallery = [raw_gallery]
+
+            # If gallery is empty but image_url exists, ensure it's included
+            if not gallery and hotel_data.get('image_url'):
+                gallery = [hotel_data.get('image_url')]
+
+            # Normalize each gallery entry into a usable URL
+            IMAGE_BUCKET = os.getenv('SUPABASE_ATTRACTION_BUCKET', 'attraction-images')
+            normalized = []
+            for g in gallery:
+                if not g:
+                    continue
+                gstr = str(g)
+                if gstr.startswith('http://') or gstr.startswith('https://'):
+                    normalized.append(gstr)
+                else:
+                    # treat as path in storage; build public URL
+                    path = gstr.lstrip('/')
+                    normalized.append(f"{SUPABASE_URL}/storage/v1/object/public/{IMAGE_BUCKET}/{path}")
+
+            hotel_data['gallery'] = normalized
+            # Ensure image_url is set for hero/background usage
+            if not hotel_data.get('image_url') and normalized:
+                hotel_data['image_url'] = normalized[0]
+        except Exception as e:
+            print(f"Error normalizing gallery for hotel '{hotel}': {e}")
+
+    # Normalize gallery for the hotel (works for DB records and fallback)
+    try:
+        raw_gallery = hotel_data.get('gallery') or hotel_data.get('gallery_urls') or hotel_data.get('image_gallery') or hotel_data.get('images') or hotel_data.get('image_url')
+        gallery = []
+        if isinstance(raw_gallery, str):
+            try:
+                parsed = json.loads(raw_gallery)
+                if isinstance(parsed, list):
+                    gallery = parsed
+                else:
+                    gallery = [parsed]
+            except Exception:
+                gallery = [i.strip() for i in raw_gallery.split(',') if i.strip()]
+        elif isinstance(raw_gallery, list):
+            gallery = raw_gallery
+        elif raw_gallery:
+            gallery = [raw_gallery]
+
+        if not gallery and hotel_data.get('image_url'):
+            gallery = [hotel_data.get('image_url')]
+
+        IMAGE_BUCKET = os.getenv('SUPABASE_ATTRACTION_BUCKET', 'attraction-images')
+        normalized = []
+        for g in gallery:
+            if not g:
+                continue
+            gstr = str(g)
+            if gstr.startswith('http://') or gstr.startswith('https://'):
+                normalized.append(gstr)
+            else:
+                path = gstr.lstrip('/')
+                normalized.append(f"{SUPABASE_URL}/storage/v1/object/public/{IMAGE_BUCKET}/{path}")
+
+        hotel_data['gallery'] = normalized
+        if not hotel_data.get('image_url') and normalized:
+            hotel_data['image_url'] = normalized[0]
+    except Exception as e:
+        print(f"Error normalizing hotel gallery: {e}")
+
     return render_template('plan/indiv-hotel.html', hotel=hotel_data, similar_hotels=similar_hotels)
 
 @app.route('/plan/eat')

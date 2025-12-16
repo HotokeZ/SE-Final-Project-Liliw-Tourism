@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-15T04:01:41.880440",
+  "timestamp": "2025-12-16T19:24:00.362319",
   "form_keys": [
     "name",
     "description",
@@ -16,7 +16,7 @@
     "longitude",
     "is_active"
   ],
-  "form_category_raw": "Resort",
+  "form_category_raw": "Inn",
   "hotel_column_exists_category": true,
   "update_data": {
     "name": "asdasddaw",
@@ -36,8 +36,18 @@
     "latitude": "14.167203",
     "longitude": "121.202545",
     "is_active": true,
-    "updated_at": "2025-12-15T04:01:41.855434",
-    "category": "Resort",
-    "gallery_urls": []
+    "updated_at": "2025-12-16T19:24:00.117406",
+    "category": "Inn",
+    "gallery_urls": [
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/4f1a355b-d718-4304-aa07-64cf645de356.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/6cea0bdc-206a-4e8a-b8f3-55474d5d7693.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/de379c0c-fd84-4bb7-8cb1-7d5bcbd9a468.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/e3a866ab-407e-4d0d-b982-e1b0f4f80d10.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/bdd6e58d-01e1-4f85-8324-d69593ec5463.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/4fa3346d-3778-407e-9d99-e7bee78e439a.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/9bf31f71-9360-4269-8c79-0575d8372a55.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/987a5ef7-b204-4a4a-8180-6b6f72504a97.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/33b0df07-e67b-453b-8661-e66a957a3825.png"
+    ]
   }
 }

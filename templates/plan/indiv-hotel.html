@@ -59,10 +59,6 @@
                         <i class="fas fa-concierge-bell"></i>
                         Amenities
                     </button>
-                    <button class="tab-btn" data-tab="rooms">
-                        <i class="fas fa-bed"></i>
-                        Rooms
-                    </button>
                     <button class="tab-btn" data-tab="gallery">
                         <i class="fas fa-images"></i>
                         Gallery
@@ -160,60 +156,37 @@
                     </div>
                 </div>
 
-                <div class="tab-content" id="rooms">
-                    <div class="section-card">
-                        <h2>Room Types</h2>
-                        <div class="rooms-grid">
-                            {% if hotel.rooms %}
-                                {% for room in hotel.rooms %}
-                                <div class="room-card">
-                                    <div class="room-image">
-                                        {% if room.image %}
-                                        <img src="{{ url_for('static', filename='uploads/' + room.image) }}" alt="{{ room.type }}">
-                                        {% endif %}
-                                        {% if room.price %}
-                                        <div class="room-price">₱{{ room.price }}/night</div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="room-info">
-                                        <h3>{{ room.type }}</h3>
-                                        {% if room.description %}<p>{{ room.description }}</p>{% endif %}
-                                        <div class="room-features">
-                                            {% if room.capacity %}<span><i class="fas fa-users"></i> {{ room.capacity }} Guests</span>{% endif %}
-                                            {% if room.bed_type %}<span><i class="fas fa-bed"></i> {{ room.bed_type }}</span>{% endif %}
-                                            {% if room.size %}<span><i class="fas fa-ruler-combined"></i> {{ room.size }} sqm</span>{% endif %}
-                                        </div>
-                                        {% if room.features %}
-                                        <ul class="room-amenities">
-                                            {% for feature in room.features %}
-                                            <li><i class="fas fa-check"></i>{{ feature }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <p>No rooms listed for this hotel.</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+                <!-- Rooms section removed (no room types in DB) -->
 
                 <div class="tab-content" id="gallery">
                     <div class="section-card">
                         <h2>Photo Gallery</h2>
-                        <div class="photo-gallery">
-                            {% if hotel.gallery %}
+                        {% if hotel.gallery and hotel.gallery|length > 0 %}
+                        <div class="hotel-carousel" id="hotelCarousel">
+                            <button class="carousel-prev" aria-label="Previous">&#8249;</button>
+                            <div class="carousel-stage">
+                                {% set first = hotel.gallery[0] %}
+                                {% if first.startswith('http') %}
+                                    <img id="carouselMain" src="{{ first }}" alt="{{ hotel.name }}">
+                                {% else %}
+                                    <img id="carouselMain" src="{{ url_for('static', filename='uploads/' + first) }}" alt="{{ hotel.name }}">
+                                {% endif %}
+                            </div>
+                            <button class="carousel-next" aria-label="Next">&#8250;</button>
+
+                            <div class="carousel-thumbs">
                                 {% for photo in hotel.gallery %}
-                                <div class="gallery-item">
-                                    <img src="{{ url_for('static', filename='uploads/' + photo) }}" alt="{{ hotel.name }} - Photo {{ loop.index }}">
-                                </div>
+                                    {% if photo.startswith('http') %}
+                                    <img class="thumb" src="{{ photo }}" data-src="{{ photo }}" alt="thumb-{{ loop.index }}">
+                                    {% else %}
+                                    <img class="thumb" src="{{ url_for('static', filename='uploads/' + photo) }}" data-src="{{ url_for('static', filename='uploads/' + photo) }}" alt="thumb-{{ loop.index }}">
+                                    {% endif %}
                                 {% endfor %}
-                            {% else %}
-                                <p>No photos available.</p>
-                            {% endif %}
+                            </div>
                         </div>
+                        {% else %}
+                            <p>No photos available.</p>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -363,6 +336,31 @@
                 });
             });
         });
+
+        // Simple carousel logic for hotel gallery
+        (function(){
+            const main = document.getElementById('carouselMain');
+            const thumbs = document.querySelectorAll('.carousel-thumbs .thumb');
+            const prev = document.querySelector('.carousel-prev');
+            const next = document.querySelector('.carousel-next');
+            if(!main || !thumbs.length) return;
+
+            let index = 0;
+            const setActive = (i) => {
+                const thumb = thumbs[i];
+                const src = thumb.getAttribute('data-src');
+                main.src = src;
+                thumbs.forEach(t=>t.classList.remove('active'));
+                thumb.classList.add('active');
+                index = i;
+            };
+
+            thumbs.forEach((t,i)=> t.addEventListener('click', ()=> setActive(i)));
+            if(prev) prev.addEventListener('click', ()=> setActive((index-1+thumbs.length)%thumbs.length));
+            if(next) next.addEventListener('click', ()=> setActive((index+1)%thumbs.length));
+            // mark first active
+            setActive(0);
+        })();
 
         // Booking fields were removed — guard date logic in case other pages reuse this script
         const checkinEl = document.getElementById('checkin');
