@@ -890,32 +890,119 @@ def eat():
 
 @app.route('/plan/eat/<restaurant>')
 def indiv_resto(restaurant):
-    # Sample restaurant data
-    resto_data = {
-        'name': restaurant.replace('-', ' ').title(),
-        'image': 'hero.JPG',
-        'cuisine': 'Filipino',
-        'price_range': '₱150 - ₱400 per person',
-        'address': 'Town Plaza, Liliw, Laguna',
-        'phone': '(049) 123-4567',
-        'hours': '10:00 AM - 9:00 PM Daily',
-        'description': 'Authentic Filipino cuisine in a cozy atmosphere',
-        'specialties': ['Adobo', 'Sinigang', 'Lechon Kawali', 'Kare-Kare'],
-        'menu_highlights': [
-            {'name': 'Adobo', 'price': '₱180', 'description': 'Classic chicken and pork adobo'},
-            {'name': 'Sinigang', 'price': '₱200', 'description': 'Sour tamarind soup with pork'},
-            {'name': 'Lechon Kawali', 'price': '₱250', 'description': 'Crispy pork belly'},
-        ],
-        'features': ['Dine-in', 'Take-out', 'Free WiFi', 'Air-conditioned'],
-        'map_embed': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3872.7!2d121.4!3d14.1'
-    }
+    resto_data = None
+    similar_restaurants = []
 
-    similar_restos = [
-        {'name': 'Other Restaurant', 'slug': 'other-restaurant', 'image': 'hero.JPG', 'cuisine': 'Filipino', 'price_range': '₱200-500'},
-    ]
+    # Try to load restaurant from Supabase (by slug) and normalize image/menu gallery fields
+    try:
+        if supabase:
+            resp = supabase.table('restaurants').select('*').eq('slug', restaurant).single().execute()
+            if resp and resp.data:
+                r = resp.data
+                resto_data = r
 
-    # Render using `restaurant` variable name expected by the template
-    return render_template('plan/indiv-resto.html', restaurant=resto_data, similar_restos=similar_restos)
+                # helper to coerce many possible representations into a list
+                def _coerce_list(raw):
+                    out = []
+                    if raw is None:
+                        return out
+                    if isinstance(raw, str):
+                        try:
+                            parsed = json.loads(raw)
+                            if isinstance(parsed, list):
+                                out = parsed
+                            else:
+                                out = [parsed]
+                        except Exception:
+                            out = [i.strip() for i in raw.split(',') if i.strip()]
+                    elif isinstance(raw, list):
+                        out = raw
+                    else:
+                        out = [raw]
+                    return out
+
+                # Normalize primary image/gallery
+                raw_gallery = r.get('image_gallery') or r.get('gallery') or r.get('images') or r.get('image_url') or r.get('image')
+                gallery = _coerce_list(raw_gallery)
+                if not gallery and r.get('image_url'):
+                    gallery = [r.get('image_url')]
+
+                IMAGE_BUCKET = os.getenv('SUPABASE_RESTAURANT_BUCKET', os.getenv('SUPABASE_PRODUCT_BUCKET', 'restaurant-images'))
+                normalized = []
+                for g in gallery:
+                    if not g:
+                        continue
+                    gstr = str(g)
+                    if gstr.startswith('http://') or gstr.startswith('https://'):
+                        normalized.append(gstr)
+                    else:
+                        path = gstr.lstrip('/')
+                        normalized.append(f"{SUPABASE_URL}/storage/v1/object/public/{IMAGE_BUCKET}/{path}")
+
+                resto_data['image_gallery'] = normalized
+                if not resto_data.get('image_url') and normalized:
+                    resto_data['image_url'] = normalized[0]
+
+                # Normalize menu images: prefer explicit menu_gallery/menu_images/menu_image_url
+                raw_menu = r.get('menu_gallery') or r.get('menu_images') or r.get('menu_image_url') or r.get('menu') or r.get('menu_highlights')
+                menu_candidates = _coerce_list(raw_menu)
+
+                # If candidates are objects (dicts), try to extract image-like keys
+                menu_flat = []
+                for m in menu_candidates:
+                    if isinstance(m, dict):
+                        extracted = m.get('image') or m.get('image_url') or m.get('url') or m.get('menu_image') or None
+                        if extracted:
+                            menu_flat.append(extracted)
+                    else:
+                        menu_flat.append(m)
+
+                normalized_menu = []
+                for mg in menu_flat:
+                    if not mg:
+                        continue
+                    mstr = str(mg)
+                    if mstr.startswith('http://') or mstr.startswith('https://'):
+                        normalized_menu.append(mstr)
+                    else:
+                        path = mstr.lstrip('/')
+                        normalized_menu.append(f"{SUPABASE_URL}/storage/v1/object/public/{IMAGE_BUCKET}/{path}")
+
+                resto_data['menu_gallery'] = normalized_menu
+                # Do not auto-convert `menu_highlights` into text menu items anymore; preserve `menu_items` only if present
+                if r.get('menu_items'):
+                    resto_data['menu_items'] = r.get('menu_items')
+
+                # Fetch a few similar restaurants for the sidebar
+                try:
+                    resp2 = supabase.table('restaurants').select('name,slug,image_url,price_range,cuisine_type').neq('slug', restaurant).limit(4).execute()
+                    similar_restaurants = resp2.data or []
+                except Exception:
+                    similar_restaurants = []
+    except Exception as e:
+        print(f"Error fetching restaurant '{restaurant}': {e}")
+
+    # Fallback sample restaurant if DB not available or not found
+    if not resto_data:
+        resto_data = {
+            'name': restaurant.replace('-', ' ').title(),
+            'image': 'hero.JPG',
+            'image_url': None,
+            'cuisine': 'Filipino',
+            'cuisine_type': 'Filipino',
+            'price_range': '₱150 - ₱400 per person',
+            'address': 'Town Plaza, Liliw, Laguna',
+            'phone': '(049) 123-4567',
+            'hours': '10:00 AM - 9:00 PM Daily',
+            'description': 'Authentic Filipino cuisine in a cozy atmosphere',
+            'features': ['Dine-in', 'Take-out', 'Free WiFi', 'Air-conditioned'],
+            'map_embed': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3872.7!2d121.4!3d14.1',
+            'image_gallery': [],
+            'menu_gallery': [],
+            'menu_items': {}
+        }
+
+    return render_template('plan/indiv-resto.html', restaurant=resto_data, similar_restaurants=similar_restaurants)
 
 
 @app.route('/submit-booking', methods=['POST'])
