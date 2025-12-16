@@ -13,8 +13,8 @@
 <body>
     {% include 'header.html' %}
 
-    <!-- Hero Section -->
-    <section class="hero-section" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{{ url_for('static', filename='uploads/' + restaurant.image) if restaurant.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}');">
+    <!-- Hero Section (featured image) -->
+    <section class="hero-section" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{{ restaurant.image_url or restaurant.menu_image_url or (url_for('static', filename='uploads/' + restaurant.image) if restaurant.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG')) }}');">
         <div class="hero-content">
             <div class="breadcrumb">
                 <a href="{{ url_for('index') }}">Home</a>
@@ -27,415 +27,330 @@
             </div>
             <h1>{{ restaurant.name }}</h1>
             <div class="hero-meta">
+                {% if restaurant.cuisine_type %}
                 <div class="cuisine-tag">
                     <i class="fas fa-utensils"></i>
-                    <span>{{ restaurant.cuisine_type or 'Filipino Cuisine' }}</span>
+                    <span>{{ restaurant.cuisine_type }}</span>
                 </div>
+                {% endif %}
+                {% if restaurant.address %}
                 <div class="location">
                     <i class="fas fa-map-marker-alt"></i>
                     <span>{{ restaurant.address }}</span>
                 </div>
+                {% endif %}
             </div>
         </div>
     </section>
 
-    <!-- Main Content -->
     <div class="container establishment-detail">
         <div class="content-wrapper">
-            <!-- Main Content Area -->
             <main class="main-content">
-                <!-- Navigation Tabs -->
                 <div class="detail-tabs">
-                    <button class="tab-btn active" data-tab="overview">
-                        <i class="fas fa-info-circle"></i>
-                        Overview
-                    </button>
-                    <button class="tab-btn" data-tab="menu">
-                        <i class="fas fa-book-open"></i>
-                        Menu
-                    </button>
-                    <button class="tab-btn" data-tab="specialties">
-                        <i class="fas fa-star"></i>
-                        Specialties
-                    </button>
-                    <button class="tab-btn" data-tab="gallery">
-                        <i class="fas fa-images"></i>
-                        Gallery
-                    </button>
-                    {# Reviews tab removed - feature not available #}
+                    <button class="tab-btn active" data-tab="overview"><i class="fas fa-info-circle"></i> Overview</button>
+                    {% if (restaurant.image_gallery or restaurant.gallery) and (restaurant.image_gallery|length > 0 or restaurant.gallery|length > 0) %}
+                        <button class="tab-btn" data-tab="gallery"><i class="fas fa-images"></i> Gallery</button>
+                    {% endif %}
+                    <button class="tab-btn" data-tab="location"><i class="fas fa-map"></i> Location</button>
+                    {% if restaurant.menu_items or restaurant.menu_gallery or restaurant.menu_images or restaurant.menu_image_url %}
+                        <button class="tab-btn" data-tab="menu"><i class="fas fa-book-open"></i> Menu</button>
+                    {% endif %}
                 </div>
 
-                <!-- Tab Content -->
                 <div class="tab-content active" id="overview">
                     <div class="section-card">
                         <h2>About {{ restaurant.name }}</h2>
+                        {% if restaurant.description %}
                         <p class="description">{{ restaurant.description }}</p>
+                        {% endif %}
 
+                        {% if restaurant.cuisine_types %}
                         <div class="cuisine-info">
                             <h3>Cuisine Type</h3>
                             <div class="cuisine-tags">
-                                {% if restaurant.cuisine_types %}
-                                    {% for cuisine in restaurant.cuisine_types %}
-                                    <span class="cuisine-badge">{{ cuisine }}</span>
-                                    {% endfor %}
-                                {% else %}
-                                    <span class="cuisine-badge">Filipino</span>
-                                    <span class="cuisine-badge">Local Delicacies</span>
-                                    <span class="cuisine-badge">Traditional</span>
-                                {% endif %}
+                                {% for cuisine in restaurant.cuisine_types %}
+                                <span class="cuisine-badge">{{ cuisine }}</span>
+                                {% endfor %}
                             </div>
                         </div>
+                        {% endif %}
 
+                        {% if restaurant.features %}
                         <div class="restaurant-features">
-                            <h3>Restaurant Features</h3>
+                            <h3>Features</h3>
                             <ul class="highlights-list">
-                                {% if restaurant.features %}
-                                    {% for feature in restaurant.features %}
-                                    <li><i class="fas fa-check-circle"></i>{{ feature }}</li>
-                                    {% endfor %}
-                                {% else %}
-                                    <li><i class="fas fa-check-circle"></i>Authentic local cuisine</li>
-                                    <li><i class="fas fa-check-circle"></i>Family-friendly atmosphere</li>
-                                    <li><i class="fas fa-check-circle"></i>Fresh ingredients daily</li>
-                                    <li><i class="fas fa-check-circle"></i>Comfortable dining area</li>
-                                    <li><i class="fas fa-check-circle"></i>Takeout available</li>
-                                {% endif %}
+                                {% for feature in restaurant.features %}
+                                <li><i class="fas fa-check-circle"></i> {{ feature }}</li>
+                                {% endfor %}
                             </ul>
                         </div>
+                        {% endif %}
 
+                        {% set has_operating = restaurant.hours or restaurant.price_range or restaurant.capacity or restaurant.parking %}
+                        {% if has_operating %}
                         <div class="operating-info">
                             <h3>Operating Hours & Pricing</h3>
                             <div class="info-grid">
+                                {% if restaurant.hours %}
                                 <div class="info-item">
                                     <i class="fas fa-clock"></i>
                                     <div>
                                         <strong>Operating Hours:</strong>
-                                        <p>{{ restaurant.hours or 'Daily: 8:00 AM - 9:00 PM' }}</p>
+                                        <p>{{ restaurant.hours }}</p>
                                     </div>
                                 </div>
+                                {% endif %}
+                                {% if restaurant.price_range %}
                                 <div class="info-item">
                                     <i class="fas fa-wallet"></i>
                                     <div>
                                         <strong>Price Range:</strong>
-                                        <p>{{ restaurant.price_range or '₱100 - ₱300 per person' }}</p>
+                                        <p>{{ restaurant.price_range }}</p>
                                     </div>
                                 </div>
+                                {% endif %}
+                                {% if restaurant.capacity %}
                                 <div class="info-item">
                                     <i class="fas fa-users"></i>
                                     <div>
                                         <strong>Capacity:</strong>
-                                        <p>{{ restaurant.capacity or '50+ seats' }}</p>
+                                        <p>{{ restaurant.capacity }}</p>
                                     </div>
                                 </div>
+                                {% endif %}
+                                {% if restaurant.parking %}
                                 <div class="info-item">
                                     <i class="fas fa-parking"></i>
                                     <div>
                                         <strong>Parking:</strong>
-                                        <p>{{ restaurant.parking or 'Available nearby' }}</p>
+                                        <p>{{ restaurant.parking }}</p>
                                     </div>
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="tab-content" id="menu">
-                    <div class="section-card">
-                        <h2>Menu Highlights</h2>
-                        <div class="menu-categories">
-                            {% if restaurant.menu_items %}
-                                {% for category, items in restaurant.menu_items.items() %}
-                                <div class="menu-category">
-                                    <h3>{{ category }}</h3>
-                                    <div class="menu-items">
-                                        {% for item in items %}
-                                        <div class="menu-item">
-                                            <div class="item-header">
-                                                <h4>{{ item.name }}</h4>
-                                                <span class="price">₱{{ item.price }}</span>
-                                            </div>
-                                            {% if item.description %}
-                                            <p class="item-description">{{ item.description }}</p>
-                                            {% endif %}
-                                            {% if item.popular %}
-                                            <span class="popular-badge"><i class="fas fa-fire"></i> Popular</span>
-                                            {% endif %}
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="menu-category">
-                                    <h3>Main Dishes</h3>
-                                    <div class="menu-items">
-                                        <div class="menu-item">
-                                            <div class="item-header">
-                                                <h4>Adobo</h4>
-                                                <span class="price">₱150</span>
-                                            </div>
-                                            <p class="item-description">Classic Filipino chicken and pork adobo</p>
-                                            <span class="popular-badge"><i class="fas fa-fire"></i> Popular</span>
-                                        </div>
-                                        <div class="menu-item">
-                                            <div class="item-header">
-                                                <h4>Sinigang</h4>
-                                                <span class="price">₱180</span>
-                                            </div>
-                                            <p class="item-description">Sour soup with pork and vegetables</p>
-                                        </div>
-                                        <div class="menu-item">
-                                            <div class="item-header">
-                                                <h4>Kare-Kare</h4>
-                                                <span class="price">₱200</span>
-                                            </div>
-                                            <p class="item-description">Oxtail stew in peanut sauce</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="menu-category">
-                                    <h3>Local Specialties</h3>
-                                    <div class="menu-items">
-                                        <div class="menu-item">
-                                            <div class="item-header">
-                                                <h4>Pancit Habhab</h4>
-                                                <span class="price">₱50</span>
-                                            </div>
-                                            <p class="item-description">Traditional Lucban stir-fried noodles</p>
-                                            <span class="popular-badge"><i class="fas fa-fire"></i> Popular</span>
-                                        </div>
-                                        <div class="menu-item">
-                                            <div class="item-header">
-                                                <h4>Uraro Cookies</h4>
-                                                <span class="price">₱100</span>
-                                            </div>
-                                            <p class="item-description">Famous arrowroot cookies</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tab-content" id="specialties">
-                    <div class="section-card">
-                        <h2>House Specialties</h2>
-                        <div class="specialties-grid">
-                            {% if restaurant.specialties %}
-                                {% for specialty in restaurant.specialties %}
-                                <div class="specialty-card">
-                                    <div class="specialty-image">
-                                        <img src="{{ url_for('static', filename='uploads/' + specialty.image) if specialty.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ specialty.name }}">
-                                        {% if specialty.best_seller %}
-                                        <span class="best-seller-badge">Best Seller</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="specialty-info">
-                                        <h3>{{ specialty.name }}</h3>
-                                        <p>{{ specialty.description }}</p>
-                                        <div class="specialty-price">₱{{ specialty.price }}</div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="specialty-card">
-                                    <div class="specialty-image">
-                                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="House Special">
-                                        <span class="best-seller-badge">Best Seller</span>
-                                    </div>
-                                    <div class="specialty-info">
-                                        <h3>House Special Platter</h3>
-                                        <p>A combination of our best dishes perfect for sharing with family and friends.</p>
-                                        <div class="specialty-price">₱500</div>
-                                    </div>
-                                </div>
-                                <div class="specialty-card">
-                                    <div class="specialty-image">
-                                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Grilled Seafood">
-                                    </div>
-                                    <div class="specialty-info">
-                                        <h3>Grilled Seafood Platter</h3>
-                                        <p>Fresh seafood grilled to perfection with special house marinade.</p>
-                                        <div class="specialty-price">₱450</div>
-                                    </div>
-                                </div>
-                                <div class="specialty-card">
-                                    <div class="specialty-image">
-                                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="Traditional Feast">
-                                    </div>
-                                    <div class="specialty-info">
-                                        <h3>Traditional Filipino Feast</h3>
-                                        <p>Experience authentic Filipino flavors with our traditional dishes.</p>
-                                        <div class="specialty-price">₱350</div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tab-content" id="gallery">
-                    <div class="section-card">
-                        <h2>Photo Gallery</h2>
-                        <div class="photo-gallery">
-                            {% if restaurant.gallery %}
-                                {% for photo in restaurant.gallery %}
-                                <div class="gallery-item">
-                                    <img src="{{ url_for('static', filename='uploads/' + photo) }}" alt="{{ restaurant.name }} - Photo {{ loop.index }}">
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="gallery-item">
-                                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ restaurant.name }} - Interior">
-                                </div>
-                                <div class="gallery-item">
-                                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ restaurant.name }} - Food">
-                                </div>
-                                <div class="gallery-item">
-                                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ restaurant.name }} - Dining Area">
-                                </div>
-                                <div class="gallery-item">
-                                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ restaurant.name }} - Dishes">
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                {# Reviews section removed — no review system in use #}
-
-            </main>
-
-            <!-- Sidebar -->
-            <aside class="sidebar">
-                <!-- Quick Info Card -->
-                <div class="sidebar-card quick-info">
-                    <div class="price-info">
-                        <span class="label">Price Range</span>
-                        <div class="price">{{ restaurant.price_range or '₱₱' }}</div>
-                        <span class="per-night">{{ restaurant.price_range or '₱100 - ₱300/person' }}</span>
-                    </div>
-                    <div class="cuisine-info">
-                        <strong>Cuisine Type:</strong>
-                        <p>{{ restaurant.cuisine_type or 'Filipino Cuisine' }}</p>
-                    </div>
-                    <div class="hours-info">
-                        <strong><i class="fas fa-clock"></i> Hours:</strong>
-                        <p>{{ restaurant.hours or 'Daily: 8:00 AM - 9:00 PM' }}</p>
-                    </div>
-                    <!-- Rating removed -->
-                    <div class="quick-contact">
-                        <a href="tel:{{ restaurant.phone }}" class="contact-btn">
-                            <i class="fas fa-phone"></i>
-                            Call Now
-                        </a>
-                        {% if restaurant.email %}
-                        <a href="mailto:{{ restaurant.email }}" class="contact-btn">
-                            <i class="fas fa-envelope"></i>
-                            Email
-                        </a>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Reservation Form -->
+                {# menu tab moved to bottom to keep gallery near the top #}
+
+                {% set resto_gallery = restaurant.image_gallery or restaurant.gallery %}
+                {% if resto_gallery and resto_gallery|length > 0 %}
+                <div class="tab-content" id="gallery">
+                    <div class="section-card">
+                        <h2>Photo Gallery</h2>
+                        <div class="hotel-carousel" id="restoCarousel">
+                            <button class="carousel-prev" aria-label="Previous">&#8249;</button>
+                            <div class="carousel-stage">
+                                {% set first = resto_gallery[0] %}
+                                {% if first.startswith('http') %}
+                                    <img id="restoCarouselMain" src="{{ first }}" alt="{{ restaurant.name }}">
+                                {% else %}
+                                    <img id="restoCarouselMain" src="{{ url_for('static', filename='uploads/' + first) }}" alt="{{ restaurant.name }}">
+                                {% endif %}
+                            </div>
+                            <button class="carousel-next" aria-label="Next">&#8250;</button>
+                            <div class="carousel-thumbs">
+                                {% for photo in resto_gallery %}
+                                    {% if photo.startswith('http') %}
+                                    <img class="thumb" src="{{ photo }}" data-src="{{ photo }}" alt="thumb-{{ loop.index }}">
+                                    {% else %}
+                                    <img class="thumb" src="{{ url_for('static', filename='uploads/' + photo) }}" data-src="{{ url_for('static', filename='uploads/' + photo) }}" alt="thumb-{{ loop.index }}">
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="tab-content" id="location">
+                    <div class="section-card">
+                        <h2>Location & Contact</h2>
+                        <div class="location-section">
+                            <div class="contact-details">
+                                {% if restaurant.address %}
+                                <div class="contact-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <div>
+                                        <strong>Address:</strong>
+                                        <p>{{ restaurant.address }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if restaurant.phone %}
+                                <div class="contact-item">
+                                    <i class="fas fa-phone"></i>
+                                    <div>
+                                        <strong>Phone:</strong>
+                                        <p>{{ restaurant.phone }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if restaurant.email %}
+                                <div class="contact-item">
+                                    <i class="fas fa-envelope"></i>
+                                    <div>
+                                        <strong>Email:</strong>
+                                        <p>{{ restaurant.email }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if restaurant.websites %}
+                                    {% for w in restaurant.websites %}
+                                    <div class="contact-item">
+                                        <i class="fas fa-globe"></i>
+                                        <div>
+                                            <strong>Website:</strong>
+                                            <p><a href="{{ w }}" target="_blank">{{ w }}</a></p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            {% if restaurant.map_embed %}
+                            <div class="map-container">
+                                {{ restaurant.map_embed | safe }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% if restaurant.menu_items or restaurant.menu_gallery or restaurant.menu_images or restaurant.menu_image_url %}
+                <div class="tab-content" id="menu">
+                    <div class="section-card">
+                        <h2>Menu</h2>
+
+                        {# Menu image gallery (menus uploaded as images) #}
+                        {% set menu_images = restaurant.menu_gallery or restaurant.menu_images or (restaurant.menu_image_url and [restaurant.menu_image_url]) %}
+                        {% if menu_images and menu_images|length > 0 %}
+                        <div class="hotel-carousel" id="menuCarousel">
+                            <button class="carousel-prev" aria-label="Previous">&#8249;</button>
+                            <div class="carousel-stage">
+                                {% set mfirst = menu_images[0] %}
+                                {% if mfirst.startswith('http') %}
+                                    <img id="menuCarouselMain" src="{{ mfirst }}" alt="{{ restaurant.name }} menu">
+                                {% else %}
+                                    <img id="menuCarouselMain" src="{{ url_for('static', filename='uploads/' + mfirst) }}" alt="{{ restaurant.name }} menu">
+                                {% endif %}
+                            </div>
+                            <button class="carousel-next" aria-label="Next">&#8250;</button>
+                            <div class="carousel-thumbs">
+                                {% for photo in menu_images %}
+                                    {% if photo.startswith('http') %}
+                                    <img class="menu-thumb thumb" src="{{ photo }}" data-src="{{ photo }}" alt="menu-{{ loop.index }}">
+                                    {% else %}
+                                    <img class="menu-thumb thumb" src="{{ url_for('static', filename='uploads/' + photo) }}" data-src="{{ url_for('static', filename='uploads/' + photo) }}" alt="menu-{{ loop.index }}">
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {# Menu items (text) #}
+                        {% if restaurant.menu_items %}
+                        <div class="menu-categories">
+                            {% for category, items in restaurant.menu_items.items() %}
+                            <div class="menu-category">
+                                <h3>{{ category }}</h3>
+                                <div class="menu-items">
+                                    {% for item in items %}
+                                    <div class="menu-item">
+                                        <div class="item-header">
+                                            <h4>{{ item.name }}</h4>
+                                            {% if item.price %}<span class="price">₱{{ item.price }}</span>{% endif %}
+                                        </div>
+                                        {% if item.description %}
+                                        <p class="item-description">{{ item.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {# Optional upload form (visible if backend sets `allow_menu_upload`) #}
+                        {% if allow_menu_upload %}
+                        <form action="{{ url_for('upload_menu', id=restaurant.id) }}" method="POST" enctype="multipart/form-data" class="menu-upload-form">
+                            <label for="menu_images">Upload menu images</label>
+                            <input type="file" id="menu_images" name="menu_images" accept="image/*" multiple>
+                            <button type="submit" class="btn-primary">Upload</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </main>
+
+            <aside class="sidebar">
+                <div class="sidebar-card quick-info">
+                    {% if restaurant.price_range %}
+                    <div class="price-info">
+                        <span class="label">Price Range</span>
+                        <div class="price">{{ restaurant.price_range }}</div>
+                    </div>
+                    {% endif %}
+                    {% if restaurant.cuisine_type %}
+                    <div class="cuisine-info">
+                        <strong>Cuisine Type:</strong>
+                        <p>{{ restaurant.cuisine_type }}</p>
+                    </div>
+                    {% endif %}
+                    {% if restaurant.hours %}
+                    <div class="hours-info">
+                        <strong><i class="fas fa-clock"></i> Hours:</strong>
+                        <p>{{ restaurant.hours }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="quick-contact">
+                        {% if restaurant.phone %}
+                        <a href="tel:{{ restaurant.phone }}" class="contact-btn"><i class="fas fa-phone"></i> Call Now</a>
+                        {% endif %}
+                        {% if restaurant.email %}
+                        <a href="mailto:{{ restaurant.email }}" class="contact-btn"><i class="fas fa-envelope"></i> Email</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if restaurant.allows_reservations %}
                 <div class="sidebar-card booking-form">
                     <h3>Make a Reservation</h3>
-                    <form action="{{ url_for('submit_reservation') }}" method="POST">
+                    <form action="{{ url_for('submit_booking') }}" method="POST">
                         <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
-                        <div class="form-group">
-                            <label for="date">
-                                <i class="fas fa-calendar"></i>
-                                Date
-                            </label>
-                            <input type="date" id="date" name="date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="time">
-                                <i class="fas fa-clock"></i>
-                                Time
-                            </label>
+                        <div class="form-group"><label for="date"><i class="fas fa-calendar"></i> Date</label><input type="date" id="date" name="date" required></div>
+                        <div class="form-group"><label for="time"><i class="fas fa-clock"></i> Time</label>
                             <select id="time" name="time" required>
                                 <option value="">Select time</option>
                                 <option value="08:00">08:00 AM</option>
-                                <option value="09:00">09:00 AM</option>
-                                <option value="10:00">10:00 AM</option>
-                                <option value="11:00">11:00 AM</option>
                                 <option value="12:00">12:00 PM</option>
-                                <option value="13:00">01:00 PM</option>
-                                <option value="14:00">02:00 PM</option>
-                                <option value="15:00">03:00 PM</option>
-                                <option value="16:00">04:00 PM</option>
-                                <option value="17:00">05:00 PM</option>
                                 <option value="18:00">06:00 PM</option>
-                                <option value="19:00">07:00 PM</option>
-                                <option value="20:00">08:00 PM</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label for="party_size">
-                                <i class="fas fa-users"></i>
-                                Party Size
-                            </label>
+                        <div class="form-group"><label for="party_size"><i class="fas fa-users"></i> Party Size</label>
                             <select id="party_size" name="party_size" required>
-                                <option value="">Select party size</option>
-                                <option value="1">1 Person</option>
-                                <option value="2">2 People</option>
-                                <option value="3">3 People</option>
-                                <option value="4">4 People</option>
-                                <option value="5">5 People</option>
-                                <option value="6">6 People</option>
-                                <option value="7+">7+ People</option>
+                                <option value="">Select</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="4">4</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label for="name">
-                                <i class="fas fa-user"></i>
-                                Full Name
-                            </label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="contact">
-                                <i class="fas fa-phone"></i>
-                                Contact Number
-                            </label>
-                            <input type="tel" id="contact" name="contact" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">
-                                <i class="fas fa-envelope"></i>
-                                Email Address
-                            </label>
-                            <input type="email" id="email" name="email">
-                        </div>
-                        <div class="form-group">
-                            <label for="special_requests">
-                                <i class="fas fa-comment"></i>
-                                Special Requests
-                            </label>
-                            <textarea id="special_requests" name="special_requests" rows="3" placeholder="Any dietary restrictions or special occasions?"></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary">
-                            <i class="fas fa-paper-plane"></i>
-                            Submit Reservation
-                        </button>
+                        <div class="form-group"><label for="name"><i class="fas fa-user"></i> Full Name</label><input type="text" id="name" name="name" required></div>
+                        <div class="form-group"><label for="contact"><i class="fas fa-phone"></i> Contact</label><input type="tel" id="contact" name="contact" required></div>
+                        <button type="submit" class="btn-primary"><i class="fas fa-paper-plane"></i> Submit Reservation</button>
                     </form>
                 </div>
+                {% endif %}
 
-                <!-- Similar Restaurants -->
                 <div class="sidebar-card similar-places">
                     <h3>Similar Restaurants</h3>
                     {% if similar_restaurants %}
                         {% for similar in similar_restaurants %}
-                        <a href="{{ url_for('indiv_resto', id=similar.id) }}" class="similar-item">
-                            <img src="{{ url_for('static', filename='uploads/' + similar.image) if similar.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ similar.name }}">
-                            <div class="similar-info">
-                                <h4>{{ similar.name }}</h4>
-                                <div class="similar-rating"></div>
-                                <div class="similar-cuisine">{{ similar.cuisine_type }}</div>
-                            </div>
+                        <a href="{{ url_for('indiv_resto', restaurant=similar.slug if similar.get('slug') else (similar.id if similar.get('id') is not none else '') ) }}" class="similar-item">
+                            <img src="{{ similar.image_url or (url_for('static', filename='uploads/' + similar.image) if similar.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG')) }}" alt="{{ similar.name }}">
+                            <div class="similar-info"><h4>{{ similar.name }}</h4><div class="similar-cuisine">{{ similar.cuisine_type }}</div></div>
                         </a>
                         {% endfor %}
                     {% else %}
@@ -449,43 +364,62 @@
     {% include 'footer.html' %}
 
     <script>
-        // Tab functionality
+        // Tabs
         document.querySelectorAll('.tab-btn').forEach(button => {
             button.addEventListener('click', () => {
                 const tabId = button.getAttribute('data-tab');
-
-                // Remove active class from all tabs and content
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-                // Add active class to clicked tab and corresponding content
                 button.classList.add('active');
-                document.getElementById(tabId).classList.add('active');
+                const el = document.getElementById(tabId);
+                if (el) el.classList.add('active');
             });
         });
 
-        // Gallery lightbox
-        document.querySelectorAll('.gallery-item img').forEach(img => {
-            img.addEventListener('click', () => {
+        // Lightbox for gallery thumbs
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.matches('.gallery-item img')) {
+                const img = e.target;
                 const lightbox = document.createElement('div');
                 lightbox.className = 'lightbox';
-                lightbox.innerHTML = `
-                    <span class="close-lightbox">&times;</span>
-                    <img src="${img.src}" alt="${img.alt}">
-                `;
+                lightbox.innerHTML = `<span class="close-lightbox">&times;</span><img src="${img.src}" alt="${img.alt}">`;
                 document.body.appendChild(lightbox);
-
-                lightbox.addEventListener('click', (e) => {
-                    if (e.target.className === 'lightbox' || e.target.className === 'close-lightbox') {
-                        lightbox.remove();
-                    }
-                });
-            });
+                lightbox.addEventListener('click', (ev) => { if (ev.target.className === 'lightbox' || ev.target.className === 'close-lightbox') lightbox.remove(); });
+            }
         });
 
-        // Set minimum date for reservation
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').setAttribute('min', today);
+        // Resto carousel init
+        (function(){
+            const main = document.getElementById('restoCarouselMain');
+            const thumbs = document.querySelectorAll('#restoCarousel .carousel-thumbs .thumb');
+            const prev = document.querySelector('#restoCarousel .carousel-prev');
+            const next = document.querySelector('#restoCarousel .carousel-next');
+            if(!main || thumbs.length === 0) return;
+            let index = 0;
+            const setActive = (i) => { const t = thumbs[i]; main.src = t.getAttribute('data-src'); thumbs.forEach(x=>x.classList.remove('active')); t.classList.add('active'); index = i; };
+            thumbs.forEach((t,i)=> t.addEventListener('click', ()=> setActive(i)));
+            if(prev) prev.addEventListener('click', ()=> setActive((index-1+thumbs.length)%thumbs.length));
+            if(next) next.addEventListener('click', ()=> setActive((index+1)%thumbs.length));
+            setActive(0);
+        })();
+
+        // Menu carousel init (if menu images provided)
+        (function(){
+            const mMain = document.getElementById('menuCarouselMain');
+            const mThumbs = document.querySelectorAll('#menuCarousel .carousel-thumbs .menu-thumb');
+            const mPrev = document.querySelector('#menuCarousel .carousel-prev');
+            const mNext = document.querySelector('#menuCarousel .carousel-next');
+            if(!mMain || mThumbs.length === 0) return;
+            let mIndex = 0;
+            const setMActive = (i) => { const t = mThumbs[i]; mMain.src = t.getAttribute('data-src'); mThumbs.forEach(x=>x.classList.remove('active')); t.classList.add('active'); mIndex = i; };
+            mThumbs.forEach((t,i)=> t.addEventListener('click', ()=> setMActive(i)));
+            if(mPrev) mPrev.addEventListener('click', ()=> setMActive((mIndex-1+mThumbs.length)%mThumbs.length));
+            if(mNext) mNext.addEventListener('click', ()=> setMActive((mIndex+1)%mThumbs.length));
+            setMActive(0);
+        })();
+
+        // Reservation date guard
+        const dateEl = document.getElementById('date'); if (dateEl) dateEl.setAttribute('min', new Date().toISOString().split('T')[0]);
     </script>
     {% include 'scripts-includes.html' %}
 </body>
