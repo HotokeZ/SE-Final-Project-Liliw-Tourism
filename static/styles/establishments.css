@@ -209,11 +209,13 @@
     padding: 0 2rem 4rem;
 }
 
-.establishments-grid {
+ .establishments-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 2rem;
+    /* allow cards to shrink and wrap naturally; use auto-fit so columns collapse when space is limited */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
     margin-top: 2rem;
+    align-items: start;
 }
 
 .establishment-card {
@@ -225,8 +227,9 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    min-height: 550px;
-    height: 100%;
+    /* Prevent grid from forcing equal-height cards; let content determine height */
+    min-height: 360px;
+    height: auto;
 }
 
 .establishment-card:hover {

@@ -42,7 +42,6 @@
                             <th>Name</th>
                             <th>Cuisine</th>
                             <th>Price Range</th>
-                            <th>Rating</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -52,24 +51,84 @@
                             {% for resto in restaurants %}
                             <tr>
                                 <td>
-                                    {% if resto.image_url %}
-                                    <img src="{{ resto.image_url }}" alt="{{ resto.name }}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                    {% if resto.image_gallery and resto.image_gallery|length > 1 %}
+                                        <div class="carousel-horizontal-thumb">
+                                            <button class="carousel-horiz-control prev" onclick="carouselHorizScroll(this, -1)">&#10094;</button>
+                                            <div class="carousel-horiz-inner">
+                                                {% for url in resto.image_gallery %}
+                                                <img src="{{ url }}" alt="{{ resto.name }}" class="carousel-horiz-img">
+                                                {% endfor %}
+                                            </div>
+                                            <button class="carousel-horiz-control next" onclick="carouselHorizScroll(this, 1)">&#10095;</button>
+                                        </div>
+                                    {% elif resto.image_gallery %}
+                                        <img src="{{ resto.image_gallery[0] }}" alt="{{ resto.name }}" class="carousel-horiz-img">
+                                    {% elif resto.image_url %}
+                                        <img src="{{ resto.image_url }}" alt="{{ resto.name }}" class="carousel-horiz-img">
                                     {% else %}
-                                    <div style="width: 60px; height: 40px; background: #e0e0e0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-utensils" style="color: #999;"></i>
-                                    </div>
+                                        <div style="width: 60px; height: 40px; background: #e0e0e0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-utensils" style="color: #999;"></i>
+                                        </div>
                                     {% endif %}
+                                <style>
+                                .carousel-horizontal-thumb {
+                                    display: flex;
+                                    align-items: center;
+                                    width: 143px; /* ~110 * 1.3 */
+                                    min-width: 143px;
+                                    max-width: 143px;
+                                    height: 52px;
+                                    overflow: hidden;
+                                    border-radius: 4px;
+                                    background: #f8f8f8;
+                                    position: relative;
+                                }
+                                .carousel-horiz-inner {
+                                    display: flex;
+                                    gap: 6px;
+                                    overflow-x: auto;
+                                    scroll-behavior: smooth;
+                                    width: 104px; /* ~80 * 1.3 */
+                                    height: 52px;
+                                }
+                                .carousel-horiz-img {
+                                    width: 78px; /* ~60 * 1.3 */
+                                    height: 52px;
+                                    object-fit: cover;
+                                    border-radius: 4px;
+                                    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+                                    flex-shrink: 0;
+                                }
+                                .carousel-horiz-control {
+                                    background: rgba(0,0,0,0.4);
+                                    color: #fff;
+                                    border: none;
+                                    font-size: 14px;
+                                    padding: 0 4px;
+                                    border-radius: 2px;
+                                    cursor: pointer;
+                                    z-index: 2;
+                                    height: 22px;
+                                    width: 18px;
+                                    line-height: 18px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                }
+                                .carousel-horiz-control.prev { margin-right: 2px; }
+                                .carousel-horiz-control.next { margin-left: 2px; }
+                                </style>
+                                <script>
+                                function carouselHorizScroll(btn, dir) {
+                                    var inner = btn.parentElement.querySelector('.carousel-horiz-inner');
+                                    if (!inner) return;
+                                    inner.scrollBy({ left: dir * 64, behavior: 'smooth' });
+                                }
+                                </script>
                                 </td>
                                 <td>{{ resto.name }}</td>
                                 <td><span class="tag">{{ resto.cuisine or 'Various' }}</span></td>
                                 <td>{{ resto.price_range or 'N/A' }}</td>
-                                <td>
-                                    {% if resto.rating %}
-                                    <span style="color: gold;"><i class="fas fa-star"></i> {{ resto.rating }}</span>
-                                    {% else %}
-                                    <span style="color: #ccc;">No ratings</span>
-                                    {% endif %}
-                                </td>
                                 <td>
                                     <span class="status {{ 'status-approved' if resto.is_active else 'status-rejected' }}">
                                         {{ 'Active' if resto.is_active else 'Inactive' }}
@@ -87,7 +146,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="7" class="no-data">No restaurants found. <a href="{{ url_for('admin_restaurants_add') }}">Add one now!</a></td>
+                                <td colspan="6" class="no-data">No restaurants found. <a href="{{ url_for('admin_restaurants_add') }}">Add one now!</a></td>
                             </tr>
                         {% endif %}
                     </tbody>

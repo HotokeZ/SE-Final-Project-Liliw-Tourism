@@ -27,15 +27,6 @@
             </div>
             <h1>{{ restaurant.name }}</h1>
             <div class="hero-meta">
-                <div class="rating">
-                    {% for i in range(restaurant.rating|int) %}
-                    <i class="fas fa-star"></i>
-                    {% endfor %}
-                    {% if restaurant.rating % 1 >= 0.5 %}
-                    <i class="fas fa-star-half-alt"></i>
-                    {% endif %}
-                    <span>{{ restaurant.rating }}/5</span>
-                </div>
                 <div class="cuisine-tag">
                     <i class="fas fa-utensils"></i>
                     <span>{{ restaurant.cuisine_type or 'Filipino Cuisine' }}</span>
@@ -319,18 +310,7 @@
                     <div class="section-card">
                         <h2>Customer Reviews</h2>
                         <div class="reviews-summary">
-                            <div class="average-rating">
-                                <div class="rating-number">{{ restaurant.rating or '4.5' }}</div>
-                                <div class="rating-stars">
-                                    {% for i in range(restaurant.rating|int) %}
-                                    <i class="fas fa-star"></i>
-                                    {% endfor %}
-                                    {% if restaurant.rating % 1 >= 0.5 %}
-                                    <i class="fas fa-star-half-alt"></i>
-                                    {% endif %}
-                                </div>
-                                <div class="review-count">Based on {{ restaurant.reviews_count or '0' }} reviews</div>
-                            </div>
+                            <p class="no-reviews-summary">Customer reviews are available on the reviews tab below.</p>
                         </div>
                         <div class="reviews-list">
                             {% if restaurant.reviews %}
@@ -341,11 +321,7 @@
                                             <strong>{{ review.author }}</strong>
                                             <span class="review-date">{{ review.date }}</span>
                                         </div>
-                                        <div class="review-rating">
-                                            {% for i in range(review.rating|int) %}
-                                            <i class="fas fa-star"></i>
-                                            {% endfor %}
-                                        </div>
+                                        <div class="review-rating"></div>
                                     </div>
                                     <p class="review-text">{{ review.comment }}</p>
                                 </div>
@@ -376,17 +352,7 @@
                         <strong><i class="fas fa-clock"></i> Hours:</strong>
                         <p>{{ restaurant.hours or 'Daily: 8:00 AM - 9:00 PM' }}</p>
                     </div>
-                    <div class="rating-info">
-                        <div class="stars">
-                            {% for i in range(restaurant.rating|int) %}
-                            <i class="fas fa-star"></i>
-                            {% endfor %}
-                            {% if restaurant.rating % 1 >= 0.5 %}
-                            <i class="fas fa-star-half-alt"></i>
-                            {% endif %}
-                        </div>
-                        <span>{{ restaurant.rating }}/5 ({{ restaurant.reviews_count or '0' }} reviews)</span>
-                    </div>
+                    <!-- Rating removed -->
                     <div class="quick-contact">
                         <a href="tel:{{ restaurant.phone }}" class="contact-btn">
                             <i class="fas fa-phone"></i>
@@ -495,10 +461,7 @@
                             <img src="{{ url_for('static', filename='uploads/' + similar.image) if similar.image else url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ similar.name }}">
                             <div class="similar-info">
                                 <h4>{{ similar.name }}</h4>
-                                <div class="similar-rating">
-                                    <i class="fas fa-star"></i>
-                                    <span>{{ similar.rating }}</span>
-                                </div>
+                                <div class="similar-rating"></div>
                                 <div class="similar-cuisine">{{ similar.cuisine_type }}</div>
                             </div>
                         </a>

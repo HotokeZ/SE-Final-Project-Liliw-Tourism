@@ -150,6 +150,9 @@ _EVENT_COLUMNS_CACHE = {}
 # Cache for hotels columns existence checks
 _HOTEL_COLUMNS_CACHE = {}
 
+# Cache for restaurants columns existence checks
+_RESTAURANT_COLUMNS_CACHE = {}
+
 def hotel_column_exists(col_name: str) -> bool:
     """Check whether the `hotels` table has a column named `col_name`.
     Performs a cheap select and caches the result. Returns False if Supabase is not configured.
@@ -192,6 +195,27 @@ def event_column_exists(col_name: str) -> bool:
     except Exception as e:
         print(f"event_column_exists check failed for '{col_name}': {e}")
         _EVENT_COLUMNS_CACHE[col_name] = False
+        return False
+
+def restaurant_column_exists(col_name: str) -> bool:
+    """Check whether the `restaurants` table has a column named `col_name`.
+    Performs a cheap select and caches the result. Returns False if Supabase is not configured.
+    """
+    global _RESTAURANT_COLUMNS_CACHE
+    if not supabase:
+        return False
+    if col_name in _RESTAURANT_COLUMNS_CACHE:
+        return _RESTAURANT_COLUMNS_CACHE[col_name]
+    try:
+        resp = supabase.table('restaurants').select(col_name).limit(1).execute()
+        if hasattr(resp, 'error') and resp.error:
+            _RESTAURANT_COLUMNS_CACHE[col_name] = False
+            return False
+        _RESTAURANT_COLUMNS_CACHE[col_name] = True
+        return True
+    except Exception as e:
+        print(f"restaurant_column_exists check failed for '{col_name}': {e}")
+        _RESTAURANT_COLUMNS_CACHE[col_name] = False
         return False
 
 def admin_required(f):
@@ -700,24 +724,36 @@ def add_media():
 @app.route('/plan')
 def plan():
     hotels = []
+    restaurants = []
     if supabase:
         try:
             resp = supabase.table('hotels').select('*').order('created_at', desc=True).execute()
             hotels = resp.data or []
         except Exception as e:
             print(f"Error fetching hotels for plan page: {e}")
-    return render_template('plan/stay.html', hotels=hotels)
+        try:
+            rresp = supabase.table('restaurants').select('*').order('created_at', desc=True).execute()
+            restaurants = rresp.data or []
+        except Exception as e:
+            print(f"Error fetching restaurants for plan page: {e}")
+    return render_template('plan/stay.html', hotels=hotels, restaurants=restaurants)
 
 @app.route('/plan/stay')
 def stay():
     hotels = []
+    restaurants = []
     if supabase:
         try:
             resp = supabase.table('hotels').select('*').order('created_at', desc=True).execute()
             hotels = resp.data or []
         except Exception as e:
             print(f"Error fetching hotels for stay page: {e}")
-    return render_template('plan/stay.html', hotels=hotels)
+        try:
+            rresp = supabase.table('restaurants').select('*').order('created_at', desc=True).execute()
+            restaurants = rresp.data or []
+        except Exception as e:
+            print(f"Error fetching restaurants for stay page: {e}")
+    return render_template('plan/stay.html', hotels=hotels, restaurants=restaurants)
 
 @app.route('/plan/stay/<hotel>')
 def indiv_hotel(hotel):
@@ -764,7 +800,6 @@ def indiv_resto(restaurant):
     resto_data = {
         'name': restaurant.replace('-', ' ').title(),
         'image': 'hero.JPG',
-        'rating': 4.7,
         'cuisine': 'Filipino',
         'price_range': '₱150 - ₱400 per person',
         'address': 'Town Plaza, Liliw, Laguna',
@@ -2671,20 +2706,62 @@ def admin_restaurants_add():
         if supabase:
             try:
                 name = request.form.get('name')
-                image_url = None
-                
+                # validate phone
+                phone = request.form.get('phone')
+                if phone:
+                    phone_digits = re.sub(r'\D', '', phone)
+                    if not phone_digits.startswith('0'):
+                        flash('Phone number must start with 0 and contain only digits.', 'error')
+                        return redirect(url_for('admin_restaurants_add'))
+                # Prepare galleries
+                image_gallery = []
+                menu_gallery = []
+
+                # If existing gallery URLs were provided via hidden form inputs (not currently used), they can be parsed here.
+                # Process main featured (single) and gallery files via helper
                 if 'image' in request.files:
                     file = request.files['image']
                     if file and file.filename:
                         file_ext = file.filename.rsplit('.', 1)[-1].lower()
-                        unique_filename = f"restaurants/{uuid.uuid4()}.{file_ext}"
                         file_bytes = file.read()
-                        supabase.storage.from_('blog-images').upload(
-                            unique_filename, file_bytes,
-                            {'content-type': file.content_type}
-                        )
-                        image_url = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
-                
+                        url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='resstaurant-images', prefix='restaurants/')
+                        if url:
+                            image_gallery.append(url)
+
+                if 'gallery_images' in request.files:
+                    files = request.files.getlist('gallery_images')
+                    for file in files:
+                        if file and file.filename:
+                            file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                            file_bytes = file.read()
+                            url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='resstaurant-images', prefix='restaurants/')
+                            if url:
+                                image_gallery.append(url)
+
+                # Menu featured and gallery
+                if 'menu_image' in request.files:
+                    file = request.files['menu_image']
+                    if file and file.filename:
+                        file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                        file_bytes = file.read()
+                        url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='resstaurant-images', prefix='restaurants/menu/')
+                        if url:
+                            menu_gallery.append(url)
+
+                if 'menu_gallery_images' in request.files:
+                    files = request.files.getlist('menu_gallery_images')
+                    for file in files:
+                        if file and file.filename:
+                            file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                            file_bytes = file.read()
+                            url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='resstaurant-images', prefix='restaurants/menu/')
+                            if url:
+                                menu_gallery.append(url)
+                # Set featured single-image fields to first gallery item for backward compatibility
+                image_url = image_gallery[0] if image_gallery else None
+                menu_image_url = menu_gallery[0] if menu_gallery else None
+
+                # Build base payload and only include optional image/gallery keys
                 resto_data = {
                     'name': name,
                     'slug': generate_slug(name),
@@ -2694,18 +2771,46 @@ def admin_restaurants_add():
                     'phone': request.form.get('phone'),
                     'price_range': request.form.get('price_range'),
                     'hours': request.form.get('hours'),
-                    'image_url': image_url,
                     'map_embed': request.form.get('map_embed'),
                     'is_active': True
                 }
-                
+
+                # Conditionally add image fields only when the DB table has those columns
+                try:
+                    if image_url and restaurant_column_exists('image_url'):
+                        resto_data['image_url'] = image_url
+                except Exception:
+                    pass
+                try:
+                    if menu_image_url and restaurant_column_exists('menu_image_url'):
+                        resto_data['menu_image_url'] = menu_image_url
+                except Exception:
+                    pass
+                try:
+                    if image_gallery and restaurant_column_exists('image_gallery'):
+                        resto_data['image_gallery'] = image_gallery
+                except Exception:
+                    pass
+                try:
+                    if menu_gallery and restaurant_column_exists('menu_gallery'):
+                        resto_data['menu_gallery'] = menu_gallery
+                except Exception:
+                    pass
+
+                # Only include category if the column exists in DB
+                try:
+                    cat_val = request.form.get('category')
+                    if cat_val and restaurant_column_exists('category'):
+                        resto_data['category'] = cat_val
+                except Exception:
+                    pass
+
                 supabase.table('restaurants').insert(resto_data).execute()
                 flash('Restaurant added successfully!', 'success')
                 return redirect(url_for('admin_restaurants'))
             except Exception as e:
                 print(f"Error adding restaurant: {e}")
                 flash('Failed to add restaurant.', 'error')
-    
     return render_template('admin/restaurant-form.html', restaurant=None)
 
 @app.route('/admin/restaurants/<int:resto_id>/edit', methods=['GET', 'POST'])
@@ -2726,26 +2831,116 @@ def admin_restaurants_edit(resto_id):
                     'is_active': request.form.get('is_active') == 'on',
                     'updated_at': datetime.now().isoformat()
                 }
-                
+                # Include category only if DB column exists
+                try:
+                    cat_val = request.form.get('category')
+                    if cat_val and restaurant_column_exists('category'):
+                        update_data['category'] = cat_val
+                except Exception:
+                    pass
+                # validate phone (starts with 0)
+                phone = request.form.get('phone')
+                if phone:
+                    phone_digits = re.sub(r'\D', '', phone)
+                    if not phone_digits.startswith('0'):
+                        flash('Phone number must start with 0 and contain only digits.', 'error')
+                        return redirect(url_for('admin_restaurants_edit', resto_id=resto_id))
+                # Determine existing images to keep based on client input (if provided).
+                image_gallery_existing = []
+                menu_gallery_existing = []
+                try:
+                    main_existing_json = request.form.get('main_existing_json')
+                    if main_existing_json:
+                        image_gallery_existing = json.loads(main_existing_json)
+                except Exception:
+                    image_gallery_existing = []
+                try:
+                    menu_existing_json = request.form.get('menu_existing_json')
+                    if menu_existing_json:
+                        menu_gallery_existing = json.loads(menu_existing_json)
+                except Exception:
+                    menu_gallery_existing = []
+                # Fallback: if client did not provide existing lists, attempt to read from DB
+                if not image_gallery_existing or not menu_gallery_existing:
+                    try:
+                        resp = supabase.table('restaurants').select('image_gallery,menu_gallery').eq('id', resto_id).single().execute()
+                        existing = resp.data or {}
+                        if not image_gallery_existing:
+                            image_gallery_existing = existing.get('image_gallery') or []
+                        if not menu_gallery_existing:
+                            menu_gallery_existing = existing.get('menu_gallery') or []
+                    except Exception:
+                        pass
+
+                # Handle main uploads via helper
+                new_main = []
                 if 'image' in request.files:
                     file = request.files['image']
                     if file and file.filename:
                         file_ext = file.filename.rsplit('.', 1)[-1].lower()
-                        unique_filename = f"restaurants/{uuid.uuid4()}.{file_ext}"
                         file_bytes = file.read()
-                        supabase.storage.from_('blog-images').upload(
-                            unique_filename, file_bytes,
-                            {'content-type': file.content_type}
-                        )
-                        update_data['image_url'] = f"{SUPABASE_URL}/storage/v1/object/public/blog-images/{unique_filename}"
-                
+                        url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='resstaurant-images', prefix='restaurants/')
+                        if url:
+                            new_main.append(url)
+                if 'gallery_images' in request.files:
+                    files = request.files.getlist('gallery_images')
+                    for file in files:
+                        if file and file.filename:
+                            file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                            file_bytes = file.read()
+                            url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='resstaurant-images', prefix='restaurants/')
+                            if url:
+                                new_main.append(url)
+                # Combine existing + new
+                combined_main = list(image_gallery_existing) + new_main
+                if combined_main:
+                    try:
+                        if restaurant_column_exists('image_gallery'):
+                            update_data['image_gallery'] = combined_main
+                    except Exception:
+                        pass
+                    try:
+                        if restaurant_column_exists('image_url'):
+                            update_data['image_url'] = combined_main[0]
+                    except Exception:
+                        pass
+                # Menu uploads via helper
+                new_menu = []
+                if 'menu_image' in request.files:
+                    file = request.files['menu_image']
+                    if file and file.filename:
+                        file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                        file_bytes = file.read()
+                        url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='resstaurant-images', prefix='restaurants/menu/')
+                        if url:
+                            new_menu.append(url)
+                if 'menu_gallery_images' in request.files:
+                    files = request.files.getlist('menu_gallery_images')
+                    for file in files:
+                        if file and file.filename:
+                            file_ext = file.filename.rsplit('.', 1)[-1].lower()
+                            file_bytes = file.read()
+                            url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, bucket='resstaurant-images', prefix='restaurants/menu/')
+                            if url:
+                                new_menu.append(url)
+                combined_menu = list(menu_gallery_existing) + new_menu
+                if combined_menu:
+                    try:
+                        if restaurant_column_exists('menu_gallery'):
+                            update_data['menu_gallery'] = combined_menu
+                    except Exception:
+                        pass
+                    try:
+                        if restaurant_column_exists('menu_image_url'):
+                            update_data['menu_image_url'] = combined_menu[0]
+                    except Exception:
+                        pass
                 supabase.table('restaurants').update(update_data).eq('id', resto_id).execute()
                 flash('Restaurant updated successfully!', 'success')
                 return redirect(url_for('admin_restaurants'))
             except Exception as e:
                 print(f"Error updating restaurant: {e}")
                 flash('Failed to update restaurant.', 'error')
-    
     restaurant = None
     if supabase:
         try:
@@ -2754,7 +2949,6 @@ def admin_restaurants_edit(resto_id):
         except:
             flash('Restaurant not found.', 'error')
             return redirect(url_for('admin_restaurants'))
-    
     return render_template('admin/restaurant-form.html', restaurant=restaurant)
 
 @app.route('/admin/restaurants/<int:resto_id>/delete')

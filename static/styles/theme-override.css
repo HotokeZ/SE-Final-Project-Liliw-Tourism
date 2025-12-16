@@ -129,6 +129,11 @@ section {
     background: var(--background-white);
 }
 
+/* Reduce heavy horizontal padding for the establishments section so content has room to layout */
+.establishments-section {
+    padding: 40px 40px;
+}
+
 /* Alternating Section Backgrounds */
 section:nth-of-type(odd) {
     background: var(--background-white);
@@ -211,6 +216,15 @@ section h2,
     color: var(--primary-color) !important;
     margin-bottom: 1rem !important;
     font-weight: 600 !important;
+}
+
+/* Keep grid behavior for establishments; tab wrapping is handled on the .tab-content element */
+.establishments-section .section-container .establishments-grid {
+    gap: 1.5rem !important;
+}
+
+.establishments-section .section-container .establishment-card {
+    height: auto !important;
 }
 
 .section-subtitle {
@@ -626,6 +640,60 @@ i, .fas, .far, .fab {
     }
 }
 
+/* Final override: ensure establishments grid lays out horizontally like restaurants */
+html body .establishments-section .section-container .establishments-grid {
+    gap: 1.5rem !important;
+}
+
+html body .establishments-section .section-container .establishment-card {
+    height: auto !important;
+}
+
+/* Make restaurant cards and hotel cards consistent */
+html body .establishment-card.restaurant-card {
+    max-width: 48% !important;
+}
+
+/* Fix: the grid contains .tab-content wrappers — make the tab content a flex container so cards sit side-by-side */
+html body .establishments-grid > .tab-content.active {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 1.5rem !important;
+    align-items: flex-start !important;
+}
+
+html body .establishments-grid > .tab-content.active .establishment-card {
+    flex: 0 1 360px !important;
+    max-width: 48% !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+}
+
+/* Strong override: ensure active tab is full-width and cards use two-column layout */
+html body .establishments-section .section-container .establishments-grid {
+    display: block !important;
+    width: 100% !important;
+}
+
+html body .establishments-grid > .tab-content.active {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1.5rem !important;
+    align-items: start !important;
+    width: 100% !important;
+    /* limit visible rows to ~5 rows and allow scrolling if more items exist */
+    max-height: 2000px !important;
+    overflow-y: auto !important;
+}
+
+html body .establishments-grid > .tab-content.active .establishment-card {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+}
+
 @media (max-width: 768px) {
     html {
         font-size: 14px;
@@ -667,6 +735,25 @@ i, .fas, .far, .fab {
     .category-tabs,
     .filter-options {
         flex-wrap: wrap !important;
+    }
+}
+
+/* Responsive: fewer columns on narrower screens */
+@media (max-width: 1200px) {
+    html body .establishments-grid > .tab-content.active {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (max-width: 940px) {
+    html body .establishments-grid > .tab-content.active {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 520px) {
+    html body .establishments-grid > .tab-content.active {
+        grid-template-columns: 1fr !important;
     }
 }
 

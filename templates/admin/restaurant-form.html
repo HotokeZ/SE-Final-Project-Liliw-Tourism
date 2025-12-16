@@ -6,6 +6,59 @@
     <title>{{ 'Edit' if restaurant else 'Add' }} Restaurant - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin-dashboard.css') }}">
+    <style>
+        /* Horizontal preview carousel for image thumbnails */
+        .preview-carousel {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            align-items: center;
+            margin: 8px 0;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        .preview-thumb {
+            position: relative;
+            width: 78px;
+            height: 52px;
+            flex-shrink: 0;
+        }
+        .preview-thumb img {
+            width: 78px;
+            height: 52px;
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        }
+        .preview-thumb .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+        /* Small image-item style to match products admin thumbnail */
+        .image-uploader .uploader-controls { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+        .image-grid { display:flex; gap:8px; align-items:center; overflow-x:auto; }
+        .image-item { position:relative; width:78px; height:52px; border-radius:6px; overflow:hidden; background:#f6f7fb; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .image-item img{ width:100%; height:100%; object-fit:cover; display:block }
+        .image-item .feature-btn{ position:absolute; left:6px; top:6px; background:rgba(255,255,255,0.95); border:0; padding:4px 6px; border-radius:6px; cursor:pointer; font-size:13px; color:#2b2b2b; box-shadow:0 1px 2px rgba(0,0,0,0.08); transition:all .12s ease }
+        .image-item.featured { box-shadow:0 6px 18px rgba(11,102,195,0.12), inset 0 0 0 2px rgba(11,102,195,0.06); transform:translateZ(0) scale(1.03); }
+        .image-item.featured .feature-btn { background:#0B66C3; color:#fff; }
+        .image-item .remove-btn{ position:absolute; right:6px; top:6px; background:rgba(0,0,0,0.6); color:#fff; border:0; padding:3px 6px; border-radius:6px; cursor:pointer; font-size:12px }
+        /* visual cue label for featured (accessible) */
+        .image-item.featured::after{ content:'Featured'; position:absolute; right:6px; bottom:6px; background:#0B66C3; color:#fff; font-size:10px; padding:2px 6px; border-radius:4px; opacity:0.95 }
+    </style>
 </head>
 <body>
     {% include 'admin/sidebar.html' %}
@@ -38,6 +91,25 @@
                         <input type="text" id="cuisine" name="cuisine" value="{{ restaurant.cuisine if restaurant else '' }}" placeholder="e.g., Filipino, Chinese">
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            {% set _cat = restaurant.category if restaurant else '' %}
+                            <option value="">Select category</option>
+                            <option value="cafe" {{ 'selected' if _cat=='cafe' else '' }}>Cafe</option>
+                            <option value="restaurant" {{ 'selected' if _cat=='restaurant' else '' }}>Restaurant</option>
+                            <option value="fine dining" {{ 'selected' if _cat=='fine dining' else '' }}>Fine Dining</option>
+                            <option value="fast food" {{ 'selected' if _cat=='fast food' else '' }}>Fast Food</option>
+                            <option value="buffet" {{ 'selected' if _cat=='buffet' else '' }}>Buffet</option>
+                            <option value="dessert" {{ 'selected' if _cat=='dessert' else '' }}>Dessert</option>
+                            <option value="bar" {{ 'selected' if _cat=='bar' else '' }}>Bar</option>
+                            <option value="food stall" {{ 'selected' if _cat=='food stall' else '' }}>Food Stall</option>
+                            <option value="bakery" {{ 'selected' if _cat=='bakery' else '' }}>Bakery</option>
+                            <option value="other" {{ 'selected' if _cat=='other' else '' }}>Other</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div class="form-group">
                     <label for="description">Description</label>
@@ -51,20 +123,53 @@
                     </div>
                     <div class="form-group">
                         <label for="phone">Phone</label>
-                        <input type="text" id="phone" name="phone" value="{{ restaurant.phone if restaurant else '' }}">
+                        <input type="tel" id="phone" name="phone" value="{{ restaurant.phone if restaurant else '' }}" pattern="^0[0-9]+$" inputmode="numeric" placeholder="09XXXXXXXX" title="Start with 0 and contain digits only">
                     </div>
                 </div>
 
+                {% set _pr = restaurant.price_range if restaurant and restaurant.price_range else '' %}
+                {% set _pmin = '' %}
+                {% set _pmax = '' %}
+                {% if _pr %}
+                    {% set _parts = _pr.split('-') %}
+                    {% set _pmin = _parts[0].strip() %}
+                    {% if _parts|length > 1 %}
+                        {% set _pmax = _parts[1].strip() %}
+                    {% endif %}
+                {% endif %}
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="price_range">Price Range</label>
-                        <input type="text" id="price_range" name="price_range" value="{{ restaurant.price_range if restaurant else '' }}" placeholder="e.g., ₱150 - ₱500">
+                        <label for="price_min">Price (min)</label>
+                        <input type="number" step="0.01" min="0" id="price_min" name="price_min" value="{{ (_pmin | replace('₱','') | replace(',','') | replace(' ','') ) if _pmin else '' }}" placeholder="e.g., 150">
                     </div>
                     <div class="form-group">
-                        <label for="hours">Operating Hours</label>
-                        <input type="text" id="hours" name="hours" value="{{ restaurant.hours if restaurant else '' }}" placeholder="e.g., 8AM - 9PM">
+                        <label for="price_max">Price (max)</label>
+                        <input type="number" step="0.01" min="0" id="price_max" name="price_max" value="{{ (_pmax | replace('₱','') | replace(',','') | replace(' ','') ) if _pmax else '' }}" placeholder="e.g., 500">
                     </div>
                 </div>
+                <input type="hidden" id="price_range" name="price_range" value="{{ restaurant.price_range if restaurant else '' }}">
+                {% set _open = '' %}
+                {% set _close = '' %}
+                {% if restaurant and restaurant.hours %}
+                    {% set _hparts = restaurant.hours.split('-') %}
+                    {% if _hparts|length >= 1 %}
+                        {% set _open = _hparts[0].strip() %}
+                    {% endif %}
+                    {% if _hparts|length > 1 %}
+                        {% set _close = _hparts[1].strip() %}
+                    {% endif %}
+                {% endif %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="opening_time">Opening Time</label>
+                        <input type="time" id="opening_time" name="opening_time" value="{{ _open }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="closing_time">Closing Time</label>
+                        <input type="time" id="closing_time" name="closing_time" value="{{ _close }}">
+                    </div>
+                </div>
+                <input type="hidden" id="hours" name="hours" value="{{ restaurant.hours if restaurant else '' }}">
 
                 <div class="form-group">
                     <label for="map_embed">Google Maps Embed URL</label>
@@ -72,13 +177,62 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="image">{{ 'Change' if restaurant else 'Upload' }} Image</label>
-                    <input type="file" id="image" name="image" accept="image/*">
-                    {% if restaurant and restaurant.image_url %}
-                    <div style="margin-top: 10px;">
-                        <img src="{{ restaurant.image_url }}" alt="Current image" style="max-width: 200px; border-radius: 8px;">
+                    <label>{{ 'Change' if restaurant else 'Upload' }} Images</label>
+                    <div id="mainImageUploader" class="image-uploader">
+                        <input type="file" id="mainFeaturedInput" name="image" accept="image/*" style="display:none">
+                        <input type="file" id="mainGalleryInput" name="gallery_images" accept="image/*" multiple style="display:none">
+                        <div class="uploader-controls">
+                            <button type="button" id="addMainImagesBtn" class="btn btn-secondary">Add Images</button>
+                            <span class="hint">Select a featured image by clicking the star on a preview.</span>
+                        </div>
+                        <input type="hidden" id="main_existing_json" name="main_existing_json" value='{{ (existing_images | tojson) if restaurant and existing_images else "[]" }}'>
+                        <div id="mainImageGrid" class="image-grid">
+                            {% if restaurant %}
+                                {% set existing_images = [] %}
+                                {% if restaurant.image_gallery %}
+                                    {% set existing_images = restaurant.image_gallery %}
+                                {% elif restaurant.image_url %}
+                                    {% set existing_images = [restaurant.image_url] %}
+                                {% endif %}
+                                {% for url in existing_images %}
+                                <div class="image-item{% if restaurant.image_url and restaurant.image_url == url %} featured{% endif %}" data-src="{{ url }}">
+                                    <button type="button" class="feature-btn" title="Set as featured">★</button>
+                                    <img src="{{ url }}" alt="current">
+                                    <button type="button" class="remove-btn" title="Remove">✕</button>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label>{{ 'Change' if restaurant and restaurant.menu_gallery else 'Upload' }} Menu Images</label>
+                    <div id="menuImageUploader" class="image-uploader">
+                        <input type="file" id="menuFeaturedInput" name="menu_image" accept="image/*" style="display:none">
+                        <input type="file" id="menuGalleryInput" name="menu_gallery_images" accept="image/*" multiple style="display:none">
+                        <div class="uploader-controls">
+                            <button type="button" id="addMenuImagesBtn" class="btn btn-secondary">Add Images</button>
+                            <span class="hint">Select a featured menu image by clicking the star on a preview.</span>
+                        </div>
+                        <input type="hidden" id="menu_existing_json" name="menu_existing_json" value='{{ (existing_images | tojson) if restaurant and existing_images else "[]" }}'>
+                        <div id="menuImageGrid" class="image-grid">
+                            {% if restaurant %}
+                                {% set existing_images = [] %}
+                                {% if restaurant.menu_gallery %}
+                                    {% set existing_images = restaurant.menu_gallery %}
+                                {% elif restaurant.menu_image_url %}
+                                    {% set existing_images = [restaurant.menu_image_url] %}
+                                {% endif %}
+                                {% for url in existing_images %}
+                                <div class="image-item{% if restaurant.menu_image_url and restaurant.menu_image_url == url %} featured{% endif %}" data-src="{{ url }}">
+                                    <button type="button" class="feature-btn" title="Set as featured">★</button>
+                                    <img src="{{ url }}" alt="current menu">
+                                    <button type="button" class="remove-btn" title="Remove">✕</button>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
                 {% if restaurant %}
@@ -105,6 +259,126 @@
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
+        // Image uploader logic (copied from product-form, adapted for main and menu)
+        (function(){
+            function makePreviewNode(fileOrUrl){
+                var container = document.createElement('div'); container.className='image-item';
+                var feat = document.createElement('button'); feat.type='button'; feat.className='feature-btn'; feat.textContent='★';
+                var img = document.createElement('img');
+                if(typeof fileOrUrl === 'string') { img.src = fileOrUrl; }
+                else { img.src = URL.createObjectURL(fileOrUrl); img.dataset.fileName = fileOrUrl.name; }
+                var rem = document.createElement('button'); rem.type='button'; rem.className='remove-btn'; rem.textContent='✕';
+                container.appendChild(feat); container.appendChild(img); container.appendChild(rem);
+                feat.addEventListener('click', function(){
+                    var grid = container.parentElement;
+                    Array.from(grid.querySelectorAll('.image-item')).forEach(function(it){ it.classList.remove('featured'); });
+                    container.classList.add('featured');
+                });
+                rem.addEventListener('click', function(){ container.remove(); });
+                return container;
+            }
+
+            // Main images
+            var addMainBtn = document.getElementById('addMainImagesBtn');
+            var mainFeaturedInput = document.getElementById('mainFeaturedInput');
+            var mainGalleryInput = document.getElementById('mainGalleryInput');
+            var mainGrid = document.getElementById('mainImageGrid');
+            if(addMainBtn && mainGalleryInput){
+                addMainBtn.addEventListener('click', function(){ mainGalleryInput.click(); });
+                mainGalleryInput.addEventListener('change', function(e){ Array.from(e.target.files).forEach(function(f){ mainGrid.appendChild(makePreviewNode(f)); }); });
+            }
+
+            // Menu images
+            var addMenuBtn = document.getElementById('addMenuImagesBtn');
+            var menuFeaturedInput = document.getElementById('menuFeaturedInput');
+            var menuGalleryInput = document.getElementById('menuGalleryInput');
+            var menuGrid = document.getElementById('menuImageGrid');
+            if(addMenuBtn && menuGalleryInput){
+                addMenuBtn.addEventListener('click', function(){ menuGalleryInput.click(); });
+                menuGalleryInput.addEventListener('change', function(e){ Array.from(e.target.files).forEach(function(f){ menuGrid.appendChild(makePreviewNode(f)); }); });
+            }
+
+            // On form submit, pack selected preview files into the inputs
+            var form = document.querySelector('form.form-container');
+            if(form){
+                form.addEventListener('submit', function(evt){
+                        // collect existing (unchanged) image URLs from previews and send as hidden JSON
+                        var mainExisting = [];
+                        if(mainGrid){
+                            Array.from(mainGrid.querySelectorAll('.image-item')).forEach(function(it){
+                                var img = it.querySelector('img');
+                                if(img && !(img.dataset && img.dataset.fileName)){
+                                    mainExisting.push(img.src);
+                                }
+                            });
+                        }
+                        var mainExistingInput = document.getElementById('main_existing_json');
+                        if(mainExistingInput) mainExistingInput.value = JSON.stringify(mainExisting);
+
+                        var menuExisting = [];
+                        if(menuGrid){
+                            Array.from(menuGrid.querySelectorAll('.image-item')).forEach(function(it){
+                                var img = it.querySelector('img');
+                                if(img && !(img.dataset && img.dataset.fileName)){
+                                    menuExisting.push(img.src);
+                                }
+                            });
+                        }
+
+                        var menuExistingInput = document.getElementById('menu_existing_json');
+                        if(menuExistingInput) menuExistingInput.value = JSON.stringify(menuExisting);
+
+                        // pack price_range from min/max into hidden `price_range`
+                        var pmin = document.getElementById('price_min') ? document.getElementById('price_min').value : '';
+                        var pmax = document.getElementById('price_max') ? document.getElementById('price_max').value : '';
+                        var hiddenPrice = document.getElementById('price_range');
+                        if(hiddenPrice){ hiddenPrice.value = (pmin || '') + (pmin || pmax ? '-' : '') + (pmax || ''); }
+
+                        // pack hours from opening_time/closing_time into hidden `hours`
+                        var openT = document.getElementById('opening_time') ? document.getElementById('opening_time').value : '';
+                        var closeT = document.getElementById('closing_time') ? document.getElementById('closing_time').value : '';
+                        var hiddenHours = document.getElementById('hours');
+                        if(hiddenHours){ hiddenHours.value = openT && closeT ? openT + ' - ' + closeT : (openT || closeT || hiddenHours.value); }
+
+                    // main pack
+                    var dtFeatMain = new DataTransfer();
+                    var dtGalMain = new DataTransfer();
+                    var items = mainGrid ? mainGrid.querySelectorAll('.image-item') : [];
+                    if(items.length){
+                        var featuredNode = mainGrid.querySelector('.image-item.featured') || items[0];
+                        Array.from(items).forEach(function(it){
+                            var img = it.querySelector('img');
+                            if(img && img.dataset && img.dataset.fileName){
+                                var name = img.dataset.fileName;
+                                var f = Array.from(mainGalleryInput.files).find(function(x){ return x.name === name; });
+                                if(f){ dtGalMain.items.add(f); if(it === featuredNode) dtFeatMain.items.add(f); }
+                            }
+                        });
+                    }
+                    if(dtFeatMain.files.length) mainFeaturedInput.files = dtFeatMain.files;
+                    if(dtGalMain.files.length) mainGalleryInput.files = dtGalMain.files;
+
+                    // menu pack
+                    var dtFeatMenu = new DataTransfer();
+                    var dtGalMenu = new DataTransfer();
+                    var mitems = menuGrid ? menuGrid.querySelectorAll('.image-item') : [];
+                    if(mitems.length){
+                        var featuredNodeM = menuGrid.querySelector('.image-item.featured') || mitems[0];
+                        Array.from(mitems).forEach(function(it){
+                            var img = it.querySelector('img');
+                            if(img && img.dataset && img.dataset.fileName){
+                                var name = img.dataset.fileName;
+                                var f = Array.from(menuGalleryInput.files).find(function(x){ return x.name === name; });
+                                if(f){ dtGalMenu.items.add(f); if(it === featuredNodeM) dtFeatMenu.items.add(f); }
+                            }
+                        });
+                    }
+                    if(dtFeatMenu.files.length) menuFeaturedInput.files = dtFeatMenu.files;
+                    if(dtGalMenu.files.length) menuGalleryInput.files = dtGalMenu.files;
+                });
+            }
+        })();
     </script>
 </body>
 </html>
+

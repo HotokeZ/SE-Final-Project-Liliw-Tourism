@@ -28,11 +28,17 @@
     <section class="filter-section">
         <div class="filter-container">
             <div class="filter-options">
-                <button class="filter-btn active" data-filter="all">All Properties</button>
-                <button class="filter-btn" data-filter="hotel">Hotels</button>
-                <button class="filter-btn" data-filter="resort">Resorts</button>
-                <button class="filter-btn" data-filter="inn">Inns & Lodges</button>
-                <button class="filter-btn" data-filter="homestay">Homestays</button>
+                <div class="plan-tabs">
+                    <button class="plan-tab active" data-tab="tab-stays">Stays</button>
+                    <button class="plan-tab" data-tab="tab-restaurants">Where to Eat</button>
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All Properties</button>
+                    <button class="filter-btn" data-filter="hotel">Hotels</button>
+                    <button class="filter-btn" data-filter="resort">Resorts</button>
+                    <button class="filter-btn" data-filter="inn">Inns & Lodges</button>
+                    <button class="filter-btn" data-filter="homestay">Homestays</button>
+                </div>
             </div>
         </div>
     </section>
@@ -41,9 +47,10 @@
     <section class="establishments-section">
         <div class="section-container">
             <div class="establishments-grid">
+                <div id="tab-stays" class="tab-content active">
                 {% if hotels and hotels|length > 0 %}
                     {% for hotel in hotels %}
-                    <a href="{{ url_for('indiv_hotel', hotel=hotel.get('slug') or (hotel.get('name')|replace(' ', '-')|lower)) }}" class="establishment-card" data-category="{{ (hotel.get('category') or 'hotel')|lower }}">
+                    <a href="{{ url_for('indiv_hotel', hotel=hotel.get('slug') or (hotel.get('name')|replace(' ', '-')|lower)) }}" class="establishment-card restaurant-card" data-category="{{ (hotel.get('category') or 'hotel')|lower }}">
                         <div class="card-image">
                             <img src="{{ hotel.get('image_url') or url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ hotel.get('name') }}">
                             <div class="card-overlay"></div>
@@ -79,6 +86,34 @@
                 {% else %}
                     <div class="no-data">No properties found. Please check back later.</div>
                 {% endif %}
+                </div>
+
+                <div id="tab-restaurants" class="tab-content" style="display:none">
+                    {% if restaurants and restaurants|length > 0 %}
+                        {% for resto in restaurants %}
+                        <a href="{{ url_for('indiv_resto', restaurant=resto.get('slug') or (resto.get('name')|replace(' ', '-')|lower)) }}" class="establishment-card restaurant-card" data-category="{{ (resto.get('cuisine') or 'restaurant')|lower }}">
+                            <div class="card-image">
+                                <img src="{{ (resto.get('image_gallery') and resto.get('image_gallery')[0]) or resto.get('image_url') or url_for('static', filename='assets/images/attractions/natural/hero.JPG') }}" alt="{{ resto.get('name') }}">
+                                <div class="card-overlay"></div>
+                                <span class="card-badge">Restaurant</span>
+                            </div>
+                            <div class="card-content">
+                                <h3>{{ resto.get('name') }}</h3>
+                                <p>{{ (resto.get('description') or '')[:140] }}</p>
+                                <div class="card-features">
+                                    <span><i class="fas fa-utensils"></i> {{ resto.get('cuisine') or 'Various' }}</span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="price">{{ resto.get('price_range') or 'N/A' }}</span>
+                                    <span class="view-link">View Details <i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-data">No restaurants found. Please check back later.</div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </section>
@@ -111,26 +146,80 @@
 
     <script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
     <script>
-        // Filter functionality
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const cards = document.querySelectorAll('.establishment-card');
+        // Tab switching for Stays / Restaurants with dynamic filters
+        const originalFiltersHTML = document.querySelector('.filter-buttons').innerHTML;
 
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const filter = btn.dataset.filter;
+        function attachFilterHandlers() {
+            const filterBtns = document.querySelectorAll('.filter-buttons .filter-btn');
+            filterBtns.forEach(btn => {
+                btn.removeEventListener('click', filterClickHandler);
+                btn.addEventListener('click', filterClickHandler);
+            });
+        }
 
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        function filterClickHandler(e) {
+            const btn = e.currentTarget;
+            const filter = btn.dataset.filter;
+            const container = document.querySelector('.tab-content.active') || document.querySelector('.tab-content');
+            const cards = container ? container.querySelectorAll('.establishment-card') : document.querySelectorAll('.establishment-card');
 
-                cards.forEach(card => {
-                    if (filter === 'all' || card.dataset.category === filter) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
+            document.querySelectorAll('.filter-buttons .filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            cards.forEach(card => {
+                const cat = (card.dataset.category || '').toLowerCase();
+                if (filter === 'all' || cat === filter) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function rebuildRestaurantFilters() {
+            const container = document.querySelector('.filter-buttons');
+            const restoCards = Array.from(document.querySelectorAll('#tab-restaurants .establishment-card'));
+            const cuisines = [...new Set(restoCards.map(c => (c.dataset.category || 'other').toLowerCase()))].filter(Boolean);
+            let html = '<button class="filter-btn active" data-filter="all">All</button>';
+            cuisines.forEach(cat => {
+                const label = cat.charAt(0).toUpperCase() + cat.slice(1);
+                html += `<button class="filter-btn" data-filter="${cat}">${label}</button>`;
+            });
+            container.innerHTML = html;
+            attachFilterHandlers();
+        }
+
+        function restoreOriginalFilters() {
+            const container = document.querySelector('.filter-buttons');
+            container.innerHTML = originalFiltersHTML;
+            attachFilterHandlers();
+        }
+
+        document.querySelectorAll('.plan-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                document.querySelectorAll('.plan-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => {
+                    c.style.display = 'none';
+                    c.classList.remove('active');
                 });
+                const el = document.getElementById(target);
+                if (el) {
+                    if (target === 'tab-restaurants') {
+                        rebuildRestaurantFilters();
+                    } else {
+                        restoreOriginalFilters();
+                    }
+                    // ensure active tab uses the grid/flex layout defined in CSS
+                    el.style.display = '';
+                    el.classList.add('active');
+                }
             });
         });
+
+        // initial attach for default filters
+        attachFilterHandlers();
     </script>
     {% include 'scripts-includes.html' %}
 </body>
