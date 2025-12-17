@@ -186,6 +186,8 @@
         const contentEl = document.getElementById('content');
         const termsEl = document.getElementById('terms');
         const DRAFT_KEY = 'createBlogDraft:v1';
+        // Server instructs whether to clear draft after successful submit
+        const CLEAR_DRAFT = {{ 'true' if clear_draft else 'false' }};
 
         // Internal state of selected images ({file: File, id?: number})
         const selectedImages = [];
@@ -444,8 +446,22 @@
             el.addEventListener('change', saveDraft);
         });
 
-        // Restore draft on load
-        loadDraft();
+        // If server requested clearing draft (after successful submit), remove saved draft and IDB images
+        (async function(){
+            if (CLEAR_DRAFT === true || CLEAR_DRAFT === 'true'){
+                try{
+                    localStorage.removeItem(DRAFT_KEY);
+                    // clear IDB images store
+                    const db = await openDB();
+                    const tx = db.transaction('images', 'readwrite');
+                    const store = tx.objectStore('images');
+                    const req = store.clear();
+                    req.onsuccess = req.onerror = function(){ db.close(); };
+                }catch(e){ /* ignore */ }
+            }
+            // Restore draft if any remains
+            loadDraft();
+        })();
     </script>
     {% include 'scripts-includes.html' %}
 </body>

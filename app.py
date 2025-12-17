@@ -1184,7 +1184,13 @@ def view_blog(blog_id):
 @app.route('/plan/blog/create')
 @verified_required
 def create_blog():
-    return render_template('plan/create.html')
+    # If a recent submission requested clearing the client draft, pass that info
+    clear_draft = False
+    try:
+        clear_draft = bool(session.pop('clear_blog_draft', False))
+    except Exception:
+        clear_draft = False
+    return render_template('plan/create.html', clear_draft=clear_draft)
 
 @app.route('/blog/create')
 def create():
@@ -1272,7 +1278,11 @@ def submit_blog():
         }
         
         result = supabase.table('blogs').insert(blog_data).execute()
-        
+        # if insert succeeded, set a session flag so client can clear local draft
+        try:
+            session['clear_blog_draft'] = True
+        except Exception:
+            pass
         flash('Thank you! Your blog post has been submitted for review.', 'success')
     except Exception as e:
         flash('An error occurred while submitting your blog post. Please try again.', 'error')
