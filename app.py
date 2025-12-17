@@ -342,7 +342,55 @@ def index():
 
 @app.route('/home')
 def home():
-    return render_template('index.html')
+    # Load featured content from database when available
+    featured_attractions = []
+    natural = []
+    heritage = []
+    experiences = []
+    events_list = []
+
+    if supabase:
+        try:
+            resp = supabase.table('attractions').select('*').eq('is_active', True).order('created_at', desc=True).limit(6).execute()
+            attractions = resp.data or []
+            natural = [a for a in attractions if (a.get('category') or '').lower() == 'natural']
+            heritage = [a for a in attractions if (a.get('category') or '').lower() == 'heritage']
+            # Pick up to 3 featured attractions for the top slider
+            featured_attractions = attractions[:3]
+        except Exception as e:
+            print(f"Error fetching attractions for home: {e}")
+
+        try:
+            resp = supabase.table('products').select('*').eq('is_active', True).order('created_at', desc=True).limit(6).execute()
+            experiences = resp.data or []
+        except Exception as e:
+            print(f"Error fetching experiences for home: {e}")
+
+        try:
+            resp = supabase.table('events').select('*').order('event_date', desc=False).limit(6).execute()
+            rows = resp.data or []
+            for r in rows:
+                image = r.get('image_url') or (r.get('gallery_urls') and (r.get('gallery_urls')[0] if isinstance(r.get('gallery_urls'), list) and len(r.get('gallery_urls'))>0 else None)) or url_for('static', filename='assets/images/attractions/natural/hero.JPG')
+                start = r.get('event_date')
+                display_date = ''
+                try:
+                    if start:
+                        sd = datetime.fromisoformat(start)
+                        display_date = sd.strftime('%B %Y')
+                except Exception:
+                    display_date = start or ''
+
+                events_list.append({
+                    'id': r.get('id'),
+                    'title': r.get('title'),
+                    'image': image,
+                    'display_date': display_date,
+                    'description': r.get('description') or ''
+                })
+        except Exception as e:
+            print(f"Error fetching events for home: {e}")
+
+    return render_template('index.html', featured_attractions=featured_attractions, natural=natural, heritage=heritage, experiences=experiences, events=events_list)
 
 @app.route('/map')
 def map():
@@ -741,7 +789,14 @@ def plan():
             restaurants = rresp.data or []
         except Exception as e:
             print(f"Error fetching restaurants for plan page: {e}")
-    return render_template('plan/stay.html', hotels=hotels, restaurants=restaurants, hotel_categories=hotel_categories, restaurant_categories=restaurant_categories)
+    # Determine initial tab from query param (e.g. ?tab=eat will open restaurants tab)
+    tab = request.args.get('tab', '')
+    if tab and tab.lower() in ('eat', 'restaurants', 'where-to-eat'):
+        initial_tab = 'tab-restaurants'
+    else:
+        initial_tab = 'tab-stays'
+
+    return render_template('plan/stay.html', hotels=hotels, restaurants=restaurants, hotel_categories=hotel_categories, restaurant_categories=restaurant_categories, initial_tab=initial_tab)
 
 @app.route('/plan/stay')
 def stay():
@@ -2663,13 +2718,62 @@ def admin_hotels_add():
                 except Exception:
                     websites = [w.strip() for w in websites_raw.split(',') if w.strip()]
 
+                # normalize latitude/longitude to floats or None so DB doesn't receive empty strings
+                lat_raw = (request.form.get('latitude') or '').strip()
+                lon_raw = (request.form.get('longitude') or '').strip()
+                try:
+                    lat_val = float(lat_raw) if lat_raw != '' else None
+                except Exception:
+                    lat_val = None
+                try:
+                    lon_val = float(lon_raw) if lon_raw != '' else None
+                except Exception:
+                    lon_val = None
+
+                # ensure slug uniqueness: try base slug and append suffix if needed
+                base_slug = generate_slug(name) if name else uuid.uuid4().hex[:8]
+                slug = base_slug
+                try:
+                    # attempt to find existing slug; append numeric suffix until unique
+                    suffix = 0
+                    while True:
+                        resp_check = supabase.table('hotels').select('id').eq('slug', slug).limit(1).execute()
+                        exists = False
+                        try:
+                            exists = bool(resp_check and getattr(resp_check, 'data', None))
+                        except Exception:
+                            exists = False
+                        if not exists:
+                            break
+                        suffix += 1
+                        slug = f"{base_slug}-{suffix}"
+                        if suffix > 50:
+                            # fallback to random suffix
+                            slug = f"{base_slug}-{uuid.uuid4().hex[:6]}"
+                            break
+                except Exception:
+                    # if check fails for any reason, fall back to base slug
+                    slug = base_slug
+
+                # Normalize optional text fields to None when empty
+                def _none_if_empty(v):
+                    try:
+                        s = (v or '').strip()
+                        return s if s != '' else None
+                    except Exception:
+                        return None
+
+                desc_val = _none_if_empty(request.form.get('description'))
+                addr_val = _none_if_empty(request.form.get('address'))
+                email_val = _none_if_empty(request.form.get('email'))
+
                 hotel_data = {
                     'name': name,
-                    'slug': generate_slug(name),
-                    'description': request.form.get('description'),
-                    'address': request.form.get('address'),
+                    'slug': slug,
+                    'description': desc_val,
+                    'address': addr_val,
                     'phone': phone,
-                    'email': request.form.get('email'),
+                    'email': email_val,
                     'price_min': price_min,
                     'price_max': price_max,
                     'image_url': image_url,
@@ -2677,8 +2781,8 @@ def admin_hotels_add():
                     'websites': websites,
                     'amenities': amenities,
                     'gallery_urls': gallery_urls,
-                    'latitude': request.form.get('latitude'),
-                    'longitude': request.form.get('longitude'),
+                    'latitude': lat_val,
+                    'longitude': lon_val,
                     'is_active': True
                 }
                 # Try including category by default; if DB rejects because column missing, retry without it
@@ -2790,14 +2894,42 @@ def admin_hotels_edit(hotel_id):
                             gallery_urls = uploaded[1:]
                 if not gallery_urls and 'gallery_images' in request.files:
                     files = request.files.getlist('gallery_images')
-                    gallery_urls = []
+                    tmp_gallery = []
                     for file in files:
                         if file and getattr(file, 'filename', ''):
                             file_ext = file.filename.rsplit('.', 1)[-1].lower()
                             file_bytes = file.read()
                             url = upload_bytes_get_url_to_bucket(file_bytes, file_ext, file.content_type, SUPABASE_PRODUCT_BUCKET, prefix='hotels/')
                             if url:
-                                gallery_urls.append(url)
+                                tmp_gallery.append(url)
+                    # Only set gallery_urls when there are actually uploaded files;
+                    # otherwise leave it as None so we don't overwrite existing images with an empty list.
+                    if tmp_gallery:
+                        gallery_urls = tmp_gallery
+
+                # If the client included a list of existing image URLs (after removals), use it
+                existing_gallery_raw = request.form.get('existing_gallery') if request.form else None
+                existing_featured_raw = request.form.get('existing_featured') if request.form else None
+                existing_gallery = None
+                if existing_gallery_raw is not None and existing_gallery_raw != '':
+                    try:
+                        import json
+                        parsed = json.loads(existing_gallery_raw)
+                        if isinstance(parsed, list):
+                            existing_gallery = parsed
+                        else:
+                            existing_gallery = [u.strip() for u in str(existing_gallery_raw).split(',') if u.strip()]
+                    except Exception:
+                        existing_gallery = [u.strip() for u in str(existing_gallery_raw).split(',') if u.strip()]
+
+                # If there were no newly uploaded gallery files, but the client provided existing_gallery (could be empty list),
+                # honor that (so user can remove all images).
+                if gallery_urls is None and existing_gallery is not None:
+                    gallery_urls = existing_gallery
+
+                # If no new featured file uploaded, but client selected an existing featured image, use that URL
+                if not image_url and existing_featured_raw:
+                    image_url = existing_featured_raw or None
 
                 # parse price min/max
                 price_min_raw = request.form.get('price_min') or ''
@@ -2822,19 +2954,44 @@ def admin_hotels_edit(hotel_id):
                 except Exception:
                     websites = [w.strip() for w in websites_raw.split(',') if w.strip()]
 
+                # Normalize latitude/longitude to float or None so updates don't send empty strings
+                lat_raw = (request.form.get('latitude') or '').strip()
+                lon_raw = (request.form.get('longitude') or '').strip()
+                try:
+                    lat_val = float(lat_raw) if lat_raw != '' else None
+                except Exception:
+                    lat_val = None
+                try:
+                    lon_val = float(lon_raw) if lon_raw != '' else None
+                except Exception:
+                    lon_val = None
+
+                def _none_if_empty(v):
+                    try:
+                        s = (v or '').strip()
+                        return s if s != '' else None
+                    except Exception:
+                        return None
+
+                name_val = _none_if_empty(request.form.get('name'))
+                desc_val = _none_if_empty(request.form.get('description'))
+                addr_val = _none_if_empty(request.form.get('address'))
+                email_val = _none_if_empty(request.form.get('email'))
+                map_embed_val = _none_if_empty(request.form.get('map_embed'))
+
                 update_data = {
-                    'name': request.form.get('name'),
-                    'description': request.form.get('description'),
-                    'address': request.form.get('address'),
+                    'name': name_val,
+                    'description': desc_val,
+                    'address': addr_val,
                     'phone': re.sub(r'[^0-9]', '', (request.form.get('phone') or '')),
-                    'email': request.form.get('email'),
+                    'email': email_val,
                     'price_min': price_min,
                     'price_max': price_max,
-                    'map_embed': request.form.get('map_embed'),
+                    'map_embed': map_embed_val,
                     'websites': websites,
                     'amenities': None,
-                    'latitude': request.form.get('latitude'),
-                    'longitude': request.form.get('longitude'),
+                    'latitude': lat_val,
+                    'longitude': lon_val,
                     'is_active': request.form.get('is_active') == 'on',
                     'updated_at': datetime.now().isoformat()
                 }
@@ -2918,7 +3075,25 @@ def admin_hotels_edit(hotel_id):
         except:
             flash('Hotel not found.', 'error')
             return redirect(url_for('admin_hotels'))
-    
+
+    # Normalize gallery_urls to a Python list so the template loops correctly.
+    if hotel:
+        try:
+            gu = hotel.get('gallery_urls')
+            if gu is not None and not isinstance(gu, (list, tuple)):
+                try:
+                    import json
+                    parsed = json.loads(gu)
+                    if isinstance(parsed, list):
+                        hotel['gallery_urls'] = parsed
+                    else:
+                        # Fallback to comma-separated string
+                        hotel['gallery_urls'] = [u.strip() for u in str(gu).split(',') if u.strip()]
+                except Exception:
+                    hotel['gallery_urls'] = [u.strip() for u in str(gu).split(',') if u.strip()]
+        except Exception as _:
+            print('Error normalizing hotel.gallery_urls:', _)
+
     return render_template('admin/hotel-form.html', hotel=hotel)
 
 @app.route('/admin/hotels/<int:hotel_id>/delete')

@@ -20,7 +20,10 @@
         .image-item { position:relative; width:140px; height:100px; border-radius:8px; overflow:hidden; background:#f6f7fb; display:flex; align-items:center; justify-content:center; }
         .image-item img{ width:100%; height:100%; object-fit:cover; display:block }
         .image-item .feature-btn{ position:absolute; left:6px; top:6px; background:rgba(255,255,255,0.9); border:0; padding:4px 6px; border-radius:6px; cursor:pointer }
-        .image-item.featured { box-shadow:0 0 0 3px rgba(11,102,195,0.12); }
+        .image-item.featured { box-shadow:0 6px 18px rgba(11,102,195,0.18); transform:translateY(-2px); }
+        /* Featured badge and stronger outline for better visual cue */
+        .image-item.featured::after{ content:'Featured'; position:absolute; right:6px; bottom:6px; background:#0B66C3; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600; }
+        .image-item.featured .feature-btn{ background:#ffd54f; color:#111; }
         .image-item .remove-btn{ position:absolute; right:6px; top:6px; background:rgba(0,0,0,0.5); color:#fff; border:0; padding:4px 6px; border-radius:6px; cursor:pointer }
         .image-uploader .hint{ color:#666; font-size:0.9rem }
     </style>
@@ -132,19 +135,11 @@
                                     {% endfor %}
                                 {% endif %}
                             </div>
+                            <!-- Hidden fields to preserve existing image URLs and featured selection -->
+                            <input type="hidden" id="existing_gallery" name="existing_gallery" value="">
+                            <input type="hidden" id="existing_featured" name="existing_featured" value="">
                         </div>
-                        {% if hotel and (hotel.image_url or hotel.gallery_urls) %}
-                        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-                            {% if hotel.image_url %}
-                            <img src="{{ hotel.image_url }}" alt="Featured" style="max-width:160px;border-radius:8px;">
-                            {% endif %}
-                            {% if hotel.gallery_urls %}
-                                {% for u in hotel.gallery_urls %}
-                                <img src="{{ u }}" alt="Gallery" style="max-width:120px;border-radius:6px;">
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        {% endif %}
+                        {# Existing images are already rendered inside the uploader previews above. #}
                     </div>
                 </div>
 
@@ -351,12 +346,39 @@
                     var rem = document.createElement('button'); rem.type='button'; rem.className='remove-btn'; rem.textContent='✕';
                     container.appendChild(feat); container.appendChild(img); container.appendChild(rem);
                     // feature toggle
+                    feat.setAttribute('aria-pressed', 'false');
                     feat.addEventListener('click', function(){
-                        Array.from(imageGrid.querySelectorAll('.image-item')).forEach(function(it){ it.classList.remove('featured'); });
+                        Array.from(imageGrid.querySelectorAll('.image-item')).forEach(function(it){
+                            it.classList.remove('featured');
+                            var btn = it.querySelector('.feature-btn'); if(btn) btn.setAttribute('aria-pressed','false');
+                        });
                         container.classList.add('featured');
+                        feat.setAttribute('aria-pressed','true');
                     });
                     rem.addEventListener('click', function(){ container.remove(); });
                     return container;
+                }
+                // Ensure existing server-rendered previews set correct aria state on load
+                if(imageGrid){
+                    Array.from(imageGrid.querySelectorAll('.image-item')).forEach(function(it){
+                        var btn = it.querySelector('.feature-btn');
+                        if(btn){
+                            btn.setAttribute('aria-pressed', it.classList.contains('featured') ? 'true' : 'false');
+                            // attach click handler so server-rendered items can be featured
+                            btn.addEventListener('click', function(){
+                                Array.from(imageGrid.querySelectorAll('.image-item')).forEach(function(i){
+                                    i.classList.remove('featured');
+                                    var b = i.querySelector('.feature-btn'); if(b) b.setAttribute('aria-pressed','false');
+                                });
+                                it.classList.add('featured');
+                                btn.setAttribute('aria-pressed','true');
+                            });
+                        }
+                        var remBtn = it.querySelector('.remove-btn');
+                        if(remBtn){
+                            remBtn.addEventListener('click', function(){ it.remove(); });
+                        }
+                    });
                 }
                 if(addBtn) addBtn.addEventListener('click', function(){ galleryInput.click(); });
                 if(galleryInput) galleryInput.addEventListener('change', function(e){ Array.from(e.target.files).forEach(function(f){ imageGrid.appendChild(makePreview(f)); }); });
@@ -371,21 +393,112 @@
                             var websitesEl = document.getElementById('websites');
                             console.log('DEBUG client: submitting hotel form — category=', catEl ? catEl.value : null, ' amenities=', amenitiesEl ? amenitiesEl.value : null, ' websites=', websitesEl ? websitesEl.value : null);
                         }catch(e){ console.log('DEBUG client: error reading category before submit', e); }
+
+                        // If user already confirmed the warning, skip validation
+                        if(window._hotelFormProceed !== true){
+                            // Determine which important fields are empty
+                            var missing = [];
+                            var checks = [
+                                {sel: '#description', label: 'Description'},
+                                {sel: '#address', label: 'Address'},
+                                {sel: '#phone', label: 'Phone'},
+                                {sel: '#email', label: 'Email'},
+                                {sel: '#map_embed', label: 'Map embed URL'},
+                                {sel: '#price_min', label: 'Price (From)'},
+                                {sel: '#price_max', label: 'Price (To)'}
+                            ];
+                            checks.forEach(function(c){
+                                var el = document.querySelector(c.sel);
+                                if(el){
+                                    var v = (el.value || '').toString().trim();
+                                    if(!v) missing.push(c.label);
+                                }
+                            });
+                            // Images check: if no preview items and no files selected
+                            var items = imageGrid ? imageGrid.querySelectorAll('.image-item') : [];
+                            var hasFileUploads = galleryInput && galleryInput.files && galleryInput.files.length>0;
+                            if(items.length === 0 && !hasFileUploads){ missing.push('Images'); }
+
+                            if(missing.length){
+                                // prevent default submit and show a simple modal confirmation
+                                evt.preventDefault();
+                                var modal = document.createElement('div');
+                                modal.style.position = 'fixed';
+                                modal.style.left = 0; modal.style.top = 0; modal.style.right = 0; modal.style.bottom = 0;
+                                modal.style.background = 'rgba(0,0,0,0.45)';
+                                modal.style.display = 'flex';
+                                modal.style.alignItems = 'center';
+                                modal.style.justifyContent = 'center';
+                                modal.style.zIndex = 99999;
+
+                                var box = document.createElement('div');
+                                box.style.background = '#fff';
+                                box.style.padding = '20px';
+                                box.style.borderRadius = '8px';
+                                box.style.maxWidth = '560px';
+                                box.style.width = '90%';
+                                box.style.boxShadow = '0 12px 40px rgba(0,0,0,0.2)';
+
+                                var title = document.createElement('h3'); title.textContent = 'Some fields are empty';
+                                title.style.marginTop = 0;
+                                var p = document.createElement('p');
+                                p.textContent = 'The following fields are empty. Are you sure you want to save?';
+                                var ul = document.createElement('ul');
+                                missing.forEach(function(m){ var li = document.createElement('li'); li.textContent = m; ul.appendChild(li); });
+
+                                var btnRow = document.createElement('div'); btnRow.style.display='flex'; btnRow.style.gap='10px'; btnRow.style.justifyContent='flex-end'; btnRow.style.marginTop='12px';
+                                var cancelBtn = document.createElement('button'); cancelBtn.type='button'; cancelBtn.className='btn btn-secondary'; cancelBtn.textContent='Cancel';
+                                var confirmBtn = document.createElement('button'); confirmBtn.type='button'; confirmBtn.className='btn btn-primary'; confirmBtn.textContent='Save anyway';
+
+                                btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
+                                box.appendChild(title); box.appendChild(p); box.appendChild(ul); box.appendChild(btnRow);
+                                modal.appendChild(box); document.body.appendChild(modal);
+
+                                cancelBtn.addEventListener('click', function(){ modal.remove(); });
+                                confirmBtn.addEventListener('click', function(){
+                                    window._hotelFormProceed = true;
+                                    modal.remove();
+                                    // re-trigger submit; use requestSubmit to ensure submit handlers run
+                                    if(typeof form.requestSubmit === 'function') form.requestSubmit(); else form.submit();
+                                });
+                                return; // stop further processing until user confirms
+                            }
+                        }
+
                         // collect files from previews and construct DataTransfer
                         var dtFeatured = new DataTransfer();
                         var dtGallery = new DataTransfer();
-                        var items = imageGrid.querySelectorAll('.image-item');
+                        var items = imageGrid ? imageGrid.querySelectorAll('.image-item') : [];
+
+                        // arrays to hold existing (server-side) image URLs
+                        var existingUrls = [];
+                        var featuredExisting = '';
+
                         if(items.length){
                             var featuredNode = imageGrid.querySelector('.image-item.featured') || items[0];
                             Array.from(items).forEach(function(it){
                                 var img = it.querySelector('img');
-                                if(img && img.dataset && img.dataset.fileName){
-                                    var name = img.dataset.fileName;
-                                    var f = Array.from(galleryInput.files).find(function(x){ return x.name === name; });
-                                    if(f){ dtGallery.items.add(f); if(it === featuredNode){ dtFeatured.items.add(f); } }
+                                if(img){
+                                    // newly added files carry dataset.fileName
+                                    if(img.dataset && img.dataset.fileName){
+                                        var name = img.dataset.fileName;
+                                        var f = Array.from(galleryInput.files).find(function(x){ return x.name === name; });
+                                        if(f){ dtGallery.items.add(f); if(it === featuredNode){ dtFeatured.items.add(f); } }
+                                    }else{
+                                        // existing server-side image, capture its src
+                                        existingUrls.push(img.src);
+                                        if(it === featuredNode){ featuredExisting = img.src; }
+                                    }
                                 }
                             });
                         }
+
+                        // populate hidden fields for existing images so server can preserve them
+                        var existingGalleryInput = document.getElementById('existing_gallery');
+                        var existingFeaturedInput = document.getElementById('existing_featured');
+                        if(existingGalleryInput) existingGalleryInput.value = JSON.stringify(existingUrls);
+                        if(existingFeaturedInput) existingFeaturedInput.value = featuredExisting || '';
+
                         if(dtFeatured.files.length) featuredInput.files = dtFeatured.files;
                         if(dtGallery.files.length) galleryInput.files = dtGallery.files;
                     });

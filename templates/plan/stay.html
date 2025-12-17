@@ -31,8 +31,8 @@
             <div class="filter-options">
                 <div class="plan-tabs-container">
                     <div class="plan-tabs">
-                        <button class="plan-tab active" data-tab="tab-stays">Stays</button>
-                        <button class="plan-tab" data-tab="tab-restaurants">Where to Eat</button>
+                        <button class="plan-tab {% if initial_tab == 'tab-stays' %}active{% endif %}" data-tab="tab-stays">Stays</button>
+                        <button class="plan-tab {% if initial_tab == 'tab-restaurants' %}active{% endif %}" data-tab="tab-restaurants">Where to Eat</button>
                         <div class="tab-slider"></div>
                     </div>
                 </div>
@@ -55,7 +55,7 @@
     <!-- Establishments Grid -->
     <section class="establishments-section">
         <div class="section-container">
-            <div id="tab-stays" class="tab-content active">
+            <div id="tab-stays" class="tab-content {% if initial_tab == 'tab-stays' %}active{% endif %}" {% if initial_tab != 'tab-stays' %}style="display:none"{% endif %}>
                 <div class="establishments-grid">
                     {% if hotels and hotels|length > 0 %}
                         {% for hotel in hotels %}
@@ -98,7 +98,7 @@
                 </div>
             </div>
 
-            <div id="tab-restaurants" class="tab-content" style="display:none">
+            <div id="tab-restaurants" class="tab-content {% if initial_tab == 'tab-restaurants' %}active{% endif %}" {% if initial_tab != 'tab-restaurants' %}style="display:none"{% endif %}>
                 <div class="establishments-grid">
                     {% if restaurants and restaurants|length > 0 %}
                         {% for resto in restaurants %}

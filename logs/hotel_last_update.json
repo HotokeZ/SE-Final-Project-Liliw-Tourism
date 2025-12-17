@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-16T19:24:00.362319",
+  "timestamp": "2025-12-17T19:20:01.848190",
   "form_keys": [
     "name",
     "description",
@@ -9,6 +9,8 @@
     "email",
     "websites",
     "map_embed",
+    "existing_gallery",
+    "existing_featured",
     "price_min",
     "price_max",
     "amenities",
@@ -19,35 +21,34 @@
   "form_category_raw": "Inn",
   "hotel_column_exists_category": true,
   "update_data": {
-    "name": "asdasddaw",
-    "description": "lkaenflaenfla",
-    "address": "lkalkfnalkns",
-    "phone": "128198032",
-    "email": "alsklkdjlk@mail.cm",
-    "price_min": 1000.0,
-    "price_max": 3000000.0,
+    "name": "asd",
+    "description": "aeeghaehrrshgg",
+    "address": "efafwefav3a2fawefvf awfawafw3f",
+    "phone": "09187653347",
+    "email": "phlipskidoodle@gmail.com",
+    "price_min": 1200.0,
+    "price_max": 3500.0,
     "map_embed": "",
     "websites": [
-      "lkadjldjlwaj"
+      "asdwdadasdwd"
     ],
     "amenities": [
-      "vroom"
+      "feafaddawdasdwdasd"
     ],
-    "latitude": "14.167203",
-    "longitude": "121.202545",
+    "latitude": "14.182673",
+    "longitude": "121.365281",
     "is_active": true,
-    "updated_at": "2025-12-16T19:24:00.117406",
+    "updated_at": "2025-12-17T19:20:01.846299",
     "category": "Inn",
+    "image_url": "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/d0755b57-1710-4e70-8b66-43891dc8a765.png",
     "gallery_urls": [
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/4f1a355b-d718-4304-aa07-64cf645de356.png",
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/6cea0bdc-206a-4e8a-b8f3-55474d5d7693.png",
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/de379c0c-fd84-4bb7-8cb1-7d5bcbd9a468.png",
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/e3a866ab-407e-4d0d-b982-e1b0f4f80d10.png",
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/bdd6e58d-01e1-4f85-8324-d69593ec5463.png",
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/4fa3346d-3778-407e-9d99-e7bee78e439a.png",
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/9bf31f71-9360-4269-8c79-0575d8372a55.png",
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/987a5ef7-b204-4a4a-8180-6b6f72504a97.png",
-      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/33b0df07-e67b-453b-8661-e66a957a3825.png"
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/10944841-33d0-45e3-8069-c925494081aa.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/30e33695-b1f5-4cfb-9c6d-c563529edb5f.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/a6e8a445-e3c7-4b25-bed7-1684258c53d3.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/f3f1e535-4c47-4372-b35c-8b03726cf3ed.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/d0755b57-1710-4e70-8b66-43891dc8a765.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/a96fc70b-ae73-4459-a2a1-59c3e90f40cb.png",
+      "https://qastfzzsaqmqwurifmpz.supabase.co/storage/v1/object/public/product-images/hotels/d2e4b7a5-249e-4ab5-8b33-12d1967e1d26.png"
     ]
   }
 }

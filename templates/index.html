@@ -45,33 +45,29 @@
             <div class="slider-container">
             <button class="slider-btn prev">&lt;</button>
             <div class="slider">
-                <div class="slide active">
-                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Attraction 1">
-                    <div class="slide-overlay"></div>
-                    <div class="slide-content">
-                        <h3>Beautiful Waterfalls</h3>
-                        <p>Discover the stunning natural cascades and refreshing pools of Liliw's pristine waterfalls</p>
-                        <a href="/attractions/natural" class="explore-btn">Explore More</a>
+                {% if featured_attractions and featured_attractions|length > 0 %}
+                    {% for a in featured_attractions %}
+                    <div class="slide {% if loop.first %}active{% endif %}">
+                        <img src="{{ a.get('image_url') or (a.get('gallery_urls') and (a.get('gallery_urls')[0] if a.get('gallery_urls') is iterable else None)) or url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="{{ a.get('name') }}">
+                        <div class="slide-overlay"></div>
+                        <div class="slide-content">
+                            <h3>{{ a.get('name') }}</h3>
+                            <p>{{ (a.get('description') or a.get('summary') or '')[:160] }}</p>
+                            <a href="{{ url_for('indiv_attractions', attraction=a.get('slug') or (a.get('name')|replace(' ', '-')|lower)) }}" class="explore-btn">Explore More</a>
+                        </div>
                     </div>
-                </div>
-                <div class="slide">
-                    <img src="{{ url_for('static', filename='assets/images/attractions/heritage/balay celina.jpg') }}" alt="Attraction 2">
-                    <div class="slide-overlay"></div>
-                    <div class="slide-content">
-                        <h3>Heritage Treasures</h3>
-                        <p>Explore centuries-old architecture and immerse yourself in Liliw's rich cultural history</p>
-                        <a href="/attractions/heritage" class="explore-btn">Explore More</a>
+                    {% endfor %}
+                {% else %}
+                    <div class="slide active">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Attraction 1">
+                        <div class="slide-overlay"></div>
+                        <div class="slide-content">
+                            <h3>Beautiful Waterfalls</h3>
+                            <p>Discover the stunning natural cascades and refreshing pools of Liliw's pristine waterfalls</p>
+                            <a href="/attractions/natural" class="explore-btn">Explore More</a>
+                        </div>
                     </div>
-                </div>
-                <div class="slide">
-                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/nature garden.jpg') }}" alt="Attraction 3">
-                    <div class="slide-overlay"></div>
-                    <div class="slide-content">
-                        <h3>Scenic Trails</h3>
-                        <p>Wander through lush gardens and peaceful paths surrounded by breathtaking natural beauty</p>
-                        <a href="/attractions/natural" class="explore-btn">Explore More</a>
-                    </div>
-                </div>
+                {% endif %}
             </div>
             <button class="slider-btn next">&gt;</button>
         </div>
@@ -90,89 +86,59 @@
         </div>
 
         <div class="grid attraction-grid" data-category="natural">
-            <div class="card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Natural 1">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Natural</span>
-                    <h3>Kilangin Falls</h3>
-                    <p>Experience the serene beauty of cascading waterfalls surrounded by lush greenery</p>
-                    <a href="/attractions/natural/1" class="card-link">Learn More →</a>
+            {% if natural and natural|length > 0 %}
+                {% for a in natural[:4] %}
+                <div class="card">
+                    <img src="{{ a.get('image_url') or (a.get('gallery_urls') and (a.get('gallery_urls')[0] if a.get('gallery_urls') is iterable else None)) or url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="{{ a.get('name') }}">
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <span class="card-tag">Natural</span>
+                        <h3>{{ a.get('name') }}</h3>
+                        <p>{{ (a.get('description') or '')[:120] }}</p>
+                        <a href="{{ url_for('indiv_attractions', attraction=a.get('slug') or (a.get('name')|replace(' ', '-')|lower)) }}" class="card-link">Learn More →</a>
+                    </div>
                 </div>
-            </div>
-            <div class="card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Natural 2">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Natural</span>
-                    <h3>Nature Garden</h3>
-                    <p>Take a peaceful walk through botanical gardens and scenic forest trails</p>
-                    <a href="/attractions/natural/2" class="card-link">Learn More →</a>
+                {% endfor %}
+            {% else %}
+                <div class="card">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Natural 1">
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <span class="card-tag">Natural</span>
+                        <h3>Kilangin Falls</h3>
+                        <p>Experience the serene beauty of cascading waterfalls surrounded by lush greenery</p>
+                        <a href="/attractions/natural/1" class="card-link">Learn More →</a>
+                    </div>
                 </div>
-            </div>
-            <div class="card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Natural 3">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Natural</span>
-                    <h3>Mountain Views</h3>
-                    <p>Relax by tranquil vistas and enjoy breathtaking mountain landscapes</p>
-                    <a href="/attractions/natural/3" class="card-link">Learn More →</a>
-                </div>
-            </div>
-            <div class="card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Natural 4">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Natural</span>
-                    <h3>Riverside Park</h3>
-                    <p>Discover peaceful riverside areas perfect for relaxation and picnics</p>
-                    <a href="/attractions/natural/4" class="card-link">Learn More →</a>
-                </div>
-            </div>
+            {% endif %}
         </div>
 
         <div class="grid attraction-grid hidden" data-category="heritage">
-            <div class="card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/heritage/balay celina.jpg') }}" alt="Heritage 1">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Heritage</span>
-                    <h3>Balay Celina</h3>
-                    <p>Marvel at this beautifully preserved ancestral house with colonial architecture</p>
-                    <a href="/attractions/heritage/1" class="card-link">Learn More →</a>
+            {% if heritage and heritage|length > 0 %}
+                {% for a in heritage[:4] %}
+                <div class="card">
+                    <img src="{{ a.get('image_url') or (a.get('gallery_urls') and (a.get('gallery_urls')[0] if a.get('gallery_urls') is iterable else None)) or url_for('static', filename='assets/images/attractions/heritage/balay celina.jpg') }}" alt="{{ a.get('name') }}">
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <span class="card-tag">Heritage</span>
+                        <h3>{{ a.get('name') }}</h3>
+                        <p>{{ (a.get('description') or '')[:120] }}</p>
+                        <a href="{{ url_for('indiv_attractions', attraction=a.get('slug') or (a.get('name')|replace(' ', '-')|lower)) }}" class="card-link">Learn More →</a>
+                    </div>
                 </div>
-            </div>
-            <div class="card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/heritage/balay celina.jpg') }}" alt="Heritage 2">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Heritage</span>
-                    <h3>St. John the Baptist Church</h3>
-                    <p>Discover the centuries-old church with beautiful Spanish colonial architecture</p>
-                    <a href="/attractions/heritage/2" class="card-link">Learn More →</a>
+                {% endfor %}
+            {% else %}
+                <div class="card">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/heritage/balay celina.jpg') }}" alt="Heritage 1">
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <span class="card-tag">Heritage</span>
+                        <h3>Balay Celina</h3>
+                        <p>Marvel at this beautifully preserved ancestral house with colonial architecture</p>
+                        <a href="/attractions/heritage/1" class="card-link">Learn More →</a>
+                    </div>
                 </div>
-            </div>
-            <div class="card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/heritage/balay celina.jpg') }}" alt="Heritage 3">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Heritage</span>
-                    <h3>Tsinelas Capital</h3>
-                    <p>Experience Liliw's vibrant local craft culture and traditional shoemaking</p>
-                    <a href="/attractions/heritage/3" class="card-link">Learn More →</a>
-                </div>
-            </div>
-            <div class="card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/heritage/balay celina.jpg') }}" alt="Heritage 4">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Heritage</span>
-                    <h3>Historic Plaza</h3>
-                    <p>Visit the town's central plaza, a gathering place rich in local history</p>
-                    <a href="/attractions/heritage/4" class="card-link">Learn More →</a>
-                </div>
-            </div>
+            {% endif %}
         </div>
 
         <div class="section-button">
@@ -187,46 +153,31 @@
             <h2>Authentic Experiences</h2>
             <p class="section-subtitle">Immerse yourself in the culture, traditions, and flavors of Liliw</p>
         <div class="experience-cards">
-            <div class="experience-card experience-card-large">
-                <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Exp 1">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Cultural</span>
-                    <h3>Traditional Shoemaking Workshop</h3>
-                    <p>Join a hands-on experience and learn the art of crafting Liliw's famous handmade shoes from local artisans</p>
-                    <a href="/experiences/products" class="card-link">Discover More →</a>
+            {% if experiences and experiences|length > 0 %}
+                {% for p in experiences[:4] %}
+                <div class="experience-card {% if loop.first %}experience-card-large{% endif %}">
+                    <img src="{{ p.get('image_url') or (p.get('gallery') and (p.get('gallery')[0] if p.get('gallery') is iterable else None)) or url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="{{ p.get('name') }}">
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <span class="card-tag">{{ (p.get('category') or 'Experience')|title }}</span>
+                        <h3>{{ p.get('name') }}</h3>
+                        <p>{{ (p.get('short_description') or p.get('description') or '')[:120] }}</p>
+                        <a href="{{ url_for('experiences') }}" class="card-link">Discover More →</a>
+                    </div>
                 </div>
-            </div>
-            <div class="experience-card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Exp 2">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Culinary</span>
-                    <h3>Local Cuisine Tour</h3>
-                    <p>Taste authentic dishes prepared by local chefs using traditional recipes</p>
-                    <a href="/plan/eat" class="card-link">Discover More →</a>
+                {% endfor %}
+            {% else %}
+                <div class="experience-card experience-card-large">
+                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Exp 1">
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <span class="card-tag">Cultural</span>
+                        <h3>Traditional Shoemaking Workshop</h3>
+                        <p>Join a hands-on experience and learn the art of crafting Liliw's famous handmade shoes from local artisans</p>
+                        <a href="/experiences/products" class="card-link">Discover More →</a>
+                    </div>
                 </div>
-            </div>
-            <div class="experience-card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Exp 3">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Festival</span>
-                    <h3>Tsinelas Festival</h3>
-                    <p>Celebrate Liliw's vibrant annual festival honoring the town's footwear heritage</p>
-                    <a href="/experiences/festivals" class="card-link">Discover More →</a>
-                </div>
-            </div>
-            <div class="experience-card">
-                <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Exp 4">
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="card-tag">Shopping</span>
-                    <h3>Local Products & Crafts</h3>
-                    <p>Browse unique handmade items and local specialties from Liliw artisans</p>
-                    <a href="/experiences/products" class="card-link">Discover More →</a>
-                </div>
-            </div>
+            {% endif %}
         </div>
         <div class="section-button">
             <a href="/experiences" class="btn">Explore All Experiences</a>
@@ -240,45 +191,37 @@
             <h2>Upcoming Events</h2>
             <p class="section-subtitle">Join us for festivals, markets, and celebrations throughout the year</p>
         <div class="event-cards">
-            <div class="event-card event-card-featured">
-                <div class="event-img">
-                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Event 1">
+            {% if events and events|length > 0 %}
+                {% for e in events[:3] %}
+                <div class="event-card {% if loop.first %}event-card-featured{% endif %}">
+                    <div class="event-img">
+                        <img src="{{ e.get('image') }}" alt="{{ e.get('title') }}">
+                    </div>
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <span class="event-date">{{ e.get('display_date') }}</span>
+                        <span class="card-tag">Event</span>
+                        <h3>{{ e.get('title') }}</h3>
+                        <p>{{ (e.get('description') or '')[:140] }}</p>
+                        <a href="/experiences/festivals/events" class="card-link">View Details →</a>
+                    </div>
                 </div>
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="event-date">December 2025</span>
-                    <span class="card-tag">Festival</span>
-                    <h3>Tsinelas Festival</h3>
-                    <p>A colorful celebration of Liliw's shoemaking heritage featuring parades, cultural performances, and craft exhibitions</p>
-                    <a href="/experiences/festivals/events" class="card-link">View Details →</a>
+                {% endfor %}
+            {% else %}
+                <div class="event-card event-card-featured">
+                    <div class="event-img">
+                        <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Event 1">
+                    </div>
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <span class="event-date">December 2025</span>
+                        <span class="card-tag">Festival</span>
+                        <h3>Tsinelas Festival</h3>
+                        <p>A colorful celebration of Liliw's shoemaking heritage featuring parades, cultural performances, and craft exhibitions</p>
+                        <a href="/experiences/festivals/events" class="card-link">View Details →</a>
+                    </div>
                 </div>
-            </div>
-            <div class="event-card">
-                <div class="event-img">
-                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Event 2">
-                </div>
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="event-date">January 2026</span>
-                    <span class="card-tag">Religious</span>
-                    <h3>Feast of St. John</h3>
-                    <p>Traditional religious celebration with processions and community gatherings</p>
-                    <a href="/experiences/festivals/events" class="card-link">View Details →</a>
-                </div>
-            </div>
-            <div class="event-card">
-                <div class="event-img">
-                    <img src="{{ url_for('static', filename='assets/images/attractions/natural/kilangin.jpg') }}" alt="Event 3">
-                </div>
-                <div class="card-overlay"></div>
-                <div class="card-content">
-                    <span class="event-date">Year Round</span>
-                    <span class="card-tag">Market</span>
-                    <h3>Local Farmers Market</h3>
-                    <p>Fresh produce and handmade goods every weekend at the town plaza</p>
-                    <a href="/experiences/festivals/events" class="card-link">View Details →</a>
-                </div>
-            </div>
+            {% endif %}
         </div>
         <div class="section-button">
             <a href="/experiences/festivals/events" class="btn">View All Events</a>
@@ -292,7 +235,7 @@
             <h2>Plan Your Visit</h2>
             <p class="section-subtitle">Everything you need to make your trip to Liliw unforgettable</p>
         <div class="plan-grid">
-            <a href="/plan/stay" class="plan-card">
+            <a href="{{ url_for('plan') }}" class="plan-card">
                 <div class="plan-icon">
                     <i class="fas fa-hotel fa-3x"></i>
                 </div>
@@ -300,7 +243,7 @@
                 <p>Find comfortable accommodations from cozy inns to modern hotels</p>
                 <span class="plan-arrow">→</span>
             </a>
-            <a href="/plan/eat" class="plan-card">
+            <a href="{{ url_for('plan') }}?tab=eat" class="plan-card">
                 <div class="plan-icon">
                     <i class="fas fa-utensils fa-3x"></i>
                 </div>
